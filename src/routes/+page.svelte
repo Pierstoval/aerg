@@ -1,10 +1,12 @@
 <script lang="ts">
-    import {Tile} from "$lib/Tile";
-    import {HexStyle} from "$lib/HexStyle";
+    import Tile from "$lib/Tile";
+    import TileComponent from "$lib/components/Tile.svelte";
+    import {HexStyle, defaultHexStyle} from "$lib/HexStyle";
+    import Player from "$lib/Player";
 
     // Using "pointy top" style, the "hex size" or "hex diameter" is the height.
     // Using "flat" hex style, the "hex size" or "hex diameter" is the actual width.
-    let style = HexStyle.flat;
+    let style = defaultHexStyle();
 
     let showControls = true;
 
@@ -20,13 +22,17 @@
         return Math.round((number + Number.EPSILON) * calculatedPrecision) / calculatedPrecision;
     }
 
-    function buildTiles(xMax: number, yMax: number, tileWidth: number, tileHeight: number) {
+    function buildTiles(xMax: number, yMax: number, tileWidth: number, tileHeight: number, hexStyle: HexStyle|undefined): Tile[]
+    {
+        if (!hexStyle) {
+            hexStyle = defaultHexStyle();
+        }
         let allTiles = [];
 
         for (let y = 0; y < yMax; y++) {
             let tiles = [];
             for (let x = 0; x < xMax; x++) {
-                let tile: Tile = new Tile(x, y, tileWidth, tileHeight, style);
+                let tile: Tile = new Tile(x, y, tileWidth, tileHeight, hexStyle);
                 tiles.push(tile);
             }
             allTiles.push(tiles);
@@ -34,6 +40,7 @@
 
         return allTiles;
     }
+
 
     $: verticesDiameter = applyPrecision(hexSize * 3 / 2);
     $: edgesDiameter = applyPrecision(hexSize * Math.sqrt(3));
@@ -50,8 +57,10 @@
         : (yMax * tileHeight + (tileHeight / 2) )
     ;
 
+    $: player = new Player(Math.ceil(xMax / 2), Math.ceil(yMax / 2));
+
     // 1st level: rows, 2nd level: row cells
-    $: board = buildTiles(xMax, yMax, tileWidth, tileHeight);
+    $: board = buildTiles(xMax, yMax, tileWidth, tileHeight, style);
 </script>
 
 <div id="controls">
@@ -100,16 +109,11 @@
         {#each board as tiles}
             <div class="tiles_row">
                 {#each tiles as tile}
-                    <svg class="tile"
-                         viewBox="0 0 {tileWidth} {tileHeight}" width="{tileWidth}" height="{tileHeight}"
-                         style="top:{tile.topCoord()}px;left:{tile.leftCoord()}px;"
-                    >
-                        <use xlink:href="#tile" />
-                        <text text-anchor="middle" dominant-baseline="middle" x="{tileWidth / 2}" y="{tileHeight / 2}">{tile.content}</text>
-                    </svg>
+                    <TileComponent {tile} />
                 {/each}
             </div>
         {/each}
+        <div class="player">P</div>
     </div>
 </div>
 
