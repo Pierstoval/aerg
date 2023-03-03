@@ -1,5 +1,5 @@
-import {defaultHexStyle, HexStyle} from "$lib/HexStyle";
-import {xCoordInPixels, yCoordInPixels} from "$lib/mathFunctions";
+import HexStyle, {defaultHexStyle} from "./HexStyle";
+import {xCoordInPixels, yCoordInPixels} from "./mathFunctions";
 
 export default class HexDefinition
 {
@@ -7,7 +7,7 @@ export default class HexDefinition
     protected readonly _y: number;
     protected readonly _width: number;
     protected readonly _height: number;
-    protected readonly _style: HexStyle;
+    private readonly _style: HexStyle;
 
     constructor(x: number, y: number, w: number, h: number, style: HexStyle|undefined) {
         this._x = x;
@@ -31,6 +31,10 @@ export default class HexDefinition
 
     get height(): number {
         return this._height;
+    }
+
+    get style(): HexStyle {
+        return this._style;
     }
 
     public topCoord(): number {

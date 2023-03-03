@@ -1,4 +1,4 @@
-import HexDefinition from "$lib/HexDefinition";
+import HexDefinition from "./HexDefinition";
 
 export default class Tile extends HexDefinition
 {

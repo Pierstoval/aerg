@@ -1,4 +1,4 @@
-import {defaultHexStyle, HexStyle} from "./HexStyle";
+import HexStyle, {defaultHexStyle} from "./HexStyle";
 
 export function yCoordInPixels(x: number, y: number, hexHeight: number, style: HexStyle|undefined): number
 {
