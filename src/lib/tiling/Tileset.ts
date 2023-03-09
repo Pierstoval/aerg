@@ -2,24 +2,24 @@ import HexStyle, {defaultHexStyle} from "./HexStyle";
 import Tile from "./Tile";
 
 export default class Tileset {
-    private _hexSize: number;
-    private _style: HexStyle;
-    private _xMax: number;
-    private _yMax: number;
+    private readonly _hexSize: number;
+    private readonly _style: HexStyle;
+    private readonly _xMax: number;
+    private readonly _yMax: number;
 
-    private _tileHeight: number;
-    private _tileWidth: number;
+    private readonly _tileHeight: number;
+    private readonly _tileWidth: number;
 
     // Distance from a point/vertex to the opposite one.
-    private _verticesDiameter: number;
+    private readonly _verticesDiameter: number;
 
     // Distance from a side/edge to the opposite one.
-    private _edgesDiameter: number;
+    private readonly _edgesDiameter: number;
 
     // 1st level: rows, 2nd level: row cells
     private _board: Tile[][] = [];
-    private _boardHeight: number;
-    private _boardWidth: number;
+    private readonly _boardHeight: number;
+    private readonly _boardWidth: number;
 
     constructor(hexSize: number, xMax: number, yMax: number, style?: HexStyle) {
         this._style = style || defaultHexStyle();

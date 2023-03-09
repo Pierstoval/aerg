@@ -46,6 +46,11 @@
             {tile.width/4},{-tile.height/2}
         " />
     {/if}
+
+    <text x="20" y="35" class="small">My</text>
+    <text x="{tile.width/2}" y="{tile.height/2}">
+        {tile.content}
+    </text>
 </svg>
 
 <style lang="scss">

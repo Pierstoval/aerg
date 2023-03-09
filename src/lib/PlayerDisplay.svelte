@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Player, {PlayerEvent} from "../Player";
+    import Player, {PlayerEvent} from "./Player";
 
     export let player: Player;
 

@@ -1,6 +1,6 @@
-import {xCoordInPixels, yCoordInPixels} from "./tiling/mathFunctions";
-import type HexStyle from "./tiling/HexStyle";
-import type Tileset from "./tiling/Tileset";
+import {xCoordInPixels, yCoordInPixels} from "$lib/tiling/mathFunctions";
+import type HexStyle from "$lib/tiling/HexStyle";
+import type Tileset from "$lib/tiling/Tileset";
 
 export enum PlayerEvent {
     MOVE = 'move',
@@ -21,8 +21,8 @@ export default class Player {
         x: number,
         y: number,
         tileset: Tileset,
-        width: number|undefined,
-        height: number|undefined,
+        width?: number|undefined,
+        height?: number|undefined,
     ) {
         this._x = x;
         this._y = y;
@@ -72,6 +72,30 @@ export default class Player {
 
     public moveRight(): void {
         this._x += 1;
+        this.dispatch(PlayerEvent.MOVE);
+    }
+
+    public moveUpLeft(): void {
+        this._x -= 1;
+        this._y -= 1;
+        this.dispatch(PlayerEvent.MOVE);
+    }
+
+    public moveDownLeft(): void {
+        this._x -= 1;
+        this._y += 1;
+        this.dispatch(PlayerEvent.MOVE);
+    }
+
+    public moveUpRight(): void {
+        this._x += 1;
+        this._y -= 1;
+        this.dispatch(PlayerEvent.MOVE);
+    }
+
+    public moveDownRight(): void {
+        this._x += 1;
+        this._y += 1;
         this.dispatch(PlayerEvent.MOVE);
     }
 
