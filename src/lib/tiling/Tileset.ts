@@ -1,9 +1,11 @@
 import HexStyle, {defaultHexStyle} from "./HexStyle";
+import HexCoordinateStyle, { defaultHexCoordinateStyle } from "./HexCoordinateStyle";
 import Tile from "./Tile";
 
 export default class Tileset {
     private readonly _hexSize: number;
     private readonly _style: HexStyle;
+    private readonly _coordinateStyle: HexCoordinateStyle;
     private readonly _xMax: number;
     private readonly _yMax: number;
 
@@ -21,8 +23,9 @@ export default class Tileset {
     private readonly _boardHeight: number;
     private readonly _boardWidth: number;
 
-    constructor(hexSize: number, xMax: number, yMax: number, style?: HexStyle) {
+    constructor(hexSize: number, xMax: number, yMax: number, style?: HexStyle, hexCoordinateStyle?: HexCoordinateStyle) {
         this._style = style || defaultHexStyle();
+        this._coordinateStyle = hexCoordinateStyle || defaultHexCoordinateStyle();
         this._hexSize = hexSize;
         this._xMax = xMax;
         this._yMax = yMax;
@@ -61,6 +64,10 @@ export default class Tileset {
 
     get style(): HexStyle {
         return this._style;
+    }
+
+    get coordinateStyle(): HexCoordinateStyle {
+        return this._coordinateStyle;
     }
 
     get tileHeight(): number {

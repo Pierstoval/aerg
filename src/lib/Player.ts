@@ -1,5 +1,6 @@
 import {xCoordInPixels, yCoordInPixels} from "$lib/tiling/mathFunctions";
-import type HexStyle from "$lib/tiling/HexStyle";
+import HexStyle from "$lib/tiling/HexStyle";
+import type HexCoordinateStyle from "$lib/tiling/HexCoordinateStyle";
 import type Tileset from "$lib/tiling/Tileset";
 
 export enum PlayerEvent {
@@ -15,6 +16,7 @@ export default class Player {
     private readonly _width: number;
     private readonly _height: number;
     private readonly _style: HexStyle;
+    private readonly _coordinateStyle: HexCoordinateStyle;
     private readonly _tileset: Tileset;
 
     constructor(
@@ -30,7 +32,16 @@ export default class Player {
         this._width = width || tileset.tileWidth;
         this._height = height || tileset.tileHeight;
         this._style = tileset.style;
+        this._coordinateStyle = tileset.coordinateStyle; // TODO: implement this elsewhere
         this.initialize();
+    }
+
+    get x(): number {
+        return this._x;
+    }
+
+    get y(): number {
+        return this._y;
     }
 
     get topCoord(): number {
@@ -55,44 +66,57 @@ export default class Player {
         this.eventListeners.set(event, events);
     }
 
+    // TODO: fix ALL methods based on coordinate system
     public moveUp(): void {
         this._y -= 1;
         this.dispatch(PlayerEvent.MOVE);
     }
 
+    // TODO: fix ALL methods based on coordinate system
     public moveDown(): void {
         this._y += 1;
         this.dispatch(PlayerEvent.MOVE);
     }
 
+    // TODO: fix ALL methods based on coordinate system
     public moveLeft(): void {
         this._x -= 1;
         this.dispatch(PlayerEvent.MOVE);
     }
 
+    // TODO: fix ALL methods based on coordinate system
     public moveRight(): void {
         this._x += 1;
         this.dispatch(PlayerEvent.MOVE);
     }
 
+    // TODO: fix ALL methods based on coordinate system
     public moveUpLeft(): void {
         this._x -= 1;
         this._y -= 1;
         this.dispatch(PlayerEvent.MOVE);
     }
 
+    // TODO: fix ALL methods based on coordinate system
     public moveDownLeft(): void {
-        this._x -= 1;
-        this._y += 1;
+        if (this._style === HexStyle.pointy) {
+            this._x += this._x % 2 === 0 ? 0 : -1;
+            this._y += 1;
+        } else {
+            this._x += 1;
+            this._y += this._y % 2 === 0 ? 0 : -1;
+        }
         this.dispatch(PlayerEvent.MOVE);
     }
 
+    // TODO: fix ALL methods based on coordinate system
     public moveUpRight(): void {
         this._x += 1;
         this._y -= 1;
         this.dispatch(PlayerEvent.MOVE);
     }
 
+    // TODO: fix ALL methods based on coordinate system
     public moveDownRight(): void {
         this._x += 1;
         this._y += 1;

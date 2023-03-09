@@ -1,3 +1,5 @@
+// Check https://www.redblobgames.com/grids/hexagons/#basics
+
 // Using "pointy top" style, the "hex size" or "hex diameter" is the height.
 // Using "flat" hex style, the "hex size" or "hex diameter" is the actual width.
 enum HexStyle {

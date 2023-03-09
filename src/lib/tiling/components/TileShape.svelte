@@ -17,7 +17,9 @@
     <style>
         text {
             fill: #333;
-            font-size: 0.7rem;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 0.8rem;
             width: 100%;
         }
         polygon {
@@ -47,8 +49,7 @@
         " />
     {/if}
 
-    <text x="20" y="35" class="small">My</text>
-    <text x="{tile.width/2}" y="{tile.height/2}">
+    <text x="{-tile.width/5}" y="{tile.height/12}">
         {tile.content}
     </text>
 </svg>

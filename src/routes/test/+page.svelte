@@ -5,6 +5,8 @@
 
     import PlayerDisplay from "$lib/PlayerDisplay.svelte";
     import Player from "$lib/Player";
+    import { PlayerEvent } from "../../lib/Player";
+    import { onMount } from "svelte";
 
     let style = defaultHexStyle();
 
@@ -17,9 +19,21 @@
     $: tileset = new Tileset(hexSize, xMax, yMax, style);
     $: player = new Player(Math.ceil(xMax / 2), Math.ceil(yMax / 2), tileset);
 
+    let playerX: number = 0;
+    let playerY: number = 0;
+
+    onMount(() => {
+        playerX = player.x;
+        playerY = player.y;
+        player.on(PlayerEvent.MOVE, () => {
+            playerX = player.x;
+            playerY = player.y;
+        });
+    });
+
     // FIXME: this is wrong yet
     const keymap = {
-        97: (p: Player) => style === HexStyle.pointy ? p.moveDownLeft() : null, // numpad1
+        97: (p: Player) => style === HexStyle.pointy ? p.moveDownLeft() : p.moveDownLeft(), // numpad1
         98: (p: Player) => style === HexStyle.pointy ? null : p.moveDown(), // numpad2
         99: (p: Player) => style === HexStyle.pointy ? p.moveDownRight() : null, // numpad3
         100: (p: Player) => style === HexStyle.pointy ? p.moveLeft() : p.moveUp(), // numpad4
@@ -46,6 +60,7 @@
         <div>Hex size: <input type="range" min="5" max="100" step="5" bind:value={hexSize}> ({hexSize})</div>
         <div>Style: <button type="button" on:click={() => style = HexStyle.pointy}>Pointy</button><button type="button" on:click={() => style = HexStyle.flat}>Flat</button></div>
         <div>Use the numpad to move your character.</div>
+        <div>Current character position: <strong>{playerX}:{playerY}</strong></div>
     </div>
 </div>
 
@@ -78,6 +93,7 @@
         top: 0;
         left: 0;
         padding: 1rem;
+        font-family: "Fira Code", monospace;
         #control-content {
             display: none;
             &.show {
