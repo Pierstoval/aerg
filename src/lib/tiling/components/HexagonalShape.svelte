@@ -1,6 +1,6 @@
 <script lang="ts">
     import Tile from "../Tile";
-    import HexStyle from "../HexStyle.js";
+    import HexAngle from "../HexagonalCoordinateSystem";
 
     export let tile: Tile;
 
@@ -29,7 +29,7 @@
         }
     </style>
 
-    {#if tile.style === HexStyle.pointy}
+    {#if tile.style === HexAngle.pointy}
         <polygon points="
             {-tile.width/2},{-tile.height/4}
             0,{-tile.height/2}

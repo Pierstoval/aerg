@@ -1,6 +1,6 @@
-import HexDefinition from "./HexDefinition";
+import HexagonalObject from "./HexagonalObject";
 
-export default class Tile extends HexDefinition
+export default class Tile extends HexagonalObject
 {
     get content() {
         return `${this._x}:${this._y}`;
