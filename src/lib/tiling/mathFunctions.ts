@@ -1,23 +1,18 @@
-import { HexagonalAngle } from './HexagonalCoordinateSystem';
+import { Orientation } from 'honeycomb-grid';
 
 export function yCoordInPixels(
 	x: number,
 	y: number,
 	hexHeight: number,
-	angle: HexagonalAngle
+	angle: Orientation
 ): number {
-	return angle === HexagonalAngle.pointy
+	return angle === Orientation.POINTY
 		? y * ((hexHeight * 3) / 4)
 		: y * hexHeight + ((x % 2) * hexHeight) / 2;
 }
 
-export function xCoordInPixels(
-	x: number,
-	y: number,
-	hexWidth: number,
-	angle: HexagonalAngle
-): number {
-	return angle === HexagonalAngle.pointy
+export function xCoordInPixels(x: number, y: number, hexWidth: number, angle: Orientation): number {
+	return angle === Orientation.POINTY
 		? x * hexWidth + ((y % 2) * hexWidth) / 2
 		: x * ((hexWidth * 3) / 4);
 }

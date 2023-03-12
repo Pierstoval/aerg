@@ -1,25 +1,25 @@
 import { xCoordInPixels, yCoordInPixels } from './mathFunctions';
-import HexagonalCoordinateSystem, { HexagonalAngle } from './HexagonalCoordinateSystem';
+import HexagonalGridConfiguration, { HexagonalAngle } from './HexagonalGridConfiguration';
 
 export default class HexagonalObject {
 	protected readonly _x: number;
 	protected readonly _y: number;
 	protected readonly _width: number;
 	protected readonly _height: number;
-	private readonly _hcs: HexagonalCoordinateSystem;
+	private readonly _hexGridConfig: HexagonalGridConfiguration;
 
 	constructor(
 		x: number,
 		y: number,
 		w: number,
 		h: number,
-		hcs?: HexagonalCoordinateSystem | undefined
+		hexGridConfig?: HexagonalGridConfiguration | undefined
 	) {
 		this._x = x;
 		this._y = y;
 		this._width = w;
 		this._height = h;
-		this._hcs = hcs || HexagonalCoordinateSystem.default();
+		this._hexGridConfig = hexGridConfig || HexagonalGridConfiguration.default();
 	}
 
 	get x(): number {
@@ -38,15 +38,15 @@ export default class HexagonalObject {
 		return this._height;
 	}
 
-	get hcs(): HexagonalCoordinateSystem {
-		return this._hcs;
+	get hexGridConfig(): HexagonalGridConfiguration {
+		return this._hexGridConfig;
 	}
 
 	public topCoord(): number {
-		return yCoordInPixels(this._x, this._y, this._height, this._hcs.angle);
+		return yCoordInPixels(this._x, this._y, this._height, this._hexGridConfig.angle);
 	}
 
 	public leftCoord(): number {
-		return xCoordInPixels(this._x, this._y, this._width, this._hcs.angle);
+		return xCoordInPixels(this._x, this._y, this._width, this._hexGridConfig.angle);
 	}
 }

@@ -1,9 +1,9 @@
 import Tile from './Tile';
-import HexagonalCoordinateSystem, { HexagonalAngle } from './HexagonalCoordinateSystem';
+import HexagonalGridConfiguration, { HexagonalAngle } from './HexagonalGridConfiguration';
 
 export default class Tileset {
 	private readonly _hexSize: number;
-	private readonly _hcs: HexagonalCoordinateSystem;
+	private readonly _hexGridConfig: HexagonalGridConfiguration;
 	private readonly _xMax: number;
 	private readonly _yMax: number;
 
@@ -25,31 +25,35 @@ export default class Tileset {
 		hexSize: number,
 		xMax: number,
 		yMax: number,
-		hcs?: HexagonalCoordinateSystem | undefined
+		hexGridConfig?: HexagonalGridConfiguration | undefined
 	) {
-		this._hcs = hcs || HexagonalCoordinateSystem.default();
+		this._hexGridConfig = hexGridConfig || HexagonalGridConfiguration.default();
 		this._hexSize = hexSize;
 		this._xMax = xMax;
 		this._yMax = yMax;
 		this._verticesDiameter = applyPrecision((this._hexSize * 3) / 2);
 		this._edgesDiameter = applyPrecision(this._hexSize * Math.sqrt(3));
 		this._tileHeight =
-			this._hcs.angle === HexagonalAngle.pointy ? this._edgesDiameter : this._verticesDiameter;
+			this._hexGridConfig.angle === HexagonalAngle.pointy
+				? this._edgesDiameter
+				: this._verticesDiameter;
 		this._tileWidth =
-			this._hcs.angle === HexagonalAngle.pointy ? this._verticesDiameter : this._edgesDiameter;
+			this._hexGridConfig.angle === HexagonalAngle.pointy
+				? this._verticesDiameter
+				: this._edgesDiameter;
 		this._boardWidth =
-			this._hcs.angle === HexagonalAngle.pointy
+			this._hexGridConfig.angle === HexagonalAngle.pointy
 				? xMax * this._tileWidth + this._tileWidth / 2
 				: xMax * (this._tileWidth * 0.75) + this._tileWidth * 0.25;
 		this._boardHeight =
-			this._hcs.angle === HexagonalAngle.pointy
+			this._hexGridConfig.angle === HexagonalAngle.pointy
 				? yMax * (this._tileHeight * 0.75) + this._tileHeight * 0.25
 				: yMax * this._tileHeight + this._tileHeight / 2;
 		this.buildTiles();
 	}
 
-	get hcs(): HexagonalCoordinateSystem {
-		return this._hcs;
+	get hexGridConfig(): HexagonalGridConfiguration {
+		return this._hexGridConfig;
 	}
 
 	get board(): Tile[][] {
@@ -98,7 +102,7 @@ export default class Tileset {
 		for (let y = 0; y < this._yMax; y++) {
 			let tiles = [];
 			for (let x = 0; x < this._xMax; x++) {
-				let tile: Tile = new Tile(x, y, this._tileWidth, this._tileHeight, this._hcs);
+				let tile: Tile = new Tile(x, y, this._tileWidth, this._tileHeight, this._hexGridConfig);
 				tiles.push(tile);
 			}
 			board.push(tiles);

@@ -1,109 +1,88 @@
 <script lang="ts">
-	import HexagonalShape from '$lib/tiling/components/HexagonalShape.svelte';
-	import Tileset from '$lib/tiling/Tileset';
-
-	import PlayerDisplay from '$lib/PlayerDisplay.svelte';
+	import { SVG } from '@svgdotjs/svg.js';
+	import { defineHex, Grid, rectangle, Orientation, Hex, hexToPoint } from 'honeycomb-grid';
 	import Player from '$lib/Player';
-	import { PlayerEvent } from '$lib/Player';
 	import { onMount } from 'svelte';
-	import HexagonalCoordinateSystem, {
-		HexagonalAngle,
-		HexagonalCoordinatePositioning
-	} from '$lib/tiling/HexagonalCoordinateSystem';
+	import { PlayerEvent } from '../../lib/Player';
 
-	let hexagonalAngle = HexagonalAngle.pointy;
-	let hexagonalPositioning = HexagonalCoordinatePositioning.oddRow;
+	let hexGridElement: HTMLElement;
 
-	let showControls = true;
+	const orientation = Orientation.FLAT;
+	const hexSize = 50;
+	const xMax = 4;
+	const yMax = 3;
 
-	let hexSize = 30;
-	let xMax = 8;
-	let yMax = 6;
+	let svgContainer: SVG;
+	let player: Player;
+	let playerPosition: Hex;
+	let hexDefinition;
+	let grid: Grid<Hex>;
 
-	$: tileset = new Tileset(
-		hexSize,
-		xMax,
-		yMax,
-		(hcs = new HexagonalCoordinateSystem(hexagonalAngle, hexagonalPositioning))
-	);
-	$: player = new Player(Math.ceil(xMax / 2), Math.ceil(yMax / 2), tileset);
-
-	let playerX: number = 0;
-	let playerY: number = 0;
+	$: hexDefinition = defineHex({
+		dimensions: hexSize,
+		orientation: orientation,
+		origin: 'topLeft'
+	});
+	$: grid = new Grid(hexDefinition, rectangle({ width: xMax, height: yMax }));
+	$: player = new Player(grid.createHex([0, 0]), grid);
+	$: playerPosition = player.position;
 
 	onMount(() => {
-		playerX = player.x;
-		playerY = player.y;
-		player.on(PlayerEvent.MOVE, () => {
-			playerX = player.x;
-			playerY = player.y;
+		if (!hexDefinition || !grid) {
+			return;
+		}
+
+		// Clear the board
+		for (const child of hexGridElement.children) {
+			hexGridElement.removeChild(child);
+		}
+
+		player.on(PlayerEvent.MOVE, function () {
+			redraw();
 		});
+
+		svgContainer = SVG().addTo(hexGridElement).size('100%', '100%');
+
+		redraw();
 	});
 
-	// FIXME: this is wrong yet
-	const keymap = {
-		97: (p: Player) =>
-			hexagonalAngle === HexagonalAngle.pointy ? p.moveDownLeft() : p.moveDownLeft(), // numpad1
-		98: (p: Player) => (hexagonalAngle === HexagonalAngle.pointy ? null : p.moveDown()), // numpad2
-		99: (p: Player) => (hexagonalAngle === HexagonalAngle.pointy ? p.moveDownRight() : null), // numpad3
-		100: (p: Player) => (hexagonalAngle === HexagonalAngle.pointy ? p.moveLeft() : p.moveUp()), // numpad4
-		102: (p: Player) => (hexagonalAngle === HexagonalAngle.pointy ? p.moveRight() : p.moveRight()), // numpad6
-		103: (p: Player) => (hexagonalAngle === HexagonalAngle.pointy ? p.moveLeft() : p.moveUpLeft()), // numpad7
-		104: (p: Player) => (hexagonalAngle === HexagonalAngle.pointy ? null : p.moveUp()), // numpad8
-		105: (p: Player) => (hexagonalAngle === HexagonalAngle.pointy ? p.moveUpRight() : null) // numpad9
-	};
-
 	function onKeyDown(e) {
-		if (keymap[e.keyCode]) {
-			keymap[e.keyCode](player);
-		}
+		player.keyDown(e.keyCode);
+		playerPosition = player.position;
+	}
+
+	function redraw() {
+		svgContainer.clear();
+
+		grid.forEach(function (hex: Hex) {
+			const polygon = svgContainer
+				// create a polygon from a hex's corner points
+				.polygon(hex.corners.map(({ x, y }) => `${x},${y}`))
+				.fill('none')
+				.stroke({ width: 2, color: '#999' });
+
+			return svgContainer.group().add(polygon);
+		});
+
+		let playerPoint = hexToPoint(player.position);
+		svgContainer.text('🧙‍♂️').move(playerPoint.x, playerPoint.y).fill('#f00');
 	}
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
 
 <div id="controls">
-	<button id="control-toggle" type="button" on:click={() => (showControls = !showControls)}
-		>Show controls</button
-	>
-	<div id="control-content" style="display:{showControls ? 'block' : 'none'};">
-		<div>Max X: <input type="range" min="2" max="20" step="1" bind:value={xMax} /> ({xMax})</div>
-		<div>Max Y: <input type="range" min="2" max="20" step="1" bind:value={yMax} /> ({yMax})</div>
-		<div>
-			Hex size: <input type="range" min="5" max="100" step="5" bind:value={hexSize} /> ({hexSize})
-		</div>
-		<div>
-			Style: <button type="button" on:click={() => (hexagonalAngle = HexagonalAngle.pointy)}
-				>Pointy</button
-			><button type="button" on:click={() => (hexagonalAngle = HexagonalAngle.flat)}>Flat</button>
-		</div>
-		<div>Use the numpad to move your character.</div>
-		<div>Current character position: <strong>{playerX}:{playerY}</strong></div>
+	<div>
+		Current character coordinates: <strong>{playerPosition.toString()}</strong>
 	</div>
 </div>
 
 <div id="board-container">
-	<div
-		id="board"
-		style="
-        --board-width: {tileset.boardWidth}px;
-        --board-height: {tileset.boardHeight}px;
-        --tile-width: {tileset.tileWidth}px;
-        --tile-height: {tileset.tileHeight}px;
-        --tile-max-x: {tileset.xMax};
-        --tile-max-y: {tileset.yMax};
-    "
-	>
-		{#each tileset.board as tiles}
-			<div class="tiles_row">
-				{#each tiles as tile}
-					<HexagonalShape {tile} content={`${tile.x}:${tile.y}`} />
-				{/each}
-			</div>
-		{/each}
-		{#key player}
-			<PlayerDisplay {player} />
-		{/key}
+	<div id="board" style="--board-width: {grid.pixelWidth}px; --board-height: {grid.pixelHeight}px;">
+		<div id="hexGrid" bind:this={hexGridElement} />
+		<div id="charactersOverlay">
+			<!--			<PlayerDisplay {player} />-->
+		</div>
 	</div>
 </div>
 
@@ -137,11 +116,12 @@
 			height: var(--board-height);
 			min-width: var(--board-width);
 			min-height: var(--board-height);
-			border: solid 1px black;
-			.tiles_row {
-				width: 100%;
+			& > * {
 				position: absolute;
-				height: calc(var(--tile-height));
+				width: 100%;
+				height: 100%;
+				top: 0;
+				left: 0;
 			}
 		}
 	}

@@ -3,9 +3,6 @@
 		<li>
 			<a href="/test">Testing/benchmarking page</a>
 		</li>
-		<li>
-			<a href="/game">Game page</a>
-		</li>
 	</ul>
 </nav>
 
