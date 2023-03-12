@@ -24,7 +24,7 @@
 		hexSize,
 		xMax,
 		yMax,
-		new HexagonalCoordinateSystem(hexagonalAngle, hexagonalPositioning)
+		(hcs = new HexagonalCoordinateSystem(hexagonalAngle, hexagonalPositioning))
 	);
 	$: player = new Player(Math.ceil(xMax / 2), Math.ceil(yMax / 2), tileset);
 

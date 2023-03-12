@@ -2,46 +2,46 @@
 // Using "flat" hex style, the "hex size" or "hex diameter" is the actual width.
 // Check https://www.redblobgames.com/grids/hexagons/#basics
 export enum HexagonalAngle {
-  pointy = "pointy",
-  flat = "flat",
+	pointy = 'pointy',
+	flat = 'flat'
 }
 
 // Check out https://www.redblobgames.com/grids/hexagons/#coordinates;
 export enum HexagonalCoordinatePositioning {
-  // Pointy style
-  oddRow = "oddRow",
-  evenRow = "evenRow",
+	// Pointy style
+	oddRow = 'oddRow',
+	evenRow = 'evenRow',
 
-  // Flat style
-  oddColumns = "oddColumns",
-  evenColumns = "evenColumns",
+	// Flat style
+	oddColumns = 'oddColumns',
+	evenColumns = 'evenColumns',
 
-  axial = "axial",
-  cube = "cube",
-  doubled = "doubled",
+	axial = 'axial',
+	cube = 'cube',
+	doubled = 'doubled'
 }
 
 export default class HexagonalCoordinateSystem {
-  private readonly _angle: HexagonalAngle;
-  private readonly _positioning: HexagonalCoordinatePositioning;
+	private readonly _angle: HexagonalAngle;
+	private readonly _positioning: HexagonalCoordinatePositioning;
 
-  constructor(angle: HexagonalAngle, positioning: HexagonalCoordinatePositioning) {
-    this._angle = angle;
-    this._positioning = positioning;
-  }
+	constructor(angle: HexagonalAngle, positioning: HexagonalCoordinatePositioning) {
+		this._angle = angle;
+		this._positioning = positioning;
+	}
 
-  get angle(): HexagonalAngle {
-    return this._angle;
-  }
+	get angle(): HexagonalAngle {
+		return this._angle;
+	}
 
-  get positioning(): HexagonalCoordinatePositioning {
-    return this._positioning;
-  }
+	get positioning(): HexagonalCoordinatePositioning {
+		return this._positioning;
+	}
 
-  public static default(): HexagonalCoordinateSystem {
-    return new HexagonalCoordinateSystem(
-      HexagonalAngle.pointy,
-      HexagonalCoordinatePositioning.oddRow
-    );
-  }
+	public static default(): HexagonalCoordinateSystem {
+		return new HexagonalCoordinateSystem(
+			HexagonalAngle.pointy,
+			HexagonalCoordinatePositioning.oddRow
+		);
+	}
 }
