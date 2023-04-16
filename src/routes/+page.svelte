@@ -2,6 +2,7 @@
 	<ul>
 		<li>
 			<a href="/test">Testing/benchmarking page</a>
+			<a href="/game">Game</a>
 		</li>
 	</ul>
 </nav>

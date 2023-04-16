@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { SVG } from '@svgdotjs/svg.js';
 	import { defineHex, Grid, rectangle, Orientation, Hex, hexToPoint } from 'honeycomb-grid';
-	import Player from '$lib/Player';
+	import Player from '../../lib/game/Player';
 	import { onMount } from 'svelte';
-	import { PlayerEvent } from '../../lib/Player';
+	import { PlayerEvent } from '../../lib/game/Player';
 
 	let hexGridElement: HTMLElement;
 

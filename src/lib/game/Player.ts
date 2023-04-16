@@ -1,6 +1,6 @@
 import type { Hex } from 'honeycomb-grid';
 import { Direction, fromCoordinates, Grid, move } from 'honeycomb-grid';
-import { keymap } from './keymap';
+import { keymap } from '../keymap';
 
 export enum PlayerEvent {
 	MOVE = 'move'
@@ -20,7 +20,7 @@ export default class Player {
 	}
 
 	public keyDown(keyCode: number) {
-		let direction: number | undefined = keymap[keyCode];
+		const direction: number | undefined = keymap[keyCode];
 
 		if (direction === undefined) {
 			return;
@@ -42,8 +42,9 @@ export default class Player {
 	}
 
 	public on(event: PlayerEvent, callback: any): void {
-		let events = this.eventListeners.get(event) || [];
+		const events = this.eventListeners.get(event) || [];
 		events.push(callback);
+
 		this.eventListeners.set(event, events);
 	}
 
@@ -54,7 +55,7 @@ export default class Player {
 	}
 
 	private dispatch(event: PlayerEvent): void {
-		let events = this.eventListeners.get(event) || [];
+		const events = this.eventListeners.get(event) || [];
 
 		events.forEach((callback: PlayerEventCallback) => callback(this));
 	}
