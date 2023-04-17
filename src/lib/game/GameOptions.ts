@@ -1,13 +1,8 @@
-import {Orientation} from "honeycomb-grid";
-
-import type {GridRendererOptions} from "../renderer/GridRenderer";
+import type {SceneConstructor} from "./Scene";
+import DefaultScene from "./components/DefaultScene.svelte";
 
 export type GameOptions = {
-    renderer: GridRendererOptions,
-    hexSize: number,
-    hexOrientation: Orientation,
-    baseXMax: number,
-    baseYMax: number,
+    defaultScene: SceneConstructor,
 }
 
 export function getConfig(options: Partial<GameOptions>): GameOptions {
@@ -21,12 +16,6 @@ export function getConfig(options: Partial<GameOptions>): GameOptions {
 
 function defaults(): Partial<GameOptions> {
     return {
-        renderer: {
-            type: "svgjs",
-        },
-        hexSize: 50,
-        hexOrientation: Orientation.FLAT,
-        baseXMax: 3,
-        baseYMax: 3,
+        defaultScene: DefaultScene,
     } as GameOptions;
 }

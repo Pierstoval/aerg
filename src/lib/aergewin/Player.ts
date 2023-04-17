@@ -1,5 +1,5 @@
 import type { Hex } from 'honeycomb-grid';
-import { Direction, fromCoordinates, Grid, move } from 'honeycomb-grid';
+import { fromCoordinates, Grid, move } from 'honeycomb-grid';
 import { keymap } from '../keymap';
 
 export enum PlayerEvent {
@@ -12,9 +12,9 @@ export default class Player {
 	private eventListeners: Map<PlayerEvent, PlayerEventCallback[]> = new Map();
 
 	private _position: Hex;
-	private _grid: Grid<any>;
+	private _grid: Grid<Hex>;
 
-	constructor(position: Hex, grid: Grid<any>) {
+	constructor(position: Hex, grid: Grid<Hex>) {
 		this._grid = grid;
 		this._position = position;
 	}

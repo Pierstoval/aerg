@@ -1,15 +1,14 @@
 <script lang="ts">
     import Game from "../../lib/game/Game";
     import {onMount} from "svelte";
+    import MainMenu from "../../lib/scenes/MainMenu.svelte";
 
     let gameElement: HTMLElement;
 
-    const players = [
-        {name: 'Foo'},
-    ];
-
     onMount(() => {
-        const game = new Game(players, gameElement);
+        const game = new Game(gameElement, {
+            defaultScene: MainMenu
+        });
 
         console.info('Game', game);
     });

@@ -1,95 +1,53 @@
-import type {Hex} from "honeycomb-grid";
-import {Grid, defineHex, rectangle} from "honeycomb-grid";
-import Player from "./Player";
-import type {PlayerDefinition} from "./PlayerDefinition";
+import {writable, type Writable} from "svelte/store";
 import type {GameOptions} from "./GameOptions";
 import {getConfig} from "./GameOptions";
-import {getRenderer} from "../renderer/getRenderer";
-import type GridRenderer from "../renderer/GridRenderer";
-import type {FeatureMode} from "./FeatureMode";
-import type {FeatureState} from "./FeatureState";
-import {writable, type Writable, type Readable, derived} from "svelte/store";
+import type {SceneConstructor, SceneInstance} from "./Scene";
 
 export default class Game {
     private readonly gameContainerElement: HTMLElement;
-    private readonly rendererContainerElement: HTMLElement;
-    private readonly _players: Map<string, Player> = new Map();
-    private readonly _grid: Grid<Hex>;
-    private readonly hexDefinition: typeof Hex;
-    private readonly options: GameOptions;
-    private readonly renderer: GridRenderer;
+    private readonly _options: GameOptions;
 
-    private _currentPlayerStore: Writable<Player|undefined> = writable();
-    private _currentFeatureModeStore: Writable<FeatureMode> = writable('default');
-    private _currentFeatureStateStore: Writable<FeatureState|undefined> = writable();
+    private _currentSceneStore: Writable<SceneConstructor> = writable();
 
-    constructor(players: PlayerDefinition[], gameContainerElement: HTMLElement, options?: Partial<GameOptions>) {
-        this.options = getConfig(options as GameOptions);
+    private _scenesCache: Map<SceneConstructor, SceneInstance> = new Map();
+
+    constructor(gameContainerElement: HTMLElement, options?: Partial<GameOptions>) {
+        this._options = getConfig(options as GameOptions);
 
         this.gameContainerElement = gameContainerElement;
         this.gameContainerElement.innerHTML = '';
 
-        this.rendererContainerElement = document.createElement('div');
-        this.rendererContainerElement.className = "game_renderer";
-        this.gameContainerElement.appendChild(this.rendererContainerElement);
-
-        this.renderer = getRenderer(this, this.options.renderer.type, this.rendererContainerElement, this.options.renderer);
-
-        this.hexDefinition = defineHex({
-            dimensions: this.options.hexSize,
-            orientation: this.options.hexOrientation,
-            origin: 'topLeft'
+        this._currentSceneStore.set(this._options.defaultScene);
+        this._currentSceneStore.subscribe((scene: SceneConstructor|undefined) => {
+            if (!scene) {
+                console.warn('Set an empty scene in the scene store.');
+                return;
+            }
+            this.renderSceneInternal(scene);
         });
+    }
 
-        this._grid = new Grid(this.hexDefinition, rectangle({
-            width: this.options.baseXMax,
-            height: this.options.baseYMax
-        }));
+    get options(): GameOptions {
+        return {...this._options};
+    }
 
-        players.forEach((playerDefinition: PlayerDefinition) => {
-            this._players.set(
-                playerDefinition.name,
-                new Player(this._grid.createHex([0,0]), this._grid)
-            );
+    public renderScene(scene: SceneConstructor) {
+        this._currentSceneStore.set(scene);
+    }
+
+    private renderSceneInternal(scene: SceneConstructor) {
+        const existingInstance = this._scenesCache.get(scene);
+        if (existingInstance) {
+            return existingInstance;
+        }
+
+        const sceneInstance: SceneInstance = new scene({
+            target: this.gameContainerElement,
+            hydrate: true,
+            props: {
+                game: this,
+            }
         });
-
-        this.renderer.render();
-
-        this.setupEvents();
-    }
-
-    get grid(): Grid<Hex> {
-        return this._grid;
-    }
-
-    get players(): Map<string, Player> {
-        return this._players;
-    }
-
-    get currentPlayerStore(): Readable<Player|undefined> {
-        return derived(this._currentPlayerStore, i => i);
-    }
-
-    get currentFeatureModeStore(): Readable<FeatureMode> {
-        return derived(this._currentFeatureModeStore, i => i);
-    }
-
-    get currentFeatureStateStore(): Readable<FeatureState | undefined> {
-        return derived(this._currentFeatureStateStore, i => i);
-    }
-
-    private setupEvents() {
-        this.gameContainerElement.addEventListener('click', () => console.info('click'));
-        this.gameContainerElement.addEventListener('dblclick', () => console.info('dblclick'));
-        this.gameContainerElement.addEventListener('mousedown', () => console.info('mousedown'));
-        this.gameContainerElement.addEventListener('mouseup', () => console.info('mouseup'));
-        this.gameContainerElement.addEventListener('mousemove', () => console.info('mousemove'));
-        this.gameContainerElement.ownerDocument.addEventListener('keydown', () => console.info('keydown'));
-        this.gameContainerElement.ownerDocument.addEventListener('keyup', () => console.info('keyup'));
-        this.gameContainerElement.ownerDocument.addEventListener('keypress', () => console.info('keypress'));
-    }
-
-    start() {
-        this._currentFeatureModeStore.set('list_players');
+        this._scenesCache.set(scene, sceneInstance);
     }
 }
