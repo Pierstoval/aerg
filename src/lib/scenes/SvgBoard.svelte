@@ -1,9 +1,10 @@
 <script lang="ts">
     import {defineHex, Grid, type Hex, hexToPoint, Orientation, rectangle} from "honeycomb-grid";
     import {onMount} from "svelte";
-    import {SVG} from "@svgdotjs/svg.js";
+    import {Svg, SVG} from "@svgdotjs/svg.js";
     import type Game from "../game/Game";
     import Player, {PlayerEvent} from "../aergewin/Player";
+    import Renderer from "../aergewin/Renderer";
 
     export let game: Game;
 
@@ -29,8 +30,9 @@
 
     let players = new Map();
 
+    let renderer: Renderer;
     let hexGridElement: HTMLElement;
-    let svgContainer;
+    let svgContainer: Svg;
     let currentPlayer: string = firstPlayerName;
 
     players.set(firstPlayerName, new Player(firstPlayerName, grid.createHex([0,0]), grid));
@@ -50,6 +52,8 @@
                 goToNextPlayer();
             });
         });
+
+        renderer = new Renderer(grid, players, svgContainer);
 
         redraw();
     });
@@ -79,36 +83,14 @@
                 found = true;
             }
         } while (true);
+
         redraw();
     }
 
     function redraw() {
-        svgContainer.clear();
+        renderer.draw();
 
-        grid.forEach(function (hex: Hex) {
-            drawPolygon(hex);
-        });
-
-        players.forEach((player: Player) => {
-            drawPlayer(player);
-        });
-
-        players = new Map(players); // Force Svelte to refresh where "players" is used in the component
-    }
-
-    function drawPolygon(hex: Hex) {
-        const polygon = svgContainer
-            // create a polygon from a hex's corner points
-            .polygon(hex.corners.map(({ x, y }) => `${x},${y}`))
-            .fill('none')
-            .stroke({ width: 2, color: '#999' });
-
-        svgContainer.group().add(polygon);
-    }
-
-    function drawPlayer(player: Player) {
-        const playerPoint = hexToPoint(player.position);
-        svgContainer.text(player.name).move(playerPoint.x, playerPoint.y).fill('#800');
+        players = new Map(players); // Forces Svelte to refresh where "players" is used in the component
     }
 
     function clickGrid(e: MouseEvent) {

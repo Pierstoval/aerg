@@ -15,5 +15,13 @@
 </script>
 
 <div id="game" bind:this={gameElement}>
-    Loading...
+    <h1>Loading...</h1>
 </div>
+
+<style lang="scss">
+    #game {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>

@@ -9,8 +9,24 @@
     }
 </script>
 
-<h1>Hello!</h1>
+<main>
+    <h1>Hello!</h1>
+    <p>Let's start a game:</p>
+    <button type="button" on:click={start}>Start</button>
+</main>
 
-<p>Let's start a game:</p>
-
-<button type="button" on:click={start}>Start</button>
+<style lang="scss">
+    main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        button {
+            padding: 0.5rem 1rem;
+            margin: 0.5rem;
+            &:hover {
+                cursor: pointer;
+            }
+        }
+    }
+</style>
