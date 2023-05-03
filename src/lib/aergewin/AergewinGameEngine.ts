@@ -1,7 +1,6 @@
 import type Player from "./Player";
 import type {PlayerName} from "./Player";
 import type {Grid, Hex} from "honeycomb-grid";
-import type {ArrayXY, Svg} from "@svgdotjs/svg.js";
 import Renderer from "./Renderer";
 import type {Direction} from "honeycomb-grid";
 import {keymap} from "../keymap";
@@ -14,10 +13,11 @@ export default class AergewinGameEngine {
 
     constructor(
         grid: Grid<Hex>,
+        gridElement: HTMLElement,
+        hudElement: HTMLElement,
         players: Map<string, Player>,
-        svgContainer: Svg
     ) {
-        this.renderer = new Renderer(grid, players, svgContainer);
+        this.renderer = new Renderer(grid, players, gridElement, hudElement);
         this.players = players;
         this.currentPlayer = this.getFirstPlayerName();
     }

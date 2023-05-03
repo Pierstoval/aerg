@@ -1,7 +1,6 @@
 <script lang="ts">
-    import {defineHex, Grid, type Hex, hexToPoint, Orientation, rectangle} from "honeycomb-grid";
+    import {defineHex, Grid, type Hex, Orientation, rectangle} from "honeycomb-grid";
     import {onMount} from "svelte";
-    import {SVG, Svg} from "@svgdotjs/svg.js";
     import Player, {PlayerEvent} from "../aergewin/Player";
     import AergewinGameEngine from "../aergewin/AergewinGameEngine";
 
@@ -29,7 +28,7 @@
 
     let gameEngine: AergewinGameEngine;
     let hexGridElement: HTMLElement;
-    let svgContainer: typeof Svg;
+    let hudElement: HTMLElement;
     let currentPlayer: string = firstPlayerName;
 
     players.set(firstPlayerName, new Player(firstPlayerName, grid.createHex([0,0]), grid));
@@ -42,9 +41,6 @@
             hexGridElement.removeChild(child);
         }
 
-        svgContainer = SVG();
-        svgContainer.addTo(hexGridElement).size('100%', '100%');
-
         players.forEach((player: Player) => {
             player.on(PlayerEvent.MOVE, () => {
                 currentPlayer = gameEngine.getNextPlayer(currentPlayer);
@@ -52,7 +48,7 @@
             });
         });
 
-        gameEngine = new AergewinGameEngine(grid, players, svgContainer);
+        gameEngine = new AergewinGameEngine(grid, hexGridElement, hudElement, players);
     });
 
     function clickGrid(e: MouseEvent) {
@@ -84,15 +80,9 @@
 
 <div id="game-container">
     <div id="board-container">
-        <div id="HUD">
-            <h2>Actions spent:</h2>
-            {#each [...players.values()] as player}
-                <p>{player.name} : {player.actionsSpent}</p>
-            {/each}
-        </div>
+        <div id="HUD" bind:this={hudElement}></div>
         <div id="board" style="--board-width: {grid.pixelWidth}px; --board-height: {grid.pixelHeight}px;">
             <div id="hexGrid" bind:this={hexGridElement}></div>
-            <div id="charactersOverlay"></div>
         </div>
     </div>
 </div>
