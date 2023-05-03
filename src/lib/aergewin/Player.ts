@@ -1,4 +1,4 @@
-import type { Hex } from 'honeycomb-grid';
+import type {Direction, Hex} from 'honeycomb-grid';
 import { fromCoordinates, Grid, move } from 'honeycomb-grid';
 import { keymap } from '../keymap';
 
@@ -11,16 +11,28 @@ export type PlayerEventCallback = (player: Player) => void;
 export default class Player {
 	private eventListeners: Map<PlayerEvent, PlayerEventCallback[]> = new Map();
 
+	private readonly _name: string;
 	private _position: Hex;
 	private _grid: Grid<Hex>;
 
-	constructor(position: Hex, grid: Grid<Hex>) {
+	private _actionsSpent = 0;
+
+	constructor(name: string, position: Hex, grid: Grid<Hex>) {
+		this._name = name;
 		this._grid = grid;
 		this._position = position;
 	}
 
-	public keyDown(keyCode: number) {
-		const direction: number | undefined = keymap[keyCode];
+	get name(): string {
+		return this._name;
+	}
+
+	get actionsSpent(): number {
+		return this._actionsSpent;
+	}
+
+	public keyDown(key: string) {
+		const direction: Direction | undefined = keymap[key];
 
 		if (direction === undefined) {
 			return;
@@ -28,13 +40,22 @@ export default class Player {
 
 		this._grid
 			.traverse([fromCoordinates(this._position), move(direction)])
-			.map((p) => (this._position = p));
+			.map((p: Hex) => {
+				const distance = this._grid.distance(this._position, p);
+				this._actionsSpent += distance;
+				this._position = p;
+
+				return p;
+			});
 
 		this.dispatch(PlayerEvent.MOVE);
 	}
 
-	public updatePosition(hex: Hex) {
+	public moveTo(hex: Hex) {
+		const distance = this._grid.distance(this._position, hex);
+		this._actionsSpent += distance;
 		this._position = hex;
+		this.dispatch(PlayerEvent.MOVE);
 	}
 
 	get position(): Hex {
