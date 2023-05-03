@@ -1,12 +1,9 @@
 <script lang="ts">
     import {defineHex, Grid, type Hex, hexToPoint, Orientation, rectangle} from "honeycomb-grid";
     import {onMount} from "svelte";
-    import {Svg, SVG} from "@svgdotjs/svg.js";
-    import type Game from "../game/Game";
+    import {SVG, Svg} from "@svgdotjs/svg.js";
     import Player, {PlayerEvent} from "../aergewin/Player";
-    import Renderer from "../aergewin/Renderer";
-
-    export let game: Game;
+    import AergewinGameEngine from "../aergewin/AergewinGameEngine";
 
     const firstPlayerName = 'Foo';
 
@@ -30,9 +27,9 @@
 
     let players = new Map();
 
-    let renderer: Renderer;
+    let gameEngine: AergewinGameEngine;
     let hexGridElement: HTMLElement;
-    let svgContainer: Svg;
+    let svgContainer: typeof Svg;
     let currentPlayer: string = firstPlayerName;
 
     players.set(firstPlayerName, new Player(firstPlayerName, grid.createHex([0,0]), grid));
@@ -45,53 +42,18 @@
             hexGridElement.removeChild(child);
         }
 
-        svgContainer = SVG().addTo(hexGridElement).size('100%', '100%');
+        svgContainer = SVG();
+        svgContainer.addTo(hexGridElement).size('100%', '100%');
 
         players.forEach((player: Player) => {
             player.on(PlayerEvent.MOVE, () => {
-                goToNextPlayer();
+                currentPlayer = gameEngine.getNextPlayer(currentPlayer);
+                redraw();
             });
         });
 
-        renderer = new Renderer(grid, players, svgContainer);
-
-        redraw();
+        gameEngine = new AergewinGameEngine(grid, players, svgContainer);
     });
-
-    function goToNextPlayer() {
-        const entries = players.entries();
-        let found = false;
-        do {
-            const entry = entries.next();
-            if (entry.done) {
-                // Last item, no value here
-                currentPlayer = firstPlayerName;
-                break;
-            }
-
-            let entryName = entry.value[1].name;
-
-            if (found) {
-                currentPlayer = entryName;
-                break;
-            }
-
-            if (entryName === currentPlayer) {
-                // Set flag to "true" so *next iteration* will set next player.
-                // If next iteration is empty (thus current iteration = last item),
-                //   then next player is the first player in the list.
-                found = true;
-            }
-        } while (true);
-
-        redraw();
-    }
-
-    function redraw() {
-        renderer.draw();
-
-        players = new Map(players); // Forces Svelte to refresh where "players" is used in the component
-    }
 
     function clickGrid(e: MouseEvent) {
         const offsetX = e.offsetX;
@@ -101,12 +63,20 @@
         });
 
         if (hexCoordinates) {
-            players.get(currentPlayer).moveTo(hexCoordinates);
+            gameEngine.getCurrentPlayer().moveTo(hexCoordinates);
         }
     }
 
     function keyDown(e: KeyboardEvent) {
-        players.get(currentPlayer).keyDown(e.key);
+        gameEngine.keyDown(e.key);
+        redraw();
+    }
+
+    function redraw() {
+        gameEngine.redraw();
+
+        // TODO: find a better solution (a svelte store?)
+        players = new Map(players); // Force svelte to refresh players everytime.
     }
 </script>
 

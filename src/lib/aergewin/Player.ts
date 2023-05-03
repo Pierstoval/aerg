@@ -2,6 +2,8 @@ import type {Direction, Hex} from 'honeycomb-grid';
 import { fromCoordinates, Grid, move } from 'honeycomb-grid';
 import { keymap } from '../keymap';
 
+export type PlayerName = string;
+
 export enum PlayerEvent {
 	MOVE = 'move'
 }
@@ -31,13 +33,7 @@ export default class Player {
 		return this._actionsSpent;
 	}
 
-	public keyDown(key: string) {
-		const direction: Direction | undefined = keymap[key];
-
-		if (direction === undefined) {
-			return;
-		}
-
+	public goToDirection(direction: Direction) {
 		this._grid
 			.traverse([fromCoordinates(this._position), move(direction)])
 			.map((p: Hex) => {

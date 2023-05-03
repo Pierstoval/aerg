@@ -5,10 +5,10 @@ import {hexToPoint} from "honeycomb-grid";
 
 export default class Renderer {
     private grid: Grid<Hex>;
-    private players: Map<any, any>;
+    private players: Map<string, Player>;
     private svgContainer: Svg;
 
-    constructor(grid: Grid<Hex>, players: Map<any, any>, svgContainer: Svg) {
+    constructor(grid: Grid<Hex>, players: Map<string, Player>, svgContainer: Svg) {
         this.grid = grid;
         this.players = players;
         this.svgContainer = svgContainer;
