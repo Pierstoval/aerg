@@ -1,8 +1,12 @@
 import type {Direction, Hex} from 'honeycomb-grid';
 import { fromCoordinates, Grid, move } from 'honeycomb-grid';
-import { keymap } from '../keymap';
+import {Color} from "@svgdotjs/svg.js";
 
 export type PlayerName = string;
+
+export type PlayerConstructor = {
+	name: string,
+};
 
 export enum PlayerEvent {
 	MOVE = 'move'
@@ -14,15 +18,28 @@ export default class Player {
 	private eventListeners: Map<PlayerEvent, PlayerEventCallback[]> = new Map();
 
 	private readonly _name: string;
+	private readonly _orderIndex: number;
+	private readonly _color: Color;
 	private _position: Hex;
 	private _grid: Grid<Hex>;
+	private _isActive: boolean = false;
 
 	private _actionsSpent = 0;
 
-	constructor(name: string, position: Hex, grid: Grid<Hex>) {
+	constructor(name: string, orderIndex: number, numberOfPlayers: number, position: Hex, grid: Grid<Hex>) {
 		this._name = name;
+		this._orderIndex = orderIndex;
 		this._grid = grid;
 		this._position = position;
+		this._color = new Color(((orderIndex-1) / (numberOfPlayers)) * 360, 90, 50, 'hsl');
+	}
+
+	get color(): Color {
+		return this._color;
+	}
+
+	get index(): number {
+		return this._orderIndex;
 	}
 
 	get name(): string {
@@ -31,6 +48,18 @@ export default class Player {
 
 	get actionsSpent(): number {
 		return this._actionsSpent;
+	}
+
+	get isActive(): boolean {
+		return this._isActive;
+	}
+
+	public activate() {
+		this._isActive = true;
+	}
+
+	public deactivate() {
+		this._isActive = false;
 	}
 
 	public goToDirection(direction: Direction) {
@@ -49,6 +78,10 @@ export default class Player {
 
 	public moveTo(hex: Hex) {
 		const distance = this._grid.distance(this._position, hex);
+		if (distance === 0) {
+			// Do nothing if player is not moving.
+			return;
+		}
 		this._actionsSpent += distance;
 		this._position = hex;
 		this.dispatch(PlayerEvent.MOVE);

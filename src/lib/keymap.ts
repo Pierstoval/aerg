@@ -1,5 +1,12 @@
 import { Direction } from 'honeycomb-grid';
 
+export type KeyType<Direction> = Direction;
+
+export type KeyValue<T> = {
+	type: KeyType<T>,
+	value: T,
+}
+
 export const keymap: { [key: string]: Direction } = {
 	"1": Direction.SW,
 	"2": Direction.S,
