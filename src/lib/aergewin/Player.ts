@@ -95,8 +95,9 @@ export default class Player {
 			return false;
 		}
 
-		return this._actionsSpent + distance <= 7;
+		// return this._actionsSpent + distance <= 7;
 
+		return true; // TODO: remove when not debugging.
 	}
 
 	get position(): Hex {

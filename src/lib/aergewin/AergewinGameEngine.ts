@@ -1,6 +1,6 @@
 import Player, {type PlayerConstructor} from "./Player";
 import type {PlayerName} from "./Player";
-import {Grid, type Hex, line, ring, spiral} from "honeycomb-grid";
+import {Direction, Grid, type Hex, hexToOffset, hexToPoint, line, ring, spiral} from "honeycomb-grid";
 import Renderer from "./Renderer";
 import {keymap} from "../keymap";
 import {PlayerEvent} from "./Player";
@@ -12,10 +12,8 @@ import {DrawEvent, GameEvent} from "./Event";
 
 export default class AergewinGameEngine {
     public static readonly options = {
-        hexSize: 60,
+        hexSize: 70,
         hexOrientation: Orientation.FLAT,
-        baseXMax: 3,
-        baseYMax: 3,
     };
 
     private readonly game: Game;
@@ -40,8 +38,6 @@ export default class AergewinGameEngine {
         this.currentPlayer = this.getFirstPlayerName();
         this.terrain = this.createTerrain();
 
-        this.refreshGrid();
-
         this.renderer = new Renderer(this.grid, this.players, this.terrain, hexGridElement, hudElement);
     }
 
@@ -64,6 +60,7 @@ export default class AergewinGameEngine {
         this.players.forEach((player: Player) => {
             player.on(PlayerEvent.MOVE, () => {
                 this.currentPlayer = this.getNextPlayer(this.currentPlayer);
+                this.renderer.updateHoverPositions([]);
                 this.redraw();
             });
         });
@@ -86,8 +83,9 @@ export default class AergewinGameEngine {
     public redraw() {
         this.checkGameIsRunning();
 
-        this.renderer.draw();
-        this.dispatch('draw', new DrawEvent(this.game, this, this.renderer));
+        this.refreshGrid();
+
+        this.renderer.draw(() => this.dispatch('draw', new DrawEvent(this.game, this, this.renderer)));
     }
 
     public keyDown(key: string) {
@@ -106,13 +104,16 @@ export default class AergewinGameEngine {
     public click(e: MouseEvent) {
         this.checkGameIsRunning();
 
-        const offsetX = e.offsetX - (this.grid.pixelWidth / 2);
-        const offsetY = e.offsetY - (this.grid.pixelHeight / 2);
+        const offsetX = e.offsetX + this.renderer.getMinX();
+        const offsetY = e.offsetY + this.renderer.getMinY();
         const hexCoordinates = this.grid.pointToHex({x: offsetX, y: offsetY}, {
             allowOutside: false,
         });
 
         if (hexCoordinates && this.getCurrentPlayer().canMoveTo(hexCoordinates)) {
+            if (!this.hexContainsTerrain(hexCoordinates)) {
+                this.terrain.push(this.createNewTerrainAt(hexCoordinates));
+            }
             this.getCurrentPlayer().moveTo(hexCoordinates);
         }
     }
@@ -120,8 +121,8 @@ export default class AergewinGameEngine {
     public mouseMove(e: MouseEvent) {
         this.checkGameIsRunning();
 
-        const offsetX = e.offsetX - (this.grid.pixelWidth / 2);
-        const offsetY = e.offsetY - (this.grid.pixelHeight / 2);
+        const offsetX = e.offsetX + this.renderer.getMinX();
+        const offsetY = e.offsetY + this.renderer.getMinY();
         const hexCoordinates = this.grid.pointToHex({x: offsetX, y: offsetY}, {
             allowOutside: false,
         });
@@ -179,8 +180,6 @@ export default class AergewinGameEngine {
                 found = true;
             }
         } while (true);
-
-        throw new Error('Unrecoverable error: could not determine next player for current turn.');
     }
 
     private checkGameIsRunning() {
@@ -243,8 +242,16 @@ export default class AergewinGameEngine {
 
     private refreshGrid() {
         this.terrain.forEach((terrainTile: TerrainTile) => {
-            const newHexes = this.grid.traverse(ring({center: terrainTile.position, radius: 1}));
-            this.grid.setHexes([...newHexes]);
+            const newHexes = this.getNewHexesAroundPosition(terrainTile.position);
+            if (newHexes.length) {
+                this.grid.setHexes(newHexes);
+            }
+        });
+        this.players.forEach((player: Player) => {
+            const newHexes = this.getNewHexesAroundPosition(player.position);
+            if (newHexes.length) {
+                this.grid.setHexes(newHexes);
+            }
         });
     }
 
@@ -252,5 +259,45 @@ export default class AergewinGameEngine {
         const events = this.eventListeners.get(eventType) || [];
 
         events.forEach((callback: GameEventCallback) => callback(event));
+    }
+
+    private getNewHexesAroundPosition(position: Hex) {
+        const directional = [];
+
+        directional.push(this.grid.neighborOf(position, Direction.N));
+        directional.push(this.grid.neighborOf(position, Direction.NE));
+        directional.push(this.grid.neighborOf(position, Direction.E));
+        directional.push(this.grid.neighborOf(position, Direction.SE));
+        directional.push(this.grid.neighborOf(position, Direction.S));
+        directional.push(this.grid.neighborOf(position, Direction.SW));
+        directional.push(this.grid.neighborOf(position, Direction.W));
+        directional.push(this.grid.neighborOf(position, Direction.NW));
+
+        return directional.filter((hex: Hex) => !this.grid.hasHex(hex));
+    }
+
+    private hexContainsTerrain(hexCoordinates: Hex) {
+        let found = false;
+
+        this.terrain.forEach((tile: TerrainTile) => {
+            if (tile.position.toString() === hexCoordinates.toString()) {
+                found = true;
+            }
+        });
+
+        return found;
+    }
+
+    private createNewTerrainAt(hexCoordinates: Hex) {
+        const terrainMap = [
+            'mountain',
+            'lake',
+            'forest',
+            'plains',
+        ];
+
+        const terrainType = terrainMap[Math.floor(Math.random() * terrainMap.length)];
+
+        return new TerrainTile(terrainType, hexCoordinates, this.grid);
     }
 }

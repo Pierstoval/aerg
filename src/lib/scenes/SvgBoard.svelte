@@ -28,12 +28,13 @@
         gameEngine = new AergewinGameEngine(game, hexGridElement, hudElement, players);
 
         gameEngine.on('draw', function(e: DrawEvent) {
-            console.info('draw');
-            pixelWidth = e.engine.gridPixelWidth;
-            pixelHeight = e.engine.gridPixelHeight;
+            pixelWidth = e.viewbox.width;
+            pixelHeight = e.viewbox.height;
         });
 
         gameEngine.start();
+
+        window.gameEngine = gameEngine;
     });
 
     const clickGrid = (e: MouseEvent) => gameEngine.click(e);

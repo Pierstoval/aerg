@@ -1,4 +1,4 @@
-import type {Grid, Hex} from "honeycomb-grid";
+import type {Grid, Hex, Point} from "honeycomb-grid";
 import type Player from "./Player";
 import type {ArrayXY, Svg} from "@svgdotjs/svg.js";
 import {hexToPoint} from "honeycomb-grid";
@@ -36,16 +36,8 @@ export default class Renderer {
         let minY = Infinity;
 
         const svgContainer = SVG();
-        svgContainer
-            .addTo(gridElement)
-            .size('100%', '100%')
-            .viewbox({
-                x: -this.grid.pixelWidth / 2,
-                y: -this.grid.pixelHeight / 2,
-                width: this.grid.pixelWidth,
-                height: this.grid.pixelHeight
-            })
-        ;
+        svgContainer.addTo(gridElement).size('100%', '100%');
+
         this.svgContainer = svgContainer;
 
         this.hudComponent = new HUDComponent({
@@ -77,13 +69,89 @@ export default class Renderer {
         }
     }
 
-    public draw() {
+    public getMinX(): number {
+        let min = Infinity;
+
+        this.grid.forEach((hex: Hex) => {
+            hex.corners.forEach((point: Point) => {
+                if (min > point.x) {
+                    min = point.x;
+                }
+            });
+        });
+
+        return min;
+    }
+
+    public getMinY(): number {
+        let min = Infinity;
+
+        this.grid.forEach((hex: Hex) => {
+            hex.corners.forEach((point: Point) => {
+                if (min > point.y) {
+                    min = point.y;
+                }
+            });
+        });
+
+        return min;
+    }
+
+    public getMaxX(): number {
+        let max = -Infinity;
+
+        this.grid.forEach((hex: Hex) => {
+            hex.corners.forEach((point: Point) => {
+                if (max < point.x) {
+                    max = point.x;
+                }
+            });
+        });
+
+        return max;
+    }
+
+    public getMaxY(): number {
+        let max = -Infinity;
+
+        this.grid.forEach((hex: Hex) => {
+            hex.corners.forEach((point: Point) => {
+                if (max < point.y) {
+                    max = point.y;
+                }
+            });
+        });
+
+        return max;
+    }
+
+    public getViewbox() {
+        const minX = this.getMinX();
+        const minY = this.getMinY();
+        const maxX = this.getMaxX();
+        const maxY = this.getMaxY();
+
+        return {
+            x: minX,
+            y: minY,
+            width: maxX - minX,
+            height: maxY - minY,
+        };
+    }
+
+    public draw(postDrawCallback?: () => any) {
         this.svgContainer.clear();
+
+        this.svgContainer.viewbox(this.getViewbox());
         this.drawGrid();
         this.drawTerrain();
         this.drawPlayers();
         this.drawHUD();
         this.drawHoverTiles();
+
+        if (postDrawCallback) {
+            postDrawCallback();
+        }
     }
 
     private drawHUD() {
@@ -103,10 +171,11 @@ export default class Renderer {
             const polygon = this.svgContainer
                 .polygon(points)
                 .fill('none')
-                .stroke({ width: 1, color: '#eee' });
+                .stroke({ width: 1, color: '#ddd' });
 
             this.svgContainer.group().add(polygon);
         });
+
     }
 
     private drawPlayers() {
@@ -147,10 +216,14 @@ export default class Renderer {
                 .fill('none')
                 .stroke({ width: 1, color: '#000' });
 
+            const corners = [...terrainTile.position.corners];
+            console.info({corners});
             this.svgContainer
-                .text(terrainTile.text)
-                .move(terrainTile.position.x - 10, terrainTile.position.y - 10)
-                .fill('#fff');
+                .image(terrainTile.image)
+                .size(this.grid.hexPrototype.width, this.grid.hexPrototype.height)
+                .move(corners[4].x, corners[5].y)
+                .stroke({width: 1, color: '#ff0000'})
+                .fill('none');
 
             this.svgContainer.group().add(polygon);
         });

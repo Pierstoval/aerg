@@ -21,18 +21,18 @@ export default class TerrainTile {
 		return this._position;
 	}
 
-	get text() {
+	get image() {
 		switch (this.type) {
 			case 'village':
-				return '🏡';
+				return '/tiles/compass.png';
 			case 'mountain':
-				return '🗻';
+				return '/tiles/montagnes.png';
 			case 'lake':
-				return '🐟';
+				return '/tiles/etang.png';
 			case 'forest':
-				return '🌲';
+				return '/tiles/foret.png';
 			case 'plains':
-				return '🌻';
+				return '/tiles/plaines.png';
 			default:
 				throw new Error(`Unrecoverable error: Unknown terrain type "${this.type}".`);
 		}
