@@ -6,9 +6,11 @@ import {SVG} from "@svgdotjs/svg.js";
 import HUDComponent from './HUD.svelte';
 import type {SvelteComponentTyped} from "svelte/types/runtime/internal/dev";
 import AergewinGameEngine from "./AergewinGameEngine";
+import type TerrainTile from "./TerrainTile";
 
 export default class Renderer {
     private _players: Map<string, Player>;
+    private _terrain: Array<TerrainTile>;
     private readonly grid: Grid<Hex>;
     private readonly svgContainer: Svg;
     private readonly hudComponent: SvelteComponentTyped;
@@ -16,11 +18,13 @@ export default class Renderer {
     constructor(
         grid: Grid<Hex>,
         players: Map<string, Player>,
+        terrain: Array<TerrainTile>,
         gridElement: HTMLElement,
         hudElement: HTMLElement
     ) {
         this.grid = grid;
         this._players = players;
+        this._terrain = terrain;
 
         // Clear the board
         for (const child of gridElement.children) {
@@ -57,11 +61,17 @@ export default class Renderer {
         this.draw();
     }
 
+    updateTerrain(terrain: Array<TerrainTile>) {
+        this._terrain = terrain;
+        this.draw();
+    }
+
     public draw() {
         this.svgContainer.clear();
         this.drawHUD();
         this.drawGrid();
         this.drawPlayers();
+        this.drawTerrain();
     }
 
     private drawHUD() {
@@ -81,7 +91,7 @@ export default class Renderer {
             const polygon = this.svgContainer
                 .polygon(points)
                 .fill('none')
-                .stroke({ width: 1, color: '#999' });
+                .stroke({ width: 1, color: '#eee' });
 
             this.svgContainer.group().add(polygon);
         });
@@ -113,6 +123,24 @@ export default class Renderer {
                 .text(String(player.index))
                 .move(playerPoint.x - xOffset - coordinateOffset/2, playerPoint.y - yOffset - coordinateOffset*1.25)
                 .fill('#fff');
+        });
+    }
+
+    private drawTerrain() {
+        this._terrain.forEach((terrainTile: TerrainTile) => {
+            const points: ArrayXY[] = terrainTile.position.corners.map(({ x, y }) => [x, y]);
+
+            const polygon = this.svgContainer
+                .polygon(points)
+                .fill('none')
+                .stroke({ width: 1, color: '#000' });
+
+            this.svgContainer
+                .text(terrainTile.text)
+                .move(terrainTile.position.x - 10, terrainTile.position.y - 10)
+                .fill('#fff');
+
+            this.svgContainer.group().add(polygon);
         });
     }
 }

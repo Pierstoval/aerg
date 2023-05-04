@@ -6,6 +6,7 @@ import {keymap} from "../keymap";
 import {PlayerEvent} from "./Player";
 import type Game from "../game/Game";
 import {defineHex, Orientation, rectangle} from "honeycomb-grid";
+import TerrainTile from "./TerrainTile";
 
 export default class AergewinGameEngine {
     public static readonly options = {
@@ -20,7 +21,7 @@ export default class AergewinGameEngine {
     private readonly renderer: Renderer;
     private started: boolean = false;
     private players: Map<string, Player>;
-    private terrain: Array<object>;
+    private terrain: Array<TerrainTile>;
 
     private currentPlayer: PlayerName;
 
@@ -34,10 +35,9 @@ export default class AergewinGameEngine {
         this.grid = this.createGrid();
         this.players = this.createPlayers(players);
         this.currentPlayer = this.getFirstPlayerName();
+        this.terrain = this.createTerrain();
 
-        this.renderer = new Renderer(this.grid, this.players, hexGridElement, hudElement);
-
-        this.terrain = [];
+        this.renderer = new Renderer(this.grid, this.players, this.terrain, hexGridElement, hudElement);
     }
 
     public get gridPixelWidth() {
@@ -184,19 +184,29 @@ export default class AergewinGameEngine {
 
         let i = 1;
         for (const playerConstructor of players) {
+            const player = new Player(
+                playerConstructor.name,
+                i,
+                players.length,
+                this.grid.createHex([0, 0]),
+                this.grid
+            );
             map.set(
                 playerConstructor.name,
-                new Player(
-                    playerConstructor.name,
-                    i,
-                    players.length,
-                    this.grid.createHex([0, 0]),
-                    this.grid
-                )
+                player
             );
             i++;
         }
 
         return map;
+    }
+
+    private createTerrain() {
+        return [
+            new TerrainTile('village', this.grid.createHex([0, 0]), this.grid),
+            new TerrainTile('mountain', this.grid.createHex([1, 0]), this.grid),
+            new TerrainTile('forest', this.grid.createHex([0, -1]), this.grid),
+            new TerrainTile('plains', this.grid.createHex([-1, 1]), this.grid),
+        ];
     }
 }

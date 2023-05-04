@@ -33,13 +33,13 @@
     $: pixelHeight = gameEngine ? gameEngine.gridPixelHeight : 0;
 </script>
 
-<svelte:body on:keydown={keyDown} on:click={clickBody} />
+<svelte:body on:keydown={keyDown} />
 
 <div id="game-container">
     <div id="board-container">
         <div id="HUD" bind:this={hudElement}></div>
         <div id="board" style="--board-width: {pixelWidth}px; --board-height: {pixelHeight}px;">
-            <div id="hexGrid" bind:this={hexGridElement}></div>
+            <div id="hexGrid" bind:this={hexGridElement} on:click={clickBody}></div>
         </div>
     </div>
 </div>

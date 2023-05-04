@@ -32,6 +32,7 @@ export default class Player {
 		this._grid = grid;
 		this._position = position;
 		this._color = new Color(((orderIndex-1) / (numberOfPlayers)) * 360, 90, 50, 'hsl');
+		this._grid.setHexes([position]);
 	}
 
 	get color(): Color {
