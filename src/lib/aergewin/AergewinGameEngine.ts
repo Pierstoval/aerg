@@ -1,12 +1,14 @@
 import Player, {type PlayerConstructor} from "./Player";
 import type {PlayerName} from "./Player";
-import {Grid, type Hex, spiral} from "honeycomb-grid";
+import {Grid, type Hex, line, ring, spiral} from "honeycomb-grid";
 import Renderer from "./Renderer";
 import {keymap} from "../keymap";
 import {PlayerEvent} from "./Player";
 import type Game from "../game/Game";
 import {defineHex, Orientation, rectangle} from "honeycomb-grid";
 import TerrainTile from "./TerrainTile";
+import type {GameEventCallback, GameEventType} from "./Event";
+import {DrawEvent, GameEvent} from "./Event";
 
 export default class AergewinGameEngine {
     public static readonly options = {
@@ -23,6 +25,7 @@ export default class AergewinGameEngine {
     private players: Map<string, Player>;
     private terrain: Array<TerrainTile>;
 
+    private eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
     private currentPlayer: PlayerName;
 
     constructor(
@@ -36,6 +39,8 @@ export default class AergewinGameEngine {
         this.players = this.createPlayers(players);
         this.currentPlayer = this.getFirstPlayerName();
         this.terrain = this.createTerrain();
+
+        this.refreshGrid();
 
         this.renderer = new Renderer(this.grid, this.players, this.terrain, hexGridElement, hudElement);
     }
@@ -82,6 +87,7 @@ export default class AergewinGameEngine {
         this.checkGameIsRunning();
 
         this.renderer.draw();
+        this.dispatch('draw', new DrawEvent(this.game, this, this.renderer));
     }
 
     public keyDown(key: string) {
@@ -106,15 +112,38 @@ export default class AergewinGameEngine {
             allowOutside: false,
         });
 
-        if (hexCoordinates) {
+        if (hexCoordinates && this.getCurrentPlayer().canMoveTo(hexCoordinates)) {
             this.getCurrentPlayer().moveTo(hexCoordinates);
         }
     }
 
-    private checkGameIsRunning() {
-        if (!this.started) {
-            throw new Error('Game not running yet. Have you forgotten to run "game.start()"?');
+    public mouseMove(e: MouseEvent) {
+        this.checkGameIsRunning();
+
+        const offsetX = e.offsetX - (this.grid.pixelWidth / 2);
+        const offsetY = e.offsetY - (this.grid.pixelHeight / 2);
+        const hexCoordinates = this.grid.pointToHex({x: offsetX, y: offsetY}, {
+            allowOutside: false,
+        });
+
+        if (!hexCoordinates) {
+            this.renderer.updateHoverPositions([]);
+            return;
         }
+
+        const player = this.getCurrentPlayer();
+        if (player.canMoveTo(hexCoordinates)) {
+            const hoverList = [...this.grid.traverse(line({start: player.position, stop: hexCoordinates}))];
+            this.renderer.updateHoverPositions(hoverList);
+        }
+    }
+
+
+    public on(eventType: GameEventType, callback: GameEventCallback): void {
+        const listeners = this.eventListeners.get(eventType) || [];
+        listeners.push(callback);
+
+        this.eventListeners.set(eventType, listeners);
     }
 
     public getNextPlayer(currentPlayer: PlayerName): PlayerName {
@@ -154,6 +183,12 @@ export default class AergewinGameEngine {
         throw new Error('Unrecoverable error: could not determine next player for current turn.');
     }
 
+    private checkGameIsRunning() {
+        if (!this.started) {
+            throw new Error('Game not running yet. Have you forgotten to run "game.start()"?');
+        }
+    }
+
     private getFirstPlayer(): Player {
         return this.players.values().next().value;
     }
@@ -170,12 +205,8 @@ export default class AergewinGameEngine {
                 origin: { x: 0, y: 0 }
             }),
             spiral({
-                radius: 2,
+                radius: 1,
             }),
-            // rectangle({
-            //     width: AergewinGameEngine.options.baseXMax,
-            //     height: AergewinGameEngine.options.baseYMax
-            // })
         );
     }
 
@@ -208,5 +239,18 @@ export default class AergewinGameEngine {
             new TerrainTile('forest', this.grid.createHex([0, -1]), this.grid),
             new TerrainTile('plains', this.grid.createHex([-1, 1]), this.grid),
         ];
+    }
+
+    private refreshGrid() {
+        this.terrain.forEach((terrainTile: TerrainTile) => {
+            const newHexes = this.grid.traverse(ring({center: terrainTile.position, radius: 1}));
+            this.grid.setHexes([...newHexes]);
+        });
+    }
+
+    private dispatch(eventType: GameEventType, event: GameEvent): void {
+        const events = this.eventListeners.get(eventType) || [];
+
+        events.forEach((callback: GameEventCallback) => callback(event));
     }
 }

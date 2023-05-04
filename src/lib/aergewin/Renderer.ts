@@ -11,6 +11,7 @@ import type TerrainTile from "./TerrainTile";
 export default class Renderer {
     private _players: Map<string, Player>;
     private _terrain: Array<TerrainTile>;
+    private _hoverOnPositions: Array<Hex> = [];
     private readonly grid: Grid<Hex>;
     private readonly svgContainer: Svg;
     private readonly hudComponent: SvelteComponentTyped;
@@ -66,12 +67,23 @@ export default class Renderer {
         this.draw();
     }
 
+    updateHoverPositions(hexes: Array<Hex>) {
+        const hasChanged = hexes.length !== this._hoverOnPositions.length
+            || hexes.toString() !== this._hoverOnPositions.toString();
+
+        if (hasChanged) {
+            this._hoverOnPositions = hexes;
+            this.draw();
+        }
+    }
+
     public draw() {
         this.svgContainer.clear();
-        this.drawHUD();
         this.drawGrid();
-        this.drawPlayers();
         this.drawTerrain();
+        this.drawPlayers();
+        this.drawHUD();
+        this.drawHoverTiles();
     }
 
     private drawHUD() {
@@ -139,6 +151,21 @@ export default class Renderer {
                 .text(terrainTile.text)
                 .move(terrainTile.position.x - 10, terrainTile.position.y - 10)
                 .fill('#fff');
+
+            this.svgContainer.group().add(polygon);
+        });
+    }
+
+    private drawHoverTiles() {
+        this._hoverOnPositions.forEach((hex: Hex) => {
+            // create a polygon from a hex's corner points
+            const points: ArrayXY[] = hex.corners.map(({ x, y }) => [x, y]);
+
+            const polygon = this.svgContainer
+                .polygon(points)
+                .fill('#000')
+                .opacity(0.05)
+                .stroke({ width: 1, color: '#ddd' });
 
             this.svgContainer.group().add(polygon);
         });

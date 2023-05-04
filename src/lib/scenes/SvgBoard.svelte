@@ -2,12 +2,16 @@
     import {onMount} from "svelte";
     import AergewinGameEngine from "../aergewin/AergewinGameEngine";
     import Game from "../game/Game";
+    import type {DrawEvent} from "../aergewin/Event";
 
     export let game: Game;
 
     let gameEngine: AergewinGameEngine;
     let hexGridElement: HTMLElement;
     let hudElement: HTMLElement;
+
+    let pixelWidth = 0;
+    let pixelHeight = 0;
 
     const players = [
         // {name: 'Alex'},
@@ -22,15 +26,20 @@
 
     onMount(() => {
         gameEngine = new AergewinGameEngine(game, hexGridElement, hudElement, players);
+
+        gameEngine.on('draw', function(e: DrawEvent) {
+            console.info('draw');
+            pixelWidth = e.engine.gridPixelWidth;
+            pixelHeight = e.engine.gridPixelHeight;
+        });
+
         gameEngine.start();
     });
 
-    const clickBody = (e: MouseEvent) => gameEngine.click(e);
+    const clickGrid = (e: MouseEvent) => gameEngine.click(e);
+    const mouseMoveGrid = (e: MouseEvent) => gameEngine.mouseMove(e);
 
     const keyDown = (e: KeyboardEvent) => gameEngine.keyDown(e.key);
-
-    $: pixelWidth = gameEngine ? gameEngine.gridPixelWidth : 0;
-    $: pixelHeight = gameEngine ? gameEngine.gridPixelHeight : 0;
 </script>
 
 <svelte:body on:keydown={keyDown} />
@@ -39,7 +48,7 @@
     <div id="board-container">
         <div id="HUD" bind:this={hudElement}></div>
         <div id="board" style="--board-width: {pixelWidth}px; --board-height: {pixelHeight}px;">
-            <div id="hexGrid" bind:this={hexGridElement} on:click={clickBody}></div>
+            <div id="hexGrid" bind:this={hexGridElement} on:click={clickGrid} on:mousemove={mouseMoveGrid}></div>
         </div>
     </div>
 </div>

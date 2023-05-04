@@ -88,6 +88,17 @@ export default class Player {
 		this.dispatch(PlayerEvent.MOVE);
 	}
 
+	public canMoveTo(hex: Hex) {
+		const distance = this._grid.distance(this._position, hex);
+		if (distance === 0) {
+			// Can't move to the current place
+			return false;
+		}
+
+		return this._actionsSpent + distance <= 7;
+
+	}
+
 	get position(): Hex {
 		return this._position;
 	}
@@ -99,15 +110,15 @@ export default class Player {
 		this.eventListeners.set(event, events);
 	}
 
-	private initialize(): void {
-		this.on(PlayerEvent.MOVE, () => {
-			console.info('MOVED');
-		});
-	}
-
 	private dispatch(event: PlayerEvent): void {
 		const events = this.eventListeners.get(event) || [];
 
 		events.forEach((callback: PlayerEventCallback) => callback(this));
+	}
+
+	private initialize(): void {
+		this.on(PlayerEvent.MOVE, () => {
+			console.info('MOVED');
+		});
 	}
 }
