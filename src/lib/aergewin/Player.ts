@@ -92,16 +92,22 @@ export default class Player {
 		this.dispatch(PlayerEvent.MOVE);
 	}
 
-	public canMoveTo(hex: Hex) {
+	public canMoveTo(hex: Hex): boolean {
 		const distance = this._grid.distance(this._position, hex);
 		if (distance === 0) {
-			// Can't move to the current place
 			return false;
 		}
 
-		// return this._actionsSpent + distance <= 7;
+		return this._actionsSpent + this.movementCost(distance) <= 7;
+	}
 
-		return true; // TODO: remove when not debugging.
+	public canExplore(hex: Hex): boolean {
+		const distance = this._grid.distance(this._position, hex);
+		if (distance === 0) {
+			return false;
+		}
+
+		return this._actionsSpent + distance + this.explorationCost() <= 7;
 	}
 
 	get position(): Hex {
@@ -113,6 +119,16 @@ export default class Player {
 		events.push(callback);
 
 		this.eventListeners.set(event, events);
+	}
+
+	private movementCost(distance: number) {
+		// TODO: "Traveller" may have a bonus here
+		return distance;
+	}
+
+	private explorationCost() {
+		// TODO: "Explorator" may have a bonus here
+		return 1;
 	}
 
 	private dispatch(event: PlayerEvent): void {

@@ -1,13 +1,11 @@
-import Player, { type PlayerConstructor } from './Player';
-import type { PlayerName } from './Player';
-import { Direction, Grid, type Hex, line, spiral } from 'honeycomb-grid';
+import type {PlayerName} from './Player';
+import Player, {type PlayerConstructor, PlayerEvent} from './Player';
+import {defineHex, Direction, Grid, type Hex, line, Orientation, spiral} from 'honeycomb-grid';
 import Renderer from './Renderer';
-import { PlayerEvent } from './Player';
 import type Game from '../game/Game';
-import { defineHex, Orientation } from 'honeycomb-grid';
 import TerrainTile from './TerrainTile';
-import type { GameEventCallback, GameEventType } from './Event';
-import { DrawEvent, GameEvent } from './Event';
+import type {GameEventCallback, GameEventType} from './Event';
+import {DrawEvent, GameEvent} from './Event';
 
 export default class AergewinGameEngine {
 	public static readonly options = {
@@ -73,34 +71,33 @@ export default class AergewinGameEngine {
 	public click(e: MouseEvent) {
 		this.checkGameIsRunning();
 
-		const offsetX = e.offsetX + this._renderer.getMinX();
-		const offsetY = e.offsetY + this._renderer.getMinY();
-		const hexCoordinates = this._grid.pointToHex(
-			{ x: offsetX, y: offsetY },
-			{
-				allowOutside: false
-			}
-		);
+		const hexCoordinates = this.getHexFromMouseEvent(e);
 
-		if (hexCoordinates && this.getCurrentPlayer().canMoveTo(hexCoordinates)) {
+		if (!hexCoordinates) {
+			this._renderer.updateHoverPositions([]);
+			return;
+		}
+
+		const currentPlayer = this.getCurrentPlayer();
+
+		if (currentPlayer.canExplore(hexCoordinates)) {
 			if (!this.hexContainsTerrain(hexCoordinates)) {
+				// Exploration
 				this._terrain.push(this.createNewTerrainAt(hexCoordinates));
 			}
-			this.getCurrentPlayer().moveTo(hexCoordinates);
+			currentPlayer.moveTo(hexCoordinates);
+			return;
+		}
+
+		if (currentPlayer.canMoveTo(hexCoordinates)) {
+			currentPlayer.moveTo(hexCoordinates);
 		}
 	}
 
 	public mouseMove(e: MouseEvent) {
 		this.checkGameIsRunning();
 
-		const offsetX = e.offsetX + this._renderer.getMinX();
-		const offsetY = e.offsetY + this._renderer.getMinY();
-		const hexCoordinates = this._grid.pointToHex(
-			{ x: offsetX, y: offsetY },
-			{
-				allowOutside: false
-			}
-		);
+		const hexCoordinates = this.getHexFromMouseEvent(e);
 
 		if (!hexCoordinates) {
 			this._renderer.updateHoverPositions([]);
@@ -114,6 +111,18 @@ export default class AergewinGameEngine {
 			];
 			this._renderer.updateHoverPositions(hoverList);
 		}
+	}
+
+	private getHexFromMouseEvent(e: MouseEvent) {
+		const offsetX = e.offsetX + this._renderer.getMinX();
+		const offsetY = e.offsetY + this._renderer.getMinY();
+
+		return this._grid.pointToHex(
+			{x: offsetX, y: offsetY},
+			{
+				allowOutside: false
+			}
+		);
 	}
 
 	public on(eventType: GameEventType, callback: GameEventCallback): void {
