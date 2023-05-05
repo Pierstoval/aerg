@@ -1,303 +1,293 @@
-import Player, {type PlayerConstructor} from "./Player";
-import type {PlayerName} from "./Player";
-import {Direction, Grid, type Hex, hexToOffset, hexToPoint, line, ring, spiral} from "honeycomb-grid";
-import Renderer from "./Renderer";
-import {keymap} from "../keymap";
-import {PlayerEvent} from "./Player";
-import type Game from "../game/Game";
-import {defineHex, Orientation, rectangle} from "honeycomb-grid";
-import TerrainTile from "./TerrainTile";
-import type {GameEventCallback, GameEventType} from "./Event";
-import {DrawEvent, GameEvent} from "./Event";
+import Player, { type PlayerConstructor } from './Player';
+import type { PlayerName } from './Player';
+import { Direction, Grid, type Hex, line, spiral } from 'honeycomb-grid';
+import Renderer from './Renderer';
+import { PlayerEvent } from './Player';
+import type Game from '../game/Game';
+import { defineHex, Orientation } from 'honeycomb-grid';
+import TerrainTile from './TerrainTile';
+import type { GameEventCallback, GameEventType } from './Event';
+import { DrawEvent, GameEvent } from './Event';
 
 export default class AergewinGameEngine {
-    public static readonly options = {
-        hexSize: 70,
-        hexOrientation: Orientation.FLAT,
-    };
+	public static readonly options = {
+		hexSize: 70,
+		hexOrientation: Orientation.FLAT
+	};
 
-    private readonly game: Game;
-    private readonly grid: Grid<Hex>;
-    private readonly renderer: Renderer;
-    private started: boolean = false;
-    private players: Map<string, Player>;
-    private terrain: Array<TerrainTile>;
+	private readonly _game: Game;
+	private readonly _grid: Grid<Hex>;
+	private readonly _renderer: Renderer;
+	private readonly _players: Map<string, Player>;
+	private readonly _terrain: Array<TerrainTile>;
 
-    private eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
-    private currentPlayer: PlayerName;
+	private started: boolean = false;
+	private eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
+	private _currentPlayer: PlayerName;
 
-    constructor(
-        game: Game,
-        hexGridElement: HTMLElement,
-        hudElement: HTMLElement,
-        players: Array<PlayerConstructor>,
-    ) {
-        this.game = game;
-        this.grid = this.createGrid();
-        this.players = this.createPlayers(players);
-        this.currentPlayer = this.getFirstPlayerName();
-        this.terrain = this.createTerrain();
+	constructor(
+		game: Game,
+		hexGridElement: HTMLElement,
+		hudElement: HTMLElement,
+		players: Array<PlayerConstructor>
+	) {
+		this._game = game;
+		this._grid = this.createGrid();
+		this._players = this.createPlayers(players);
+		this._terrain = this.createTerrain();
+		this._currentPlayer = this.getFirstPlayerName();
+		this._renderer = new Renderer(this, hexGridElement, hudElement);
+	}
 
-        this.renderer = new Renderer(this.grid, this.players, this.terrain, hexGridElement, hudElement);
-    }
+	get grid(): Grid<Hex> {
+		return this._grid;
+	}
 
-    public get gridPixelWidth() {
-        return this.grid.pixelWidth;
-    }
+	get players(): Map<string, Player> {
+		return this._players;
+	}
 
-    public get gridPixelHeight() {
-        return this.grid.pixelHeight;
-    }
+	get terrain(): Array<TerrainTile> {
+		return this._terrain;
+	}
 
-    public start() {
-        if (this.started) {
-            throw new Error('Game already running.');
-        }
-        this.started = true;
+	public start() {
+		if (this.started) {
+			throw new Error('Game already running.');
+		}
+		this.started = true;
 
-        this.getFirstPlayer().activate();
+		this.getFirstPlayer().activate();
 
-        this.players.forEach((player: Player) => {
-            player.on(PlayerEvent.MOVE, () => {
-                this.currentPlayer = this.getNextPlayer(this.currentPlayer);
-                this.renderer.updateHoverPositions([]);
-                this.redraw();
-            });
-        });
+		this._players.forEach((player: Player) => {
+			player.on(PlayerEvent.MOVE, () => {
+				this._currentPlayer = this.getNextPlayer(this._currentPlayer);
+				this._renderer.updateHoverPositions([]);
+				this.redraw();
+			});
+		});
 
-        this.redraw();
-    }
+		this.redraw();
+	}
 
-    public getCurrentPlayer(): Player {
-        this.checkGameIsRunning();
+	public click(e: MouseEvent) {
+		this.checkGameIsRunning();
 
-        const player = this.players.get(this.currentPlayer);
+		const offsetX = e.offsetX + this._renderer.getMinX();
+		const offsetY = e.offsetY + this._renderer.getMinY();
+		const hexCoordinates = this._grid.pointToHex(
+			{ x: offsetX, y: offsetY },
+			{
+				allowOutside: false
+			}
+		);
 
-        if (!player) {
-            throw new Error('Unrecoverable error: cannot find current player.');
-        }
+		if (hexCoordinates && this.getCurrentPlayer().canMoveTo(hexCoordinates)) {
+			if (!this.hexContainsTerrain(hexCoordinates)) {
+				this._terrain.push(this.createNewTerrainAt(hexCoordinates));
+			}
+			this.getCurrentPlayer().moveTo(hexCoordinates);
+		}
+	}
 
-        return player;
-    }
+	public mouseMove(e: MouseEvent) {
+		this.checkGameIsRunning();
 
-    public redraw() {
-        this.checkGameIsRunning();
+		const offsetX = e.offsetX + this._renderer.getMinX();
+		const offsetY = e.offsetY + this._renderer.getMinY();
+		const hexCoordinates = this._grid.pointToHex(
+			{ x: offsetX, y: offsetY },
+			{
+				allowOutside: false
+			}
+		);
 
-        this.refreshGrid();
+		if (!hexCoordinates) {
+			this._renderer.updateHoverPositions([]);
+			return;
+		}
 
-        this.renderer.draw(() => this.dispatch('draw', new DrawEvent(this.game, this, this.renderer)));
-    }
+		const player = this.getCurrentPlayer();
+		if (player.canMoveTo(hexCoordinates)) {
+			const hoverList = [
+				...this._grid.traverse(line({ start: player.position, stop: hexCoordinates }))
+			];
+			this._renderer.updateHoverPositions(hoverList);
+		}
+	}
 
-    public keyDown(key: string) {
-        this.checkGameIsRunning();
+	public on(eventType: GameEventType, callback: GameEventCallback): void {
+		const listeners = this.eventListeners.get(eventType) || [];
+		listeners.push(callback);
 
-        const action = keymap[key];
+		this.eventListeners.set(eventType, listeners);
+	}
 
-        if (action === undefined) {
-            return;
-        }
+	private redraw() {
+		this.checkGameIsRunning();
 
-        this.getCurrentPlayer().goToDirection(action);
-        this.redraw();
-    }
+		this.refreshGrid();
 
-    public click(e: MouseEvent) {
-        this.checkGameIsRunning();
+		this._renderer.draw(() =>
+			this.dispatch('draw', new DrawEvent(this._game, this, this._renderer.getViewbox()))
+		);
+	}
 
-        const offsetX = e.offsetX + this.renderer.getMinX();
-        const offsetY = e.offsetY + this.renderer.getMinY();
-        const hexCoordinates = this.grid.pointToHex({x: offsetX, y: offsetY}, {
-            allowOutside: false,
-        });
+	private getNextPlayer(currentPlayer: PlayerName): PlayerName {
+		const firstPlayerName = this.getFirstPlayerName();
+		const entries = this._players.entries();
+		this._players.forEach((p: Player) => {
+			p.deactivate();
+		});
 
-        if (hexCoordinates && this.getCurrentPlayer().canMoveTo(hexCoordinates)) {
-            if (!this.hexContainsTerrain(hexCoordinates)) {
-                this.terrain.push(this.createNewTerrainAt(hexCoordinates));
-            }
-            this.getCurrentPlayer().moveTo(hexCoordinates);
-        }
-    }
+		let found = false;
 
-    public mouseMove(e: MouseEvent) {
-        this.checkGameIsRunning();
+		do {
+			const entry = entries.next();
+			if (entry.done) {
+				// Last item, no value here
+				this._currentPlayer = firstPlayerName;
+				this.getFirstPlayer().activate();
+				return this._currentPlayer;
+			}
 
-        const offsetX = e.offsetX + this.renderer.getMinX();
-        const offsetY = e.offsetY + this.renderer.getMinY();
-        const hexCoordinates = this.grid.pointToHex({x: offsetX, y: offsetY}, {
-            allowOutside: false,
-        });
+			const player: Player = entry.value[1];
 
-        if (!hexCoordinates) {
-            this.renderer.updateHoverPositions([]);
-            return;
-        }
+			if (found) {
+				this._currentPlayer = player.name;
+				player.activate();
+				return this._currentPlayer;
+			}
 
-        const player = this.getCurrentPlayer();
-        if (player.canMoveTo(hexCoordinates)) {
-            const hoverList = [...this.grid.traverse(line({start: player.position, stop: hexCoordinates}))];
-            this.renderer.updateHoverPositions(hoverList);
-        }
-    }
+			if (player.name === currentPlayer) {
+				// Set flag to "true" so *next iteration* will set next player.
+				// If next iteration is empty (thus current iteration = last item),
+				//   then next player is the first player in the list.
+				found = true;
+			}
+		} while (true);
+	}
 
+	private getCurrentPlayer(): Player {
+		this.checkGameIsRunning();
 
-    public on(eventType: GameEventType, callback: GameEventCallback): void {
-        const listeners = this.eventListeners.get(eventType) || [];
-        listeners.push(callback);
+		const player = this._players.get(this._currentPlayer);
 
-        this.eventListeners.set(eventType, listeners);
-    }
+		if (!player) {
+			throw new Error('Unrecoverable error: cannot find current player.');
+		}
 
-    public getNextPlayer(currentPlayer: PlayerName): PlayerName {
-        const firstPlayerName = this.getFirstPlayerName();
-        const entries = this.players.entries();
-        this.players.forEach((p: Player) => {
-            p.deactivate();
-        });
+		return player;
+	}
 
-        let found = false;
+	private checkGameIsRunning() {
+		if (!this.started) {
+			throw new Error('Game not running yet. Have you forgotten to run "game.start()"?');
+		}
+	}
 
-        do {
-            const entry = entries.next();
-            if (entry.done) {
-                // Last item, no value here
-                this.currentPlayer = firstPlayerName;
-                this.getFirstPlayer().activate();
-                return this.currentPlayer;
-            }
+	private getFirstPlayer(): Player {
+		return this._players.values().next().value;
+	}
 
-            const player: Player = entry.value[1];
+	private getFirstPlayerName(): PlayerName {
+		return this.getFirstPlayer().name;
+	}
 
-            if (found) {
-                this.currentPlayer = player.name;
-                player.activate();
-                return this.currentPlayer;
-            }
+	private createGrid() {
+		return new Grid(
+			defineHex({
+				dimensions: AergewinGameEngine.options.hexSize,
+				orientation: AergewinGameEngine.options.hexOrientation,
+				origin: { x: 0, y: 0 }
+			}),
+			spiral({
+				radius: 1
+			})
+		);
+	}
 
-            if (player.name === currentPlayer) {
-                // Set flag to "true" so *next iteration* will set next player.
-                // If next iteration is empty (thus current iteration = last item),
-                //   then next player is the first player in the list.
-                found = true;
-            }
-        } while (true);
-    }
+	private createPlayers(players: Array<PlayerConstructor>) {
+		const map = new Map();
 
-    private checkGameIsRunning() {
-        if (!this.started) {
-            throw new Error('Game not running yet. Have you forgotten to run "game.start()"?');
-        }
-    }
+		let i = 1;
+		for (const playerConstructor of players) {
+			const player = new Player(
+				playerConstructor.name,
+				i,
+				players.length,
+				this._grid.createHex([0, 0]),
+				this._grid
+			);
+			map.set(playerConstructor.name, player);
+			i++;
+		}
 
-    private getFirstPlayer(): Player {
-        return this.players.values().next().value;
-    }
+		return map;
+	}
 
-    private getFirstPlayerName(): PlayerName {
-        return this.getFirstPlayer().name;
-    }
+	private createTerrain() {
+		return [
+			new TerrainTile('village', this._grid.createHex([0, 0]), this._grid),
+			new TerrainTile('mountain', this._grid.createHex([1, 0]), this._grid),
+			new TerrainTile('forest', this._grid.createHex([0, -1]), this._grid),
+			new TerrainTile('plains', this._grid.createHex([-1, 1]), this._grid)
+		];
+	}
 
-    private createGrid() {
-        return new Grid(
-            defineHex({
-                dimensions: AergewinGameEngine.options.hexSize,
-                orientation: AergewinGameEngine.options.hexOrientation,
-                origin: { x: 0, y: 0 }
-            }),
-            spiral({
-                radius: 1,
-            }),
-        );
-    }
+	private refreshGrid() {
+		this._terrain.forEach((terrainTile: TerrainTile) => {
+			const newHexes = this.getNewHexesAroundPosition(terrainTile.position);
+			if (newHexes.length) {
+				this._grid.setHexes(newHexes);
+			}
+		});
+		this._players.forEach((player: Player) => {
+			const newHexes = this.getNewHexesAroundPosition(player.position);
+			if (newHexes.length) {
+				this._grid.setHexes(newHexes);
+			}
+		});
+	}
 
-    private createPlayers(players: Array<PlayerConstructor>) {
-        const map = new Map();
+	private dispatch(eventType: GameEventType, event: GameEvent): void {
+		const events = this.eventListeners.get(eventType) || [];
 
-        let i = 1;
-        for (const playerConstructor of players) {
-            const player = new Player(
-                playerConstructor.name,
-                i,
-                players.length,
-                this.grid.createHex([0, 0]),
-                this.grid
-            );
-            map.set(
-                playerConstructor.name,
-                player
-            );
-            i++;
-        }
+		events.forEach((callback: GameEventCallback) => callback(event));
+	}
 
-        return map;
-    }
+	private getNewHexesAroundPosition(position: Hex) {
+		const directional = [];
 
-    private createTerrain() {
-        return [
-            new TerrainTile('village', this.grid.createHex([0, 0]), this.grid),
-            new TerrainTile('mountain', this.grid.createHex([1, 0]), this.grid),
-            new TerrainTile('forest', this.grid.createHex([0, -1]), this.grid),
-            new TerrainTile('plains', this.grid.createHex([-1, 1]), this.grid),
-        ];
-    }
+		directional.push(this._grid.neighborOf(position, Direction.N));
+		directional.push(this._grid.neighborOf(position, Direction.NE));
+		directional.push(this._grid.neighborOf(position, Direction.E));
+		directional.push(this._grid.neighborOf(position, Direction.SE));
+		directional.push(this._grid.neighborOf(position, Direction.S));
+		directional.push(this._grid.neighborOf(position, Direction.SW));
+		directional.push(this._grid.neighborOf(position, Direction.W));
+		directional.push(this._grid.neighborOf(position, Direction.NW));
 
-    private refreshGrid() {
-        this.terrain.forEach((terrainTile: TerrainTile) => {
-            const newHexes = this.getNewHexesAroundPosition(terrainTile.position);
-            if (newHexes.length) {
-                this.grid.setHexes(newHexes);
-            }
-        });
-        this.players.forEach((player: Player) => {
-            const newHexes = this.getNewHexesAroundPosition(player.position);
-            if (newHexes.length) {
-                this.grid.setHexes(newHexes);
-            }
-        });
-    }
+		return directional.filter((hex: Hex) => !this._grid.hasHex(hex));
+	}
 
-    private dispatch(eventType: GameEventType, event: GameEvent): void {
-        const events = this.eventListeners.get(eventType) || [];
+	private hexContainsTerrain(hexCoordinates: Hex) {
+		let found = false;
 
-        events.forEach((callback: GameEventCallback) => callback(event));
-    }
+		this._terrain.forEach((tile: TerrainTile) => {
+			if (tile.position.toString() === hexCoordinates.toString()) {
+				found = true;
+			}
+		});
 
-    private getNewHexesAroundPosition(position: Hex) {
-        const directional = [];
+		return found;
+	}
 
-        directional.push(this.grid.neighborOf(position, Direction.N));
-        directional.push(this.grid.neighborOf(position, Direction.NE));
-        directional.push(this.grid.neighborOf(position, Direction.E));
-        directional.push(this.grid.neighborOf(position, Direction.SE));
-        directional.push(this.grid.neighborOf(position, Direction.S));
-        directional.push(this.grid.neighborOf(position, Direction.SW));
-        directional.push(this.grid.neighborOf(position, Direction.W));
-        directional.push(this.grid.neighborOf(position, Direction.NW));
+	private createNewTerrainAt(hexCoordinates: Hex) {
+		const terrainMap = ['mountain', 'lake', 'forest', 'plains'];
 
-        return directional.filter((hex: Hex) => !this.grid.hasHex(hex));
-    }
+		const terrainType = terrainMap[Math.floor(Math.random() * terrainMap.length)];
 
-    private hexContainsTerrain(hexCoordinates: Hex) {
-        let found = false;
-
-        this.terrain.forEach((tile: TerrainTile) => {
-            if (tile.position.toString() === hexCoordinates.toString()) {
-                found = true;
-            }
-        });
-
-        return found;
-    }
-
-    private createNewTerrainAt(hexCoordinates: Hex) {
-        const terrainMap = [
-            'mountain',
-            'lake',
-            'forest',
-            'plains',
-        ];
-
-        const terrainType = terrainMap[Math.floor(Math.random() * terrainMap.length)];
-
-        return new TerrainTile(terrainType, hexCoordinates, this.grid);
-    }
+		return new TerrainTile(terrainType, hexCoordinates, this._grid);
+	}
 }

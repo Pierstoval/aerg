@@ -1,4 +1,4 @@
-import type {Hex} from 'honeycomb-grid';
+import type { Hex } from 'honeycomb-grid';
 import type { Grid } from 'honeycomb-grid';
 
 export default class TerrainTile {

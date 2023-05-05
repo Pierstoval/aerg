@@ -1,246 +1,224 @@
-import type {Grid, Hex, Point} from "honeycomb-grid";
-import type Player from "./Player";
-import type {ArrayXY, Svg} from "@svgdotjs/svg.js";
-import {hexToPoint} from "honeycomb-grid";
-import {SVG} from "@svgdotjs/svg.js";
+import type { Hex, Point } from 'honeycomb-grid';
+import type Player from './Player';
+import type { ArrayXY, Svg } from '@svgdotjs/svg.js';
+import { hexToPoint } from 'honeycomb-grid';
+import { SVG } from '@svgdotjs/svg.js';
 import HUDComponent from './HUD.svelte';
-import type {SvelteComponentTyped} from "svelte/types/runtime/internal/dev";
-import AergewinGameEngine from "./AergewinGameEngine";
-import type TerrainTile from "./TerrainTile";
+import type { SvelteComponentTyped } from 'svelte/types/runtime/internal/dev';
+import AergewinGameEngine from './AergewinGameEngine';
+import type TerrainTile from './TerrainTile';
 
 export default class Renderer {
-    private _players: Map<string, Player>;
-    private _terrain: Array<TerrainTile>;
-    private _hoverOnPositions: Array<Hex> = [];
-    private readonly grid: Grid<Hex>;
-    private readonly svgContainer: Svg;
-    private readonly hudComponent: SvelteComponentTyped;
+	private gameEngine: AergewinGameEngine;
+	private _hoverOnPositions: Array<Hex> = [];
+	private readonly svgContainer: Svg;
+	private readonly hudComponent: SvelteComponentTyped;
 
-    constructor(
-        grid: Grid<Hex>,
-        players: Map<string, Player>,
-        terrain: Array<TerrainTile>,
-        gridElement: HTMLElement,
-        hudElement: HTMLElement
-    ) {
-        this.grid = grid;
-        this._players = players;
-        this._terrain = terrain;
+	constructor(gameEngine: AergewinGameEngine, gridElement: HTMLElement, hudElement: HTMLElement) {
+		this.gameEngine = gameEngine;
 
-        // Clear the board
-        for (const child of gridElement.children) {
-            gridElement.removeChild(child);
-        }
+		// Clear the board
+		for (const child of gridElement.children) {
+			gridElement.removeChild(child);
+		}
 
-        let minX = Infinity;
-        let minY = Infinity;
+		const svgContainer = SVG();
+		svgContainer.addTo(gridElement).size('100%', '100%');
 
-        const svgContainer = SVG();
-        svgContainer.addTo(gridElement).size('100%', '100%');
+		this.svgContainer = svgContainer;
 
-        this.svgContainer = svgContainer;
+		this.hudComponent = new HUDComponent({
+			target: hudElement,
+			hydrate: true,
+			props: {
+				gameEngine
+			}
+		});
+	}
 
-        this.hudComponent = new HUDComponent({
-            target: hudElement,
-            hydrate: true,
-            props: {
-                players: players,
-            }
-        });
-    }
+	public updateHoverPositions(hexes: Array<Hex>) {
+		const hasChanged =
+			hexes.length !== this._hoverOnPositions.length ||
+			hexes.toString() !== this._hoverOnPositions.toString();
 
-    updatePlayers(players: Map<string, Player>) {
-        this._players = players;
-        this.draw();
-    }
+		if (hasChanged) {
+			this._hoverOnPositions = hexes;
+			this.draw();
+		}
+	}
 
-    updateTerrain(terrain: Array<TerrainTile>) {
-        this._terrain = terrain;
-        this.draw();
-    }
+	public getMinX(): number {
+		let min = Infinity;
 
-    updateHoverPositions(hexes: Array<Hex>) {
-        const hasChanged = hexes.length !== this._hoverOnPositions.length
-            || hexes.toString() !== this._hoverOnPositions.toString();
+		this.gameEngine.grid.forEach((hex: Hex) => {
+			hex.corners.forEach((point: Point) => {
+				if (min > point.x) {
+					min = point.x;
+				}
+			});
+		});
 
-        if (hasChanged) {
-            this._hoverOnPositions = hexes;
-            this.draw();
-        }
-    }
+		return min;
+	}
 
-    public getMinX(): number {
-        let min = Infinity;
+	public getMinY(): number {
+		let min = Infinity;
 
-        this.grid.forEach((hex: Hex) => {
-            hex.corners.forEach((point: Point) => {
-                if (min > point.x) {
-                    min = point.x;
-                }
-            });
-        });
+		this.gameEngine.grid.forEach((hex: Hex) => {
+			hex.corners.forEach((point: Point) => {
+				if (min > point.y) {
+					min = point.y;
+				}
+			});
+		});
 
-        return min;
-    }
+		return min;
+	}
 
-    public getMinY(): number {
-        let min = Infinity;
+	public getViewbox() {
+		const minX = this.getMinX();
+		const minY = this.getMinY();
+		const maxX = this.getMaxX();
+		const maxY = this.getMaxY();
 
-        this.grid.forEach((hex: Hex) => {
-            hex.corners.forEach((point: Point) => {
-                if (min > point.y) {
-                    min = point.y;
-                }
-            });
-        });
+		return {
+			x: minX,
+			y: minY,
+			width: maxX - minX,
+			height: maxY - minY
+		};
+	}
 
-        return min;
-    }
+	public draw(postDrawCallback?: () => any) {
+		this.svgContainer.clear();
 
-    public getMaxX(): number {
-        let max = -Infinity;
+		this.svgContainer.viewbox(this.getViewbox());
+		this.drawGrid();
+		this.drawTerrain();
+		this.drawPlayers();
+		this.drawHUD();
+		this.drawHoverTiles();
 
-        this.grid.forEach((hex: Hex) => {
-            hex.corners.forEach((point: Point) => {
-                if (max < point.x) {
-                    max = point.x;
-                }
-            });
-        });
+		if (postDrawCallback) {
+			postDrawCallback();
+		}
+	}
 
-        return max;
-    }
+	private getMaxX(): number {
+		let max = -Infinity;
 
-    public getMaxY(): number {
-        let max = -Infinity;
+		this.gameEngine.grid.forEach((hex: Hex) => {
+			hex.corners.forEach((point: Point) => {
+				if (max < point.x) {
+					max = point.x;
+				}
+			});
+		});
 
-        this.grid.forEach((hex: Hex) => {
-            hex.corners.forEach((point: Point) => {
-                if (max < point.y) {
-                    max = point.y;
-                }
-            });
-        });
+		return max;
+	}
 
-        return max;
-    }
+	private getMaxY(): number {
+		let max = -Infinity;
 
-    public getViewbox() {
-        const minX = this.getMinX();
-        const minY = this.getMinY();
-        const maxX = this.getMaxX();
-        const maxY = this.getMaxY();
+		this.gameEngine.grid.forEach((hex: Hex) => {
+			hex.corners.forEach((point: Point) => {
+				if (max < point.y) {
+					max = point.y;
+				}
+			});
+		});
 
-        return {
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY,
-        };
-    }
+		return max;
+	}
 
-    public draw(postDrawCallback?: () => any) {
-        this.svgContainer.clear();
+	private drawHUD() {
+		this.gameEngine.players.forEach((p: Player) => {
+			if (p.isActive) {
+				this.hudComponent.currentPlayerIndex = p.index;
+			}
+		});
+	}
 
-        this.svgContainer.viewbox(this.getViewbox());
-        this.drawGrid();
-        this.drawTerrain();
-        this.drawPlayers();
-        this.drawHUD();
-        this.drawHoverTiles();
+	private drawGrid() {
+		this.gameEngine.grid.forEach((hex: Hex) => {
+			// create a polygon from a hex's corner points
+			const points: ArrayXY[] = hex.corners.map(({ x, y }) => [x, y]);
 
-        if (postDrawCallback) {
-            postDrawCallback();
-        }
-    }
+			const polygon = this.svgContainer
+				.polygon(points)
+				.fill('none')
+				.stroke({ width: 1, color: '#ddd' });
 
-    private drawHUD() {
-        this.hudComponent.players = new Map(this._players); // Forces Svelte component to refresh iterator.
-        this._players.forEach((p: Player) => {
-            if (p.isActive) {
-                this.hudComponent.currentPlayerIndex = p.index;
-            }
-        });
-    }
+			this.svgContainer.group().add(polygon);
+		});
+	}
 
-    private drawGrid() {
-        this.grid.forEach((hex: Hex) => {
-            // create a polygon from a hex's corner points
-            const points: ArrayXY[] = hex.corners.map(({ x, y }) => [x, y]);
+	private drawPlayers() {
+		const numberOfPlayers = this.gameEngine.players.size;
 
-            const polygon = this.svgContainer
-                .polygon(points)
-                .fill('none')
-                .stroke({ width: 1, color: '#ddd' });
+		this.gameEngine.players.forEach((player: Player) => {
+			const playerPoint = hexToPoint(player.position);
 
-            this.svgContainer.group().add(polygon);
-        });
+			const coordinateOffset = 10;
+			const distanceToTheCenter = AergewinGameEngine.options.hexSize / 2;
+			const t = (player.index - 1) / (numberOfPlayers / 2);
 
-    }
+			let x = playerPoint.x - coordinateOffset;
+			let y = playerPoint.y - coordinateOffset;
 
-    private drawPlayers() {
-        const numberOfPlayers = this._players.size;
+			const angleInRadians = t * Math.PI;
+			const xOffset = Math.cos(angleInRadians) * distanceToTheCenter;
+			const yOffset = Math.sin(angleInRadians) * distanceToTheCenter;
 
-        this._players.forEach((player: Player) => {
-            const playerPoint = hexToPoint(player.position);
+			this.svgContainer
+				.circle(coordinateOffset * 2)
+				.move(x - xOffset, y - yOffset)
+				.fill(player.color);
 
-            const coordinateOffset = 10;
-            const distanceToTheCenter = AergewinGameEngine.options.hexSize / 2;
-            const t = (player.index-1) / (numberOfPlayers/2);
+			this.svgContainer
+				.text(String(player.index))
+				.move(
+					playerPoint.x - xOffset - coordinateOffset / 2,
+					playerPoint.y - yOffset - coordinateOffset * 1.25
+				)
+				.fill('#fff');
+		});
+	}
 
-            let x = playerPoint.x - coordinateOffset;
-            let y = playerPoint.y - coordinateOffset;
+	private drawTerrain() {
+		this.gameEngine.terrain.forEach((terrainTile: TerrainTile) => {
+			const points: ArrayXY[] = terrainTile.position.corners.map(({ x, y }) => [x, y]);
 
-            const angleInRadians = t * Math.PI;
-            const xOffset = Math.cos(angleInRadians) * distanceToTheCenter;
-            const yOffset = Math.sin(angleInRadians) * distanceToTheCenter;
+			const polygon = this.svgContainer
+				.polygon(points)
+				.fill('none')
+				.stroke({ width: 1, color: '#000' });
 
-            this.svgContainer
-                .circle(coordinateOffset * 2)
-                .move(x - xOffset, y - yOffset)
-                .fill(player.color);
+			const corners = [...terrainTile.position.corners];
+			this.svgContainer
+				.image(terrainTile.image)
+				.size(this.gameEngine.grid.hexPrototype.width, this.gameEngine.grid.hexPrototype.height)
+				.move(corners[4].x, corners[5].y)
+				.stroke({ width: 1, color: '#ff0000' })
+				.fill('none');
 
-            this.svgContainer
-                .text(String(player.index))
-                .move(playerPoint.x - xOffset - coordinateOffset/2, playerPoint.y - yOffset - coordinateOffset*1.25)
-                .fill('#fff');
-        });
-    }
+			this.svgContainer.group().add(polygon);
+		});
+	}
 
-    private drawTerrain() {
-        this._terrain.forEach((terrainTile: TerrainTile) => {
-            const points: ArrayXY[] = terrainTile.position.corners.map(({ x, y }) => [x, y]);
+	private drawHoverTiles() {
+		this._hoverOnPositions.forEach((hex: Hex) => {
+			// create a polygon from a hex's corner points
+			const points: ArrayXY[] = hex.corners.map(({ x, y }) => [x, y]);
 
-            const polygon = this.svgContainer
-                .polygon(points)
-                .fill('none')
-                .stroke({ width: 1, color: '#000' });
+			const polygon = this.svgContainer
+				.polygon(points)
+				.fill('#000')
+				.opacity(0.05)
+				.stroke({ width: 1, color: '#ddd' });
 
-            const corners = [...terrainTile.position.corners];
-            console.info({corners});
-            this.svgContainer
-                .image(terrainTile.image)
-                .size(this.grid.hexPrototype.width, this.grid.hexPrototype.height)
-                .move(corners[4].x, corners[5].y)
-                .stroke({width: 1, color: '#ff0000'})
-                .fill('none');
-
-            this.svgContainer.group().add(polygon);
-        });
-    }
-
-    private drawHoverTiles() {
-        this._hoverOnPositions.forEach((hex: Hex) => {
-            // create a polygon from a hex's corner points
-            const points: ArrayXY[] = hex.corners.map(({ x, y }) => [x, y]);
-
-            const polygon = this.svgContainer
-                .polygon(points)
-                .fill('#000')
-                .opacity(0.05)
-                .stroke({ width: 1, color: '#ddd' });
-
-            this.svgContainer.group().add(polygon);
-        });
-    }
+			this.svgContainer.group().add(polygon);
+		});
+	}
 }

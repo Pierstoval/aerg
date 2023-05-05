@@ -1,11 +1,11 @@
-import type {Direction, Hex} from 'honeycomb-grid';
+import type { Direction, Hex } from 'honeycomb-grid';
 import { fromCoordinates, Grid, move } from 'honeycomb-grid';
-import {Color} from "@svgdotjs/svg.js";
+import { Color } from '@svgdotjs/svg.js';
 
 export type PlayerName = string;
 
 export type PlayerConstructor = {
-	name: string,
+	name: string;
 };
 
 export enum PlayerEvent {
@@ -26,12 +26,18 @@ export default class Player {
 
 	private _actionsSpent = 0;
 
-	constructor(name: string, orderIndex: number, numberOfPlayers: number, position: Hex, grid: Grid<Hex>) {
+	constructor(
+		name: string,
+		orderIndex: number,
+		numberOfPlayers: number,
+		position: Hex,
+		grid: Grid<Hex>
+	) {
 		this._name = name;
 		this._orderIndex = orderIndex;
 		this._grid = grid;
 		this._position = position;
-		this._color = new Color(((orderIndex-1) / (numberOfPlayers)) * 360, 90, 50, 'hsl');
+		this._color = new Color(((orderIndex - 1) / numberOfPlayers) * 360, 90, 50, 'hsl');
 		this._grid.setHexes([position]);
 	}
 
@@ -64,15 +70,13 @@ export default class Player {
 	}
 
 	public goToDirection(direction: Direction) {
-		this._grid
-			.traverse([fromCoordinates(this._position), move(direction)])
-			.map((p: Hex) => {
-				const distance = this._grid.distance(this._position, p);
-				this._actionsSpent += distance;
-				this._position = p;
+		this._grid.traverse([fromCoordinates(this._position), move(direction)]).map((p: Hex) => {
+			const distance = this._grid.distance(this._position, p);
+			this._actionsSpent += distance;
+			this._position = p;
 
-				return p;
-			});
+			return p;
+		});
 
 		this.dispatch(PlayerEvent.MOVE);
 	}

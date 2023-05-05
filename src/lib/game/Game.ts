@@ -1,53 +1,53 @@
-import {writable, type Writable} from "svelte/store";
-import type {GameOptions} from "./GameOptions";
-import {getConfig} from "./GameOptions";
-import type {SceneConstructor, SceneInstance} from "./Scene";
+import { writable, type Writable } from 'svelte/store';
+import type { GameOptions } from './GameOptions';
+import { getConfig } from './GameOptions';
+import type { SceneConstructor, SceneInstance } from './Scene';
 
 export default class Game {
-    private readonly gameContainerElement: HTMLElement;
-    private readonly _options: GameOptions;
+	private readonly gameContainerElement: HTMLElement;
+	private readonly _options: GameOptions;
 
-    private _currentSceneStore: Writable<SceneConstructor> = writable();
+	private _currentSceneStore: Writable<SceneConstructor> = writable();
 
-    private _scenesCache: Map<SceneConstructor, SceneInstance> = new Map();
+	private _scenesCache: Map<SceneConstructor, SceneInstance> = new Map();
 
-    constructor(gameContainerElement: HTMLElement, options?: Partial<GameOptions>) {
-        this._options = getConfig(options as GameOptions);
+	constructor(gameContainerElement: HTMLElement, options?: Partial<GameOptions>) {
+		this._options = getConfig(options as GameOptions);
 
-        this.gameContainerElement = gameContainerElement;
-        this.gameContainerElement.innerHTML = '';
+		this.gameContainerElement = gameContainerElement;
+		this.gameContainerElement.innerHTML = '';
 
-        this._currentSceneStore.set(this._options.defaultScene);
-        this._currentSceneStore.subscribe((scene: SceneConstructor|undefined) => {
-            if (!scene) {
-                console.warn('Set an empty scene in the scene store.');
-                return;
-            }
-            this.renderSceneInternal(scene);
-        });
-    }
+		this._currentSceneStore.set(this._options.defaultScene);
+		this._currentSceneStore.subscribe((scene: SceneConstructor | undefined) => {
+			if (!scene) {
+				console.warn('Set an empty scene in the scene store.');
+				return;
+			}
+			this.renderSceneInternal(scene);
+		});
+	}
 
-    get options(): GameOptions {
-        return {...this._options};
-    }
+	get options(): GameOptions {
+		return { ...this._options };
+	}
 
-    public renderScene(scene: SceneConstructor) {
-        this._currentSceneStore.set(scene);
-    }
+	public renderScene(scene: SceneConstructor) {
+		this._currentSceneStore.set(scene);
+	}
 
-    private renderSceneInternal(scene: SceneConstructor) {
-        const existingInstance = this._scenesCache.get(scene);
-        if (existingInstance) {
-            return existingInstance;
-        }
+	private renderSceneInternal(scene: SceneConstructor) {
+		const existingInstance = this._scenesCache.get(scene);
+		if (existingInstance) {
+			return existingInstance;
+		}
 
-        const sceneInstance: SceneInstance = new scene({
-            target: this.gameContainerElement,
-            hydrate: true,
-            props: {
-                game: this,
-            }
-        });
-        this._scenesCache.set(scene, sceneInstance);
-    }
+		const sceneInstance: SceneInstance = new scene({
+			target: this.gameContainerElement,
+			hydrate: true,
+			props: {
+				game: this
+			}
+		});
+		this._scenesCache.set(scene, sceneInstance);
+	}
 }
