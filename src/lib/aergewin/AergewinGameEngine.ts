@@ -343,9 +343,13 @@ export default class AergewinGameEngine {
 				this._terrain.push(this.createNewTerrainAt(hexCoordinates));
 				currentPlayer.explore(hexCoordinates);
 				currentPlayer.moveTo(hexCoordinates);
+			} else {
+				return;
 			}
 		} else if (currentPlayer.canMoveTo(hexCoordinates)) {
 			currentPlayer.moveTo(hexCoordinates);
+		} else {
+			return;
 		}
 
 		this._currentPlayer = this.getNextPlayer(this._currentPlayer);
