@@ -92,6 +92,17 @@ export default class Player {
 		this.dispatch(PlayerEvent.MOVE);
 	}
 
+	public explore(hex: Hex) {
+		const distance = this._grid.distance(this._position, hex);
+		if (distance === 0) {
+			// Do nothing if player is not moving.
+			return;
+		}
+		this._actionsSpent += distance + this.explorationCost();
+		this._position = hex;
+		this.dispatch(PlayerEvent.MOVE);
+	}
+
 	public canMoveTo(hex: Hex): boolean {
 		const distance = this._grid.distance(this._position, hex);
 		if (distance === 0) {
@@ -135,11 +146,5 @@ export default class Player {
 		const events = this.eventListeners.get(event) || [];
 
 		events.forEach((callback: PlayerEventCallback) => callback(this));
-	}
-
-	private initialize(): void {
-		this.on(PlayerEvent.MOVE, () => {
-			console.info('MOVED');
-		});
 	}
 }

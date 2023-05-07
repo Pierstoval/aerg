@@ -7,6 +7,11 @@ import TerrainTile from './TerrainTile';
 import type {GameEventCallback, GameEventType} from './Event';
 import {DrawEvent, GameEvent} from './Event';
 
+type CurrentGameAction = 'actions_list'
+	| 'move'
+	| 'fight'
+	| 'activate_zone';
+
 export default class AergewinGameEngine {
 	public static readonly options = {
 		hexSize: 70,
@@ -22,6 +27,7 @@ export default class AergewinGameEngine {
 	private started: boolean = false;
 	private eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
 	private _currentPlayer: PlayerName;
+	private currentAction: CurrentGameAction = 'actions_list';
 
 	constructor(
 		game: Game,
@@ -55,6 +61,7 @@ export default class AergewinGameEngine {
 		}
 		this.started = true;
 
+		this.currentAction = 'actions_list';
 		this.getFirstPlayer().activate();
 
 		this._players.forEach((player: Player) => {
@@ -71,46 +78,48 @@ export default class AergewinGameEngine {
 	public click(e: MouseEvent) {
 		this.checkGameIsRunning();
 
-		const hexCoordinates = this.getHexFromMouseEvent(e);
-
-		if (!hexCoordinates) {
-			this._renderer.updateHoverPositions([]);
-			return;
+		switch (this.currentAction) {
+			case 'actions_list':
+				console.info('TODO: actions_list');
+				break;
+			case 'move':
+				this.moveCurrentPlayerTo(this.getHexFromMouseEvent(e));
+				break;
+			case 'fight':
+				console.info('TODO: fight')
+				break;
+			case 'activate_zone':
+				console.info('TODO: activate_zone')
+				break;
 		}
 
-		const currentPlayer = this.getCurrentPlayer();
-
-		if (currentPlayer.canExplore(hexCoordinates)) {
-			if (!this.hexContainsTerrain(hexCoordinates)) {
-				// Exploration
-				this._terrain.push(this.createNewTerrainAt(hexCoordinates));
-			}
-			currentPlayer.moveTo(hexCoordinates);
-			return;
-		}
-
-		if (currentPlayer.canMoveTo(hexCoordinates)) {
-			currentPlayer.moveTo(hexCoordinates);
-		}
 	}
 
 	public mouseMove(e: MouseEvent) {
 		this.checkGameIsRunning();
 
-		const hexCoordinates = this.getHexFromMouseEvent(e);
+		this._renderer.updateHoverPositions([]);
 
-		if (!hexCoordinates) {
-			this._renderer.updateHoverPositions([]);
-			return;
+		switch (this.currentAction) {
+			case 'actions_list':
+				console.info('TODO: actions_list');
+				break;
+			case 'move':
+				this.hoverCurrentPlayerPath(this.getHexFromMouseEvent(e));
+				break;
+			case 'fight':
+				console.info('TODO: fight')
+				break;
+			case 'activate_zone':
+				console.info('TODO: activate_zone')
+				break;
 		}
 
-		const player = this.getCurrentPlayer();
-		if (player.canMoveTo(hexCoordinates)) {
-			const hoverList = [
-				...this._grid.traverse(line({ start: player.position, stop: hexCoordinates }))
-			];
-			this._renderer.updateHoverPositions(hoverList);
-		}
+	}
+
+	private playerCanMoveOrExplore(player: Player, hexCoordinates: Hex) {
+		return (!this.hexContainsTerrain(hexCoordinates) && player.canExplore(hexCoordinates))
+			|| (this.hexContainsTerrain(hexCoordinates) && player.canMoveTo(hexCoordinates));
 	}
 
 	private getHexFromMouseEvent(e: MouseEvent) {
@@ -298,5 +307,40 @@ export default class AergewinGameEngine {
 		const terrainType = terrainMap[Math.floor(Math.random() * terrainMap.length)];
 
 		return new TerrainTile(terrainType, hexCoordinates, this._grid);
+	}
+
+	private moveCurrentPlayerTo(hexCoordinates: Hex | undefined) {
+		if (!hexCoordinates) {
+			this._renderer.updateHoverPositions([]);
+			return;
+		}
+
+		const currentPlayer = this.getCurrentPlayer();
+
+		if (!this.hexContainsTerrain(hexCoordinates)) {
+			if (currentPlayer.canExplore(hexCoordinates)) {
+				// Exploration
+				this._terrain.push(this.createNewTerrainAt(hexCoordinates));
+				currentPlayer.explore(hexCoordinates);
+				currentPlayer.moveTo(hexCoordinates);
+			}
+
+			return;
+		}
+
+		if (currentPlayer.canMoveTo(hexCoordinates)) {
+			currentPlayer.moveTo(hexCoordinates);
+		}
+	}
+
+	private hoverCurrentPlayerPath(hexCoordinates: Hex | undefined) {
+		const player = this.getCurrentPlayer();
+
+		if (hexCoordinates && this.playerCanMoveOrExplore(player, hexCoordinates)) {
+			const hoverList = [
+				...this._grid.traverse(line({ start: player.position, stop: hexCoordinates }))
+			];
+			this._renderer.updateHoverPositions(hoverList);
+		}
 	}
 }
