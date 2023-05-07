@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type Game from '../game/Game';
 	import SvgBoard from './SvgBoard.svelte';
+	import {_} from "svelte-i18n";
 
 	export let game: Game;
 
@@ -10,9 +11,8 @@
 </script>
 
 <main>
-	<h1>Hello!</h1>
-	<p>Let's start a game:</p>
-	<button type="button" on:click={start}>Start</button>
+	<h1>Aergewin</h1>
+	<button type="button" on:click={start}>{$_('main_menu.start_button')}</button>
 </main>
 
 <style lang="scss">

@@ -1,9 +1,16 @@
+<script lang="ts">
+	import {_} from "svelte-i18n";
+</script>
+
 <nav>
-	<ul>
-		<li>
-			<a href="/game">Game</a>
-		</li>
-	</ul>
+	<div>
+		<h1>{$_('homepage.aergewin_title')}</h1>
+		<ul>
+			<li>
+				<a href="/game">{$_('homepage.link_game')}</a>
+			</li>
+		</ul>
+	</div>
 </nav>
 
 <style lang="scss">

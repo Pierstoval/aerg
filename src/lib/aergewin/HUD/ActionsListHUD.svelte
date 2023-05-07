@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type AergewinGameEngine from '../AergewinGameEngine';
+	import {_} from "svelte-i18n";
 
 	export let gameEngine: AergewinGameEngine;
 
@@ -19,15 +20,15 @@
 </script>
 
 {#if currentPlayer.canMove()}
-	<button on:click={activeMoveAction}>Move or explore</button>
+	<button on:click={activeMoveAction}>{$_('hud.actions.move_or_explore')}</button>
 {/if}
 
 {#if gameEngine.playerCanFight(currentPlayer)}
-	<button on:click={fightAction}>Move or explore</button>
+	<button on:click={fightAction}>{$_('hud.actions.fight')}</button>
 {/if}
 
 {#if gameEngine.playerCanActivateZone(currentPlayer)}
-	<button on:click={activateZone}>Activate current zone</button>
+	<button on:click={activateZone}>{$_('hud.actions.activate_current_zone')}</button>
 {/if}
 
 <style lang="scss">

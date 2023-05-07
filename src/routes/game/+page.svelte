@@ -1,6 +1,7 @@
 <script lang="ts">
-	import Game from '../../lib/game/Game';
+	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
+	import Game from '../../lib/game/Game';
 	import MainMenu from '../../lib/scenes/MainMenu.svelte';
 
 	let gameElement: HTMLElement;
@@ -14,7 +15,7 @@
 </script>
 
 <div id="game" bind:this={gameElement}>
-	<h1>Loading...</h1>
+	<h1>{$_('home.loading')}</h1>
 </div>
 
 <style lang="scss">

@@ -9,6 +9,7 @@
 	import MoveHUD from './HUD/MoveHUD.svelte';
 	import FightHUD from './HUD/FightHUD.svelte';
 	import ActivateZoneHUD from './HUD/ActivateZoneHUD.svelte';
+	import {_} from "svelte-i18n";
 
 	export let gameEngine: AergewinGameEngine;
 
@@ -33,7 +34,7 @@
 </script>
 
 <section id="actions">
-	<h1>Players:</h1>
+	<h1>{$_('hud.players_list')}</h1>
 	{#each players as player}
 		<p class:active={currentPlayer?.index === player.index}>
 			<span class="player-pin" style="--player-color: {player.color.toString()}"
@@ -52,13 +53,13 @@
 
 {#if currentPlayer}
 	<section id="currentPlayer">
-		<h3>Current player: {currentPlayer.name}</h3>
+		<h3>{$_('hud.current_player')} {currentPlayer.name}</h3>
 		<p>
-			Inventory:
+			{$_('hud.inventory')}
 		</p>
 		<ul id="inventoryList">
 			{#each [...currentPlayer.inventory.entries()] as [resource, amount]}
-				<li>{resource} ({amount})</li>
+				<li>{$_(`resource.${resource}`)} ({amount})</li>
 			{:else}
 				<li>-</li>
 			{/each}
