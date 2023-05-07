@@ -14,10 +14,10 @@
 	let pixelHeight = 0;
 
 	const players = [
-		// {name: 'Alex'},
-		// {name: 'Hélène'},
-		// {name: 'Aidan'},
-		// {name: 'Jillian'},
+		// { name: 'Alex' },
+		// { name: 'Hélène' },
+		// { name: 'Aidan' },
+		// { name: 'Jillian' },
 		{ name: 'Jane' },
 		{ name: 'John' },
 		{ name: 'Ella' },

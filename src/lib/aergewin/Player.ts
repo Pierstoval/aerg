@@ -1,6 +1,11 @@
 import type { Direction, Hex } from 'honeycomb-grid';
 import { fromCoordinates, Grid, move } from 'honeycomb-grid';
 import { Color } from '@svgdotjs/svg.js';
+import type TerrainTile from './TerrainTile';
+import type {ResourceName} from "./GameData";
+import type ZoneActivation from "./ZoneActivation";
+
+export type InventoryItem = [ResourceName, number];
 
 export type PlayerName = string;
 
@@ -23,6 +28,8 @@ export default class Player {
 	private _position: Hex;
 	private _grid: Grid<Hex>;
 	private _isActive: boolean = false;
+	private _inventory: Map<ResourceName, number> = new Map();
+	private _hp: number;
 
 	private _actionsSpent = 0;
 
@@ -39,6 +46,7 @@ export default class Player {
 		this._position = position;
 		this._color = new Color(((orderIndex - 1) / numberOfPlayers) * 360, 90, 50, 'hsl');
 		this._grid.setHexes([position]);
+		this._hp = 10; // TODO: implement player classes to customize HP
 	}
 
 	get color(): Color {
@@ -53,6 +61,10 @@ export default class Player {
 		return this._name;
 	}
 
+	get inventory(): Map<ResourceName, number> {
+		return this._inventory;
+	}
+
 	get actionsSpent(): number {
 		return this._actionsSpent;
 	}
@@ -61,11 +73,19 @@ export default class Player {
 		return this._isActive;
 	}
 
-	public activate() {
+	get position(): Hex {
+		return this._position;
+	}
+
+	get hp(): number {
+		return this._hp;
+	}
+
+	public play() {
 		this._isActive = true;
 	}
 
-	public deactivate() {
+	public stopPlaying() {
 		this._isActive = false;
 	}
 
@@ -125,8 +145,44 @@ export default class Player {
 		return this._actionsSpent + distance + this.explorationCost() <= 7;
 	}
 
-	get position(): Hex {
-		return this._position;
+	public canActivateZone(terrain: TerrainTile) {
+		if (terrain.possibleActions.length === 0) {
+			// No actions possible.
+			return false;
+		}
+
+		// TODO: calculate depending on terrain type.
+		const minimumTerrainActivationCost = 1;
+
+		return this._actionsSpent + minimumTerrainActivationCost <= 7;
+	}
+
+	public gatherFoodAt(zone: TerrainTile) {
+		// TODO: calculate amount based on player type and zone.
+		const amount = 1;
+
+		this.addItemToInventory('food', amount);
+	}
+
+	public gatherWoodAt(zone: TerrainTile) {
+		// TODO: calculate amount based on player type and zone.
+		const amount = 1;
+
+		this.addItemToInventory('wood', amount);
+	}
+
+	public gatherMineralsAt(zone: TerrainTile) {
+		// TODO: calculate amount based on player type and zone.
+		const amount = 1;
+
+		this.addItemToInventory('minerals', amount);
+	}
+
+	healAt(playerZone: TerrainTile) {
+		// TODO: calculate amount based on player type and zone.
+		const amount = 1;
+
+		this._hp += amount;
 	}
 
 	public on(event: PlayerEvent, callback: any): void {
@@ -134,6 +190,12 @@ export default class Player {
 		events.push(callback);
 
 		this.eventListeners.set(event, events);
+	}
+
+	private addItemToInventory(resource: ResourceName, amount: number = 1) {
+		let currentAmount = this._inventory.get(resource) || 0;
+
+		this._inventory.set(resource, currentAmount + amount);
 	}
 
 	private movementCost(distance: number) {

@@ -1,6 +1,6 @@
 import type Game from '../game/Game';
 import type AergewinGameEngine from './AergewinGameEngine';
-import type Renderer from "./Renderer";
+import type Renderer from './Renderer';
 
 export type GameEventType = 'tick';
 
