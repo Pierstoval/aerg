@@ -17,10 +17,7 @@
 
 <style lang="scss">
 	main {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
+		text-align: center;
 		button {
 			padding: 0.5rem 1rem;
 			margin: 0.5rem;

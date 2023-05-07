@@ -1,9 +1,8 @@
 import type Game from '../game/Game';
 import type AergewinGameEngine from './AergewinGameEngine';
-import type Renderer from './Renderer';
-import type { ViewBoxLike } from '@svgdotjs/svg.js';
+import type Renderer from "./Renderer";
 
-export type GameEventType = 'draw';
+export type GameEventType = 'tick';
 
 export type GameEventCallback = (e: GameEvent) => void;
 
@@ -17,11 +16,11 @@ export abstract class GameEvent {
 	}
 }
 
-export class DrawEvent extends GameEvent {
-	public readonly viewbox: ViewBoxLike;
+export class TickEvent extends GameEvent {
+	public readonly renderer: Renderer;
 
-	constructor(game: Game, engine: AergewinGameEngine, viewbox: ViewBoxLike) {
+	constructor(game: Game, engine: AergewinGameEngine, renderer: Renderer) {
 		super(game, engine);
-		this.viewbox = viewbox;
+		this.renderer = renderer;
 	}
 }

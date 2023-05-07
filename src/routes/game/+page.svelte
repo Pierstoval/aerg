@@ -9,7 +9,6 @@
 		const game = new Game(gameElement, {
 			defaultScene: MainMenu
 		});
-
 		console.info('Game', game);
 	});
 </script>
@@ -19,9 +18,14 @@
 </div>
 
 <style lang="scss">
+	:global(body, html) {
+		height: 100%;
+	}
 	#game {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		width: 100%;
+		min-height: 100%;
 	}
 </style>

@@ -2,49 +2,82 @@
 
 <script lang="ts">
 	import type AergewinGameEngine from './AergewinGameEngine';
+	import type {CurrentGameAction} from './AergewinGameEngine';
 	import type Player from './Player';
+	import type {ComponentType, SvelteComponentTyped} from 'svelte/types/runtime/internal/dev';
+	import ActionsListHUD from "./HUD/ActionsListHUD.svelte";
+	import MoveHUD from "./HUD/MoveHUD.svelte";
+	import FightHUD from "./HUD/FightHUD.svelte";
+	import ActivateZoneHUD from "./HUD/ActivateZoneHUD.svelte";
 
 	export let gameEngine: AergewinGameEngine;
-	export let currentPlayerIndex: number = 0;
 
 	let players: Array<Player> = [];
+	let currentPlayerIndex = 0;
+	let currentAction: string = '';
+	let currentHUDComponent: SvelteComponentTyped|undefined;
 
-	gameEngine.on('draw', () => {
+	const actionsComponents: {[key: CurrentGameAction]: ComponentType} = {
+		'actions_list': ActionsListHUD,
+		'move': MoveHUD,
+		'fight': FightHUD,
+		'activate_zone': ActivateZoneHUD,
+	};
+
+	gameEngine.on('tick', () => {
 		players = [...gameEngine.players.values()];
+		currentAction = gameEngine.currentAction;
+		currentHUDComponent = actionsComponents[currentAction];
+		currentPlayerIndex = gameEngine.getCurrentPlayer().index;
 	});
 </script>
 
-<section>
+<section id="actions">
 	<h1>Players actions:</h1>
 	{#each players as player}
 		<p class:active={currentPlayerIndex === player.index}>
-			<span class="player-pin" style="--player-color: {player.color.toString()}"
-				>{player.index}</span
-			>
+			<span class="player-pin" style="--player-color: {player.color.toString()}">{player.index}</span>
 			<span>{player.name}: {player.actionsSpent}</span>
 		</p>
 	{/each}
 </section>
 
+{#if currentHUDComponent}
+	<section id="currentAction">
+		<svelte:component this={currentHUDComponent} gameEngine={gameEngine}></svelte:component>
+	</section>
+{/if}
+
 <style lang="scss">
-	p.active {
-		background: #ddd;
-		border: solid 1px #ccc;
-		border-radius: 1rem;
+	#currentAction {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		position: fixed;
+		bottom: 1rem;
 	}
-	.player-pin {
-		display: inline-block;
-		width: 1rem;
-		height: 1rem;
-		background-color: var(--player-color);
-		border-radius: 50%;
-		text-align: center;
-		font-size: 14px;
-		line-height: 100%;
-		font-weight: bolder;
-		color: white;
-		text-shadow: 0 0 3px #000000;
-		margin: 0;
-		padding: 0;
+	#actions {
+		position: absolute;
+		width: 18rem;
+
+		p.active {
+			background: #ddd;
+			border: solid 1px #ccc;
+			border-radius: 1rem;
+		}
+		.player-pin {
+			display: inline-block;
+			width: 1rem;
+			height: 1rem;
+			background-color: var(--player-color);
+			border-radius: 50%;
+			text-align: center;
+			font-size: 14px;
+			line-height: 100%;
+			font-weight: bolder;
+			color: white;
+			text-shadow: 0 0 3px #000000;
+		}
 	}
 </style>

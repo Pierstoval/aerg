@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import AergewinGameEngine from '../aergewin/AergewinGameEngine';
 	import Game from '../game/Game';
-	import type { DrawEvent } from '../aergewin/Event';
+	import type { TickEvent } from '../aergewin/Event';
 
 	export let game: Game;
 
@@ -27,9 +27,10 @@
 	onMount(() => {
 		gameEngine = new AergewinGameEngine(game, hexGridElement, hudElement, players);
 
-		gameEngine.on('draw', function (e: DrawEvent) {
-			pixelWidth = e.viewbox.width;
-			pixelHeight = e.viewbox.height;
+		gameEngine.on('tick', function (e: TickEvent) {
+			const viewbox = e.renderer.getViewbox();
+			pixelWidth = viewbox.width;
+			pixelHeight = viewbox.height;
 		});
 
 		gameEngine.start();
@@ -55,19 +56,19 @@
 
 <style lang="scss">
 	#game-container {
-		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		width: 100%;
+		min-height: 100%;
 		z-index: 0;
 	}
 	#board-container {
 		z-index: 2;
-		display: flex;
-		align-items: center;
-		justify-content: center;
 	}
 	#board {
 		z-index: 3;
-		position: absolute;
+		position: relative;
 		top: 0;
 		left: 0;
 		outline: solid 1px #ddd;

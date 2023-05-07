@@ -103,6 +103,10 @@ export default class Player {
 		this.dispatch(PlayerEvent.MOVE);
 	}
 
+	public canMove(): boolean {
+		return this._actionsSpent + this.movementCost(1) <= 7;
+	}
+
 	public canMoveTo(hex: Hex): boolean {
 		const distance = this._grid.distance(this._position, hex);
 		if (distance === 0) {

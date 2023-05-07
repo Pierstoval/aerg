@@ -5,9 +5,11 @@ import Renderer from './Renderer';
 import type Game from '../game/Game';
 import TerrainTile from './TerrainTile';
 import type {GameEventCallback, GameEventType} from './Event';
-import {DrawEvent, GameEvent} from './Event';
+import {TickEvent, GameEvent} from './Event';
+import type Foe from "./Foe";
 
-type CurrentGameAction = 'actions_list'
+export type CurrentGameAction =
+	'actions_list'
 	| 'move'
 	| 'fight'
 	| 'activate_zone';
@@ -23,11 +25,12 @@ export default class AergewinGameEngine {
 	private readonly _renderer: Renderer;
 	private readonly _players: Map<string, Player>;
 	private readonly _terrain: Array<TerrainTile>;
+	private readonly _foes: Array<Foe> = [];
 
 	private started: boolean = false;
 	private eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
 	private _currentPlayer: PlayerName;
-	private currentAction: CurrentGameAction = 'actions_list';
+	private _currentAction: CurrentGameAction = 'actions_list';
 
 	constructor(
 		game: Game,
@@ -41,6 +44,10 @@ export default class AergewinGameEngine {
 		this._terrain = this.createTerrain();
 		this._currentPlayer = this.getFirstPlayerName();
 		this._renderer = new Renderer(this, hexGridElement, hudElement);
+	}
+
+	get currentAction(): CurrentGameAction {
+		return this._currentAction;
 	}
 
 	get grid(): Grid<Hex> {
@@ -61,24 +68,16 @@ export default class AergewinGameEngine {
 		}
 		this.started = true;
 
-		this.currentAction = 'actions_list';
+		this._currentAction = 'actions_list';
 		this.getFirstPlayer().activate();
 
-		this._players.forEach((player: Player) => {
-			player.on(PlayerEvent.MOVE, () => {
-				this._currentPlayer = this.getNextPlayer(this._currentPlayer);
-				this._renderer.updateHoverPositions([]);
-				this.redraw();
-			});
-		});
-
-		this.redraw();
+		this.tick();
 	}
 
 	public click(e: MouseEvent) {
 		this.checkGameIsRunning();
 
-		switch (this.currentAction) {
+		switch (this._currentAction) {
 			case 'actions_list':
 				console.info('TODO: actions_list');
 				break;
@@ -98,23 +97,62 @@ export default class AergewinGameEngine {
 	public mouseMove(e: MouseEvent) {
 		this.checkGameIsRunning();
 
-		this._renderer.updateHoverPositions([]);
-
-		switch (this.currentAction) {
+		switch (this._currentAction) {
 			case 'actions_list':
+				this._renderer.updateHoverPositions([]);
 				console.info('TODO: actions_list');
 				break;
 			case 'move':
 				this.hoverCurrentPlayerPath(this.getHexFromMouseEvent(e));
 				break;
 			case 'fight':
+				this._renderer.updateHoverPositions([]);
 				console.info('TODO: fight')
 				break;
 			case 'activate_zone':
+				this._renderer.updateHoverPositions([]);
 				console.info('TODO: activate_zone')
 				break;
 		}
 
+	}
+
+	public playerCanFight(player: Player) {
+		const currentPlayerPosition = player.position;
+
+		let canFight = false;
+
+		this._foes.forEach((foe: Foe) => {
+			if (foe.position === currentPlayerPosition) {
+				canFight = true;
+			}
+		});
+
+		return canFight;
+	}
+
+	public getCurrentPlayer(): Player {
+		this.checkGameIsRunning();
+
+		const player = this._players.get(this._currentPlayer);
+
+		if (!player) {
+			throw new Error('Unrecoverable error: cannot find current player.');
+		}
+
+		return player;
+	}
+
+	public on(eventType: GameEventType, callback: GameEventCallback): void {
+		const listeners = this.eventListeners.get(eventType) || [];
+		listeners.push(callback);
+
+		this.eventListeners.set(eventType, listeners);
+	}
+
+	public changeCurrentActionState(state: CurrentGameAction) {
+		this._currentAction = state;
+		this.tick();
 	}
 
 	private playerCanMoveOrExplore(player: Player, hexCoordinates: Hex) {
@@ -134,20 +172,13 @@ export default class AergewinGameEngine {
 		);
 	}
 
-	public on(eventType: GameEventType, callback: GameEventCallback): void {
-		const listeners = this.eventListeners.get(eventType) || [];
-		listeners.push(callback);
-
-		this.eventListeners.set(eventType, listeners);
-	}
-
-	private redraw() {
+	private tick() {
 		this.checkGameIsRunning();
 
 		this.refreshGrid();
 
 		this._renderer.draw(() =>
-			this.dispatch('draw', new DrawEvent(this._game, this, this._renderer.getViewbox()))
+			this.dispatch('tick', new TickEvent(this._game, this, this._renderer))
 		);
 	}
 
@@ -184,18 +215,6 @@ export default class AergewinGameEngine {
 				found = true;
 			}
 		} while (true);
-	}
-
-	private getCurrentPlayer(): Player {
-		this.checkGameIsRunning();
-
-		const player = this._players.get(this._currentPlayer);
-
-		if (!player) {
-			throw new Error('Unrecoverable error: cannot find current player.');
-		}
-
-		return player;
 	}
 
 	private checkGameIsRunning() {
@@ -310,8 +329,9 @@ export default class AergewinGameEngine {
 	}
 
 	private moveCurrentPlayerTo(hexCoordinates: Hex | undefined) {
+		this._renderer.updateHoverPositions([]);
+
 		if (!hexCoordinates) {
-			this._renderer.updateHoverPositions([]);
 			return;
 		}
 
@@ -324,13 +344,13 @@ export default class AergewinGameEngine {
 				currentPlayer.explore(hexCoordinates);
 				currentPlayer.moveTo(hexCoordinates);
 			}
-
-			return;
-		}
-
-		if (currentPlayer.canMoveTo(hexCoordinates)) {
+		} else if (currentPlayer.canMoveTo(hexCoordinates)) {
 			currentPlayer.moveTo(hexCoordinates);
 		}
+
+		this._currentPlayer = this.getNextPlayer(this._currentPlayer);
+		this._currentAction = 'actions_list';
+		this.tick();
 	}
 
 	private hoverCurrentPlayerPath(hexCoordinates: Hex | undefined) {
