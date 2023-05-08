@@ -14,9 +14,6 @@ const config = {
 			precompress: true,
 			fallback: 'index.html',
 		}),
-		prerender: {
-			crawl: true,
-		},
 	}
 };
 
