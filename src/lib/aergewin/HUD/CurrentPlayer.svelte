@@ -14,21 +14,21 @@
     });
 </script>
 
+<section id="currentPlayer">
 {#if currentPlayer}
-    <section id="currentPlayer">
-        <h3>{$_('hud.current_player')} {currentPlayer.name}</h3>
-        <p>
-            {$_('hud.inventory')}
-        </p>
-        <ul id="inventoryList">
-            {#each [...currentPlayer.inventory.entries()] as [resource, amount]}
-                <li>{$_(`resource.${resource}`)} ({amount})</li>
-            {:else}
-                <li>-</li>
-            {/each}
-        </ul>
-    </section>
+    <h3>{$_('hud.current_player')} {currentPlayer.name}</h3>
+    <p>
+        {$_('hud.inventory')}
+    </p>
+    <ul id="inventoryList">
+        {#each [...currentPlayer.inventory.entries()] as [resource, amount]}
+            <li>{$_(`resource.${resource}`)} ({amount})</li>
+        {:else}
+            <li>-</li>
+        {/each}
+    </ul>
 {/if}
+</section>
 
 <style lang="scss">
     #currentPlayer {

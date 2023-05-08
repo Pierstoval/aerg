@@ -1,18 +1,18 @@
 import { writable, type Writable } from 'svelte/store';
-import type { GameOptions } from './GameOptions';
-import { getConfig } from './GameOptions';
+import type { SceneManagerOptions } from './SceneManagerOptions';
+import { getConfig } from './SceneManagerOptions';
 import type { SceneConstructor, SceneInstance } from './Scene';
 
-export default class Game {
+export default class SceneManager {
 	private readonly gameContainerElement: HTMLElement;
-	private readonly _options: GameOptions;
+	private readonly _options: SceneManagerOptions;
 
 	private _currentSceneStore: Writable<SceneConstructor> = writable();
 
 	private _scenesCache: Map<SceneConstructor, SceneInstance> = new Map();
 
-	constructor(gameContainerElement: HTMLElement, options?: Partial<GameOptions>) {
-		this._options = getConfig(options as GameOptions);
+	constructor(gameContainerElement: HTMLElement, options?: Partial<SceneManagerOptions>) {
+		this._options = getConfig(options as SceneManagerOptions);
 
 		this.gameContainerElement = gameContainerElement;
 		this.gameContainerElement.innerHTML = '';
@@ -27,7 +27,7 @@ export default class Game {
 		});
 	}
 
-	get options(): GameOptions {
+	get options(): SceneManagerOptions {
 		return { ...this._options };
 	}
 

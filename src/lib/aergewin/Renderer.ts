@@ -18,9 +18,8 @@ export default class Renderer {
 		this.gameEngine = gameEngine;
 
 		// Clear the board
-		for (const child of gridElement.children) {
-			gridElement.removeChild(child);
-		}
+		hudElement.innerHTML = '';
+		gridElement.innerHTML = '';
 
 		const svgContainer = SVG();
 		svgContainer.addTo(gridElement).size('100%', '100%');
@@ -96,6 +95,7 @@ export default class Renderer {
 		this.drawGrid();
 		this.drawTerrain();
 		this.drawPlayers();
+		this.drawCurrentPlayerPosition();
 		this.drawHUD();
 		this.drawHoverTiles();
 
@@ -152,6 +152,19 @@ export default class Renderer {
 
 			this.svgContainer.group().add(polygon);
 		});
+	}
+
+	private drawCurrentPlayerPosition() {
+		const player = this.gameEngine.getCurrentPlayer();
+
+		const points: ArrayXY[] = player.position.corners.map(({ x, y }) => [x, y]);
+
+		const polygon = this.svgContainer
+			.polygon(points)
+			.fill('none')
+			.stroke({ width: 4, color: player.color.toHex() });
+
+		this.svgContainer.group().add(polygon);
 	}
 
 	private drawPlayers() {

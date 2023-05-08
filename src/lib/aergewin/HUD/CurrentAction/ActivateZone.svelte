@@ -2,23 +2,29 @@
 	import type AergewinGameEngine from '../../AergewinGameEngine';
 	import ZoneActivation from "../../ZoneActivation";
 	import {_} from "svelte-i18n";
+	import type TerrainTile from "../../TerrainTile";
+	import type Player from "../../Player";
 
 	export let gameEngine: AergewinGameEngine;
-
-	const currentPlayer = gameEngine.getCurrentPlayer();
-	const currentZone = gameEngine.getPlayerZone(currentPlayer);
-
-	const possibleActions = currentZone.possibleActions;
+	let currentPlayer: Player|undefined;
+	let currentZone: TerrainTile|undefined;
+	let possibleActions: ZoneActivation[] = [];
+	gameEngine.on('tick', () => {
+		currentPlayer = gameEngine.getCurrentPlayer();
+		currentZone = gameEngine.getPlayerZone(currentPlayer);
+		possibleActions = currentZone.possibleActions;
+	})
 
 	function executeAction(action: ZoneActivation) {
+		if (!currentPlayer) {
+			throw new Error('Unrecoverable error: cannot find current player to execute action.');
+		}
 		gameEngine.playerExecuteAction(currentPlayer, action);
 	}
 </script>
 
 <section>
-	<h3>Activate current zone</h3>
-	<p>{$_('hud.activate_zone.current_zone')} <strong>{$_(`zone.${currentZone.type}`)}</strong></p>
-	<p></p>
+	<h3>{$_('hud.activate_zone.current_zone')} <strong>{$_(`zone.${currentZone?.type}`)}</strong></h3>
 	{#each possibleActions as action}
 		<button on:click={() => executeAction(action)}>
 			{$_(`actions.${action.name}`)}

@@ -1,8 +1,8 @@
 export default {
     'actions.build_barricade': 'Construire une barricade',
-    'actions.gather_food': 'Récolter du bois',
+    'actions.gather_food': 'Récolter de la nourriture',
     'actions.gather_minerals': 'Récolter du minerai',
-    'actions.gather_wood': 'Récolter de la nourriture',
+    'actions.gather_wood': 'Récolter du bois',
     'actions.heal_self': 'Se soigner',
     'actions.repair_village': 'Réparer le village',
     'home.loading': 'Chargement en cours…',

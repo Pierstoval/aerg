@@ -1,18 +1,18 @@
 import type { SceneConstructor } from './Scene';
 import DefaultScene from './components/DefaultScene.svelte';
 
-export type GameOptions = {
+export type SceneManagerOptions = {
 	defaultScene: SceneConstructor;
 };
 
-export function getConfig(options: Partial<GameOptions>): GameOptions {
+export function getConfig(options: Partial<SceneManagerOptions>): SceneManagerOptions {
 	const finalOptions = Object.assign(defaults(), options);
 
-	return finalOptions as GameOptions;
+	return finalOptions as SceneManagerOptions;
 }
 
-function defaults(): Partial<GameOptions> {
+function defaults(): Partial<SceneManagerOptions> {
 	return {
 		defaultScene: DefaultScene
-	} as GameOptions;
+	} as SceneManagerOptions;
 }

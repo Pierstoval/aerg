@@ -1,12 +1,12 @@
 <script lang="ts">
-	import type Game from '../game/Game';
-	import SvgBoard from './SvgBoard.svelte';
+	import type SceneManager from '../game/SceneManager';
+	import GameHexBoard from './GameHexBoard.svelte';
 	import {_} from "svelte-i18n";
 
-	export let game: Game;
+	export let game: SceneManager;
 
 	function start() {
-		game.renderScene(SvgBoard);
+		game.renderScene(GameHexBoard);
 	}
 </script>
 

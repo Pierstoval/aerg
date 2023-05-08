@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import {afterUpdate, onMount} from 'svelte';
 	import AergewinGameEngine from '../aergewin/AergewinGameEngine';
-	import Game from '../game/Game';
+	import SceneManager from '../game/SceneManager';
 	import type { TickEvent } from '../aergewin/Event';
 
-	export let game: Game;
+	export let game: SceneManager;
 
 	let gameEngine: AergewinGameEngine;
 	let hexGridElement: HTMLElement;
@@ -24,7 +24,7 @@
 		{ name: 'Mario' }
 	];
 
-	onMount(() => {
+	function start() {
 		gameEngine = new AergewinGameEngine(game, hexGridElement, hudElement, players);
 
 		gameEngine.on('tick', function (e: TickEvent) {
@@ -34,6 +34,10 @@
 		});
 
 		gameEngine.start();
+	}
+
+	onMount(() => {
+		start();
 	});
 
 	const clickGrid = (e: MouseEvent) => gameEngine.click(e);
@@ -49,7 +53,9 @@
 				bind:this={hexGridElement}
 				on:click={clickGrid}
 				on:mousemove={mouseMoveGrid}
-			/>
+			>
+				…
+			</div>
 		</div>
 	</div>
 </div>

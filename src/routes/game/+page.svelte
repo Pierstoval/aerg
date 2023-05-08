@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
-	import Game from '../../lib/game/Game';
+	import SceneManager from '../../lib/game/SceneManager';
 	import MainMenu from '../../lib/scenes/MainMenu.svelte';
 
 	let gameElement: HTMLElement;
 
 	onMount(() => {
-		const game = new Game(gameElement, {
+		const game = new SceneManager(gameElement, {
 			defaultScene: MainMenu
 		});
 		console.info('Game', game);

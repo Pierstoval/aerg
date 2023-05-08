@@ -2,7 +2,7 @@ import type { PlayerName } from './Player';
 import Player, { type PlayerConstructor, PlayerEvent } from './Player';
 import { defineHex, Direction, Grid, type Hex, line, Orientation, spiral } from 'honeycomb-grid';
 import Renderer from './Renderer';
-import type Game from '../game/Game';
+import type SceneManager from '../game/SceneManager';
 import TerrainTile from './TerrainTile';
 import type { GameEventCallback, GameEventType } from './Event';
 import { TickEvent, GameEvent } from './Event';
@@ -11,15 +11,13 @@ import type { TerrainType } from './GameData';
 import { TerrainsDecks } from './GameData';
 import type ZoneActivation from "./ZoneActivation";
 
-export type CurrentGameAction = 'actions_list' | 'move' | 'fight' | 'activate_zone';
-
 export default class AergewinGameEngine {
 	public static readonly options = {
 		hexSize: 70,
 		hexOrientation: Orientation.FLAT
 	};
 
-	private readonly _game: Game;
+	private readonly _game: SceneManager;
 	private readonly _grid: Grid<Hex>;
 	private readonly _renderer: Renderer;
 	private readonly _players: Map<string, Player>;
@@ -30,10 +28,9 @@ export default class AergewinGameEngine {
 	private started: boolean = false;
 	private eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
 	private _currentPlayer: PlayerName;
-	private _currentAction: CurrentGameAction = 'actions_list';
 
 	constructor(
-		game: Game,
+		game: SceneManager,
 		hexGridElement: HTMLElement,
 		hudElement: HTMLElement,
 		players: Array<PlayerConstructor>
@@ -45,10 +42,6 @@ export default class AergewinGameEngine {
 		this._currentPlayer = this.getFirstPlayerName();
 		this._renderer = new Renderer(this, hexGridElement, hudElement);
 		this._terrainDeck = TerrainsDecks;
-	}
-
-	get currentAction(): CurrentGameAction {
-		return this._currentAction;
 	}
 
 	get grid(): Grid<Hex> {
@@ -69,7 +62,6 @@ export default class AergewinGameEngine {
 		}
 		this.started = true;
 
-		this._currentAction = 'actions_list';
 		this.getFirstPlayer().play();
 
 		this.tick();
@@ -78,31 +70,13 @@ export default class AergewinGameEngine {
 	public click(e: MouseEvent) {
 		this.checkGameIsRunning();
 
-		switch (this._currentAction) {
-			case 'actions_list':
-			case 'fight':
-			case 'activate_zone':
-				// Usually nothing to do, as it is handled by HUD.
-				break;
-			case 'move':
-				this.moveCurrentPlayerTo(this.getHexFromMouseEvent(e));
-				break;
-		}
+		this.moveCurrentPlayerTo(this.getHexFromMouseEvent(e));
 	}
 
 	public mouseMove(e: MouseEvent) {
 		this.checkGameIsRunning();
 
-		switch (this._currentAction) {
-			case 'actions_list':
-			case 'activate_zone':
-			case 'fight':
-				this._renderer.updateHoverPositions([]);
-				break;
-			case 'move':
-				this.hoverCurrentPlayerPath(this.getHexFromMouseEvent(e));
-				break;
-		}
+		this.hoverCurrentPlayerPath(this.getHexFromMouseEvent(e));
 	}
 
 	public playerCanFight(player: Player) {
@@ -166,11 +140,6 @@ export default class AergewinGameEngine {
 		this.eventListeners.set(eventType, listeners);
 	}
 
-	public changeCurrentActionState(state: CurrentGameAction) {
-		this._currentAction = state;
-		this.tick();
-	}
-
 	public playerExecuteAction(player: Player, action: ZoneActivation) {
 		switch (action.name) {
 			case "repair_village":
@@ -180,26 +149,29 @@ export default class AergewinGameEngine {
 				alert('TODO: build barricade');
 				break;
 			case "heal_self":
-				player.healAt(this.getPlayerZone(player));
+				player.healAt(action, this.getPlayerZone(player));
 				break;
 			case "gather_food":
-				player.gatherFoodAt(this.getPlayerZone(player));
+				player.gatherFoodAt(action, this.getPlayerZone(player));
 				break;
 			case "gather_wood":
-				player.gatherWoodAt(this.getPlayerZone(player));
+				player.gatherWoodAt(action, this.getPlayerZone(player));
 				break;
 			case "gather_minerals":
-				player.gatherMineralsAt(this.getPlayerZone(player));
+				player.gatherMineralsAt(action, this.getPlayerZone(player));
 				break;
 		}
 
+		this.goToNextPlayer();
 		this.tick();
 	}
 
 	private playerCanMoveOrExplore(player: Player, hexCoordinates: Hex) {
+		const hexContainsTerrain = this.hexContainsTerrain(hexCoordinates);
+
 		return (
-			(!this.hexContainsTerrain(hexCoordinates) && player.canExplore(hexCoordinates)) ||
-			(this.hexContainsTerrain(hexCoordinates) && player.canMoveTo(hexCoordinates))
+			(!hexContainsTerrain && player.canExplore(hexCoordinates)) ||
+			(hexContainsTerrain && player.canMoveTo(hexCoordinates))
 		);
 	}
 
@@ -400,10 +372,13 @@ export default class AergewinGameEngine {
 			return;
 		}
 
-		this._currentPlayer = this.getNextPlayer(this._currentPlayer);
-		this._currentAction = 'actions_list';
+		this.goToNextPlayer();
 		this.tick();
 	}
+
+	private goToNextPlayer() {
+		this._currentPlayer = this.getNextPlayer(this._currentPlayer);
+	};
 
 	private hoverCurrentPlayerPath(hexCoordinates: Hex | undefined) {
 		const player = this.getCurrentPlayer();

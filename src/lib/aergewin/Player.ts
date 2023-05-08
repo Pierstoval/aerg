@@ -157,32 +157,36 @@ export default class Player {
 		return this._actionsSpent + minimumTerrainActivationCost <= 7;
 	}
 
-	public gatherFoodAt(zone: TerrainTile) {
+	public gatherFoodAt(action: ZoneActivation, zone: TerrainTile) {
 		// TODO: calculate amount based on player type and zone.
 		const amount = 1;
 
 		this.addItemToInventory('food', amount);
+		this._actionsSpent += action.cost;
 	}
 
-	public gatherWoodAt(zone: TerrainTile) {
+	public gatherWoodAt(action: ZoneActivation, zone: TerrainTile) {
 		// TODO: calculate amount based on player type and zone.
 		const amount = 1;
 
 		this.addItemToInventory('wood', amount);
+		this._actionsSpent += action.cost;
 	}
 
-	public gatherMineralsAt(zone: TerrainTile) {
+	public gatherMineralsAt(action: ZoneActivation, zone: TerrainTile) {
 		// TODO: calculate amount based on player type and zone.
 		const amount = 1;
 
 		this.addItemToInventory('minerals', amount);
+		this._actionsSpent += action.cost;
 	}
 
-	healAt(playerZone: TerrainTile) {
+	healAt(action: ZoneActivation, playerZone: TerrainTile) {
 		// TODO: calculate amount based on player type and zone.
 		const amount = 1;
 
 		this._hp += amount;
+		this._actionsSpent += action.cost;
 	}
 
 	public on(event: PlayerEvent, callback: any): void {

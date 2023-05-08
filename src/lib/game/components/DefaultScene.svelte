@@ -1,16 +1,14 @@
 <script lang="ts">
-	import Game from '../Game';
+	import SceneManager from '../SceneManager';
 
-	export let game: Game;
-
-	let options = game.options;
+	export let game: SceneManager;
 </script>
 
 <main>
 	<h1>Game ready to be coded!</h1>
 
 	<p>Here are the game options:</p>
-	<pre>{JSON.stringify(options, undefined, 4)}</pre>
+	<pre>{JSON.stringify(game.options, undefined, 4)}</pre>
 </main>
 
 <style lang="scss">
