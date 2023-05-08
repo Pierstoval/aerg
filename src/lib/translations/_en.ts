@@ -1,5 +1,6 @@
 export default {
 	'actions.build_barricade': 'Build barricade',
+	'actions.drop_items': 'Drop items',
 	'actions.gather_food': 'Gather food',
 	'actions.gather_minerals': 'Gather minerals',
 	'actions.gather_wood': 'Gather wood',
@@ -16,18 +17,21 @@ export default {
 	'hud.activate_zone.possible_actions': 'Possible actions',
 	'hud.activate_zone.xp_gain': 'Gain: {xp}XP',
 	'hud.current_player': 'Current player:',
+	'hud.generic_actions.deposit_resource': 'Deposit one unit of {resource}',
+	'hud.generic_actions.next_player': 'Next player',
 	'hud.inventory': 'Inventory:',
 	'hud.parameters.change_language': 'Change language:',
 	'hud.players_list': 'Players:',
+	'hud.village.title': 'Village',
 	'main_menu.start_button': 'New game',
 	'resource.food': 'Food',
 	'resource.minerals': 'Minerals',
 	'resource.wood': 'Wood',
-	'zone.village': 'Village',
-	'zone.mountain': 'Mountain',
-	'zone.lake': 'Lake',
 	'zone.forest': 'Forest',
+	'zone.lake': 'Lake',
 	'zone.mine': 'Mine',
+	'zone.mountain': 'Mountain',
 	'zone.plains': 'Plains',
-	'zone.sanctuary': 'Sanctuary'
+	'zone.sanctuary': 'Sanctuary',
+	'zone.village': 'Village'
 };

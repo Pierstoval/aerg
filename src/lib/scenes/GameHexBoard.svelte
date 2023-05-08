@@ -36,9 +36,7 @@
 		gameEngine.start();
 	}
 
-	onMount(() => {
-		start();
-	});
+	onMount(start);
 
 	const clickGrid = (e: MouseEvent) => gameEngine.click(e);
 	const mouseMoveGrid = (e: MouseEvent) => gameEngine.mouseMove(e);

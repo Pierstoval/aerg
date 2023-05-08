@@ -12,10 +12,10 @@
         <Fight {gameEngine} />
     </div>
     <div>
-        <ActivateZone {gameEngine} />
+        <GenericActions {gameEngine} />
     </div>
     <div>
-        <GenericActions {gameEngine} />
+        <ActivateZone {gameEngine} />
     </div>
 </section>
 

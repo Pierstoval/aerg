@@ -31,10 +31,13 @@
 		position: fixed;
 		width: 18rem;
 
-		p.active {
-			background: #ddd;
-			border: solid 1px #ccc;
-			border-radius: 1rem;
+		p {
+			border: solid 1px transparent;
+			&.active {
+				background: #ddd;
+				border-color: #ccc;
+				border-radius: 1rem;
+			}
 		}
 		.player-pin {
 			display: inline-block;

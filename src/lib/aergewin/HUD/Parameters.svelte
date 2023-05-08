@@ -75,7 +75,8 @@
 			width: 100vw;
 			height: 100vh;
 			padding: 2rem;
-			background: white;
+			background-color: rgba(255, 255, 255, 0.4);
+			backdrop-filter: blur(1rem);
 			align-items: center;
 			justify-content: center;
 

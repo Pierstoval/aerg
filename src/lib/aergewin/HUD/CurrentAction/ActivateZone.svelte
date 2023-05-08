@@ -4,17 +4,25 @@
 	import { _ } from 'svelte-i18n';
 	import type TerrainTile from '../../TerrainTile';
 	import type Player from '../../Player';
+	import {onMount} from "svelte";
 
 	export let gameEngine: AergewinGameEngine;
 	let currentPlayer: Player;
 	let currentZone: TerrainTile;
 	let possibleActions: ZoneActivation[] = [];
 
-	gameEngine.on('tick', () => {
+	gameEngine.on('tick', sync);
+	onMount(() => {
+		if (gameEngine.isRunning) {
+			sync();
+		}
+	});
+
+	function sync() {
 		currentPlayer = gameEngine.getCurrentPlayer();
 		currentZone = gameEngine.getPlayerZone(currentPlayer);
 		possibleActions = currentZone.possibleActions;
-	});
+	}
 
 	function canExecuteAction(action: ZoneActivation): boolean {
 		if (!currentPlayer) {
@@ -34,21 +42,23 @@
 <section>
 	<h3>{$_('hud.activate_zone.current_zone')} <strong>{$_(`zone.${currentZone?.type}`)}</strong></h3>
 	{#each possibleActions as action}
-		<button
-			on:click={() => checkAndExecuteAction(action)}
-			class:disabled="{!canExecuteAction(action)}"
-		>
-			{$_(`actions.${action.name}`)}
+		<div>
+			<button
+					on:click={() => checkAndExecuteAction(action)}
+					class:disabled="{!canExecuteAction(action)}"
+			>
+				{$_(`actions.${action.name}`)}
+			</button>
 			(
 			{$_('hud.activate_zone.cost', { values: { action: action.cost } })}
 			{#each action.resourceCost as resourceCost}
 				, {resourceCost[1]} {$_(`resource.${resourceCost[0]}`)}
 			{/each}
 			{#if action.experienceGain}; {$_('hud.activate_zone.xp_gain', {
-					values: { xp: action.experienceGain }
-				})}{/if}
+				values: { xp: action.experienceGain }
+			})}{/if}
 			)
-		</button>
+		</div>
 	{/each}
 </section>
 
@@ -58,7 +68,6 @@
 		display: block;
 	}
 	button {
-		display: block;
 		border: solid 1px transparent;
 		background: #f0f8ff;
 		padding: 0.5rem 1rem;

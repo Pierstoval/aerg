@@ -1,5 +1,6 @@
 export default {
 	'actions.build_barricade': 'Construire une barricade',
+	'actions.drop_items': 'Déposer des objets',
 	'actions.gather_food': 'Récolter de la nourriture',
 	'actions.gather_minerals': 'Récolter du minerai',
 	'actions.gather_wood': 'Récolter du bois',
@@ -16,18 +17,21 @@ export default {
 	'hud.activate_zone.possible_actions': 'Actions possibles',
 	'hud.activate_zone.xp_gain': 'Gain : {xp} XP',
 	'hud.current_player': 'Joueur/joueuse en cours :',
+	'hud.generic_actions.deposit_resource': 'Déposer une unité de {resource}',
+	'hud.generic_actions.next_player': 'Joueur/joueuse suivant(e)',
 	'hud.inventory': 'Inventaire :',
 	'hud.parameters.change_language': 'Changer la langue :',
 	'hud.players_list': 'Joueurs/joueuses :',
+	'hud.village.title': 'Village',
 	'main_menu.start_button': 'Nouvelle partie',
 	'resource.food': 'Nourriture',
 	'resource.minerals': 'Minerai',
 	'resource.wood': 'Bois',
-	'zone.village': 'Village',
-	'zone.mountain': 'Montagne',
-	'zone.lake': 'Lac',
 	'zone.forest': 'Forêt',
+	'zone.lake': 'Lac',
 	'zone.mine': 'Mine',
+	'zone.mountain': 'Montagne',
 	'zone.plains': 'Plaine',
-	'zone.sanctuary': 'Sanctuaire'
+	'zone.sanctuary': 'Sanctuaire',
+	'zone.village': 'Village'
 };

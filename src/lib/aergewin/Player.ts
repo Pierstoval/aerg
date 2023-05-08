@@ -135,6 +135,20 @@ export default class Player {
 		return totalCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
 	}
 
+	public dropResource(resource: ResourceName) {
+		let currentAmount = this._inventory.get(resource) || 0;
+		if (currentAmount === 0) {
+			throw new Error(
+				`Unrecoverable error: cannot drop resource "${resource}" since current inventory contains none.`
+			);
+		}
+
+		this._inventory.set(resource, currentAmount - 1);
+		if (this._inventory.get(resource) === 0) {
+			this._inventory.delete(resource);
+		}
+	}
+
 	public canExplore(hex: Hex): boolean {
 		const distance = this._grid.distance(this._position, hex);
 		if (distance === 0) {

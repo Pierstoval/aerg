@@ -62,6 +62,14 @@ export default class AergewinGameEngine {
 		return this._terrain;
 	}
 
+	get isRunning(): boolean {
+		return this.started;
+	}
+
+	get terrainsInventory(): Array<TerrainInventoryItem> {
+		return this._terrainsInventory;
+	}
+
 	public start() {
 		if (this.started) {
 			throw new Error('Game already running.');
@@ -202,6 +210,35 @@ export default class AergewinGameEngine {
 		}
 
 		this.goToNextPlayer();
+	}
+
+	public addResourceAt(resource: ResourceName, position: Hex) {
+		const positionAsString = position.toString();
+		const terrainsAtPosition = this._terrainsInventory.filter((item: TerrainInventoryItem) => {
+			return item.position.toString() === positionAsString;
+		});
+
+		if (terrainsAtPosition.length > 1) {
+			throw new Error('Unrecoverable error: more than one terrain were found at the same position');
+		}
+
+		if (terrainsAtPosition.length === 0) {
+			const inventory: Map<ResourceName, number> = new Map();
+			inventory.set(resource, 1);
+			this._terrainsInventory.push({
+				position: this._grid.createHex(position),
+				inventory: inventory
+			});
+		} else {
+			const resourceAmount = terrainsAtPosition[0].inventory.get(resource) || 0;
+			terrainsAtPosition[0].inventory.set(resource, resourceAmount + 1);
+		}
+
+		this.tick();
+	}
+
+	public goToNextPlayer() {
+		this._currentPlayer = this.getNextPlayer(this._currentPlayer);
 		this.tick();
 	}
 
@@ -412,11 +449,6 @@ export default class AergewinGameEngine {
 		}
 
 		this.goToNextPlayer();
-		this.tick();
-	}
-
-	private goToNextPlayer() {
-		this._currentPlayer = this.getNextPlayer(this._currentPlayer);
 	}
 
 	private hoverCurrentPlayerPath(hexCoordinates: Hex | undefined) {
