@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type AergewinGameEngine from '../AergewinGameEngine';
+	import type AergewinGameEngine from '../../AergewinGameEngine';
 	import {_} from "svelte-i18n";
 
 	export let gameEngine: AergewinGameEngine;

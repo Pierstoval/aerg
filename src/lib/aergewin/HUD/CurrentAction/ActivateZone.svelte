@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type AergewinGameEngine from '../AergewinGameEngine';
-	import ZoneActivation from "../ZoneActivation";
+	import type AergewinGameEngine from '../../AergewinGameEngine';
+	import ZoneActivation from "../../ZoneActivation";
 	import {_} from "svelte-i18n";
 
 	export let gameEngine: AergewinGameEngine;
@@ -17,17 +17,17 @@
 
 <section>
 	<h3>Activate current zone</h3>
-	<p>Current zone is: <strong>{currentZone.type}</strong></p>
-	<p>Possible actions:</p>
+	<p>{$_('hud.activate_zone.current_zone')} <strong>{$_(`zone.${currentZone.type}`)}</strong></p>
+	<p></p>
 	{#each possibleActions as action}
 		<button on:click={() => executeAction(action)}>
 			{$_(`actions.${action.name}`)}
 			(
 			{$_('hud.activate_zone.cost', {values: {action: action.cost}})}
 			{#each action.resourceCost as resourceCost}
-				, {resourceCost[1]} {resourceCost[0]}
+				, {resourceCost[1]} {$_(`resource.${resourceCost[0]}`)}
 			{/each}
-			{#if action.experienceGain}; Gain: {action.experienceGain}XP{/if}
+			{#if action.experienceGain}; {$_('hud.activate_zone.xp_gain', {values: {xp: action.experienceGain}})}{/if}
 			)
 		</button>
 	{/each}

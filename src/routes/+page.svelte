@@ -21,6 +21,10 @@
 		width: 100vw;
 		height: 100vh;
 		padding: 3rem;
+		h1 {
+			text-align: center;
+			margin: 1rem auto;
+		}
 		ul {
 			list-style: none;
 			min-width: 50%;
@@ -28,13 +32,16 @@
 			li {
 				text-align: center;
 				a {
-					display: inline-block;
-					padding: 0.2rem 0.5rem;
+					display: block;
+					padding: 0.4rem 2rem;
 					border: solid 1px transparent;
 					border-radius: 1rem;
+					background-color: #f1f1f1;
+					color: #4169E1;
 					&:hover {
-						background-color: #eee;
+						background-color: #e1e1e1;
 						border-color: #ddd;
+						color: #3c61ce;
 					}
 				}
 			}
