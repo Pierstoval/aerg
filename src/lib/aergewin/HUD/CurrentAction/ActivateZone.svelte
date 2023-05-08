@@ -6,20 +6,28 @@
 	import type Player from '../../Player';
 
 	export let gameEngine: AergewinGameEngine;
-	let currentPlayer: Player | undefined;
-	let currentZone: TerrainTile | undefined;
+	let currentPlayer: Player;
+	let currentZone: TerrainTile;
 	let possibleActions: ZoneActivation[] = [];
+
 	gameEngine.on('tick', () => {
 		currentPlayer = gameEngine.getCurrentPlayer();
 		currentZone = gameEngine.getPlayerZone(currentPlayer);
 		possibleActions = currentZone.possibleActions;
 	});
 
-	function executeAction(action: ZoneActivation) {
+	function canExecuteAction(action: ZoneActivation): boolean {
 		if (!currentPlayer) {
-			throw new Error('Unrecoverable error: cannot find current player to execute action.');
+			throw new Error('Unrecoverable error: cannot find current player to check if they can execute action.');
 		}
-		gameEngine.playerExecuteAction(currentPlayer, action);
+		return gameEngine.playerCanActivateZone(currentPlayer, action);
+	}
+
+	function checkAndExecuteAction(action: ZoneActivation) {
+		if (!canExecuteAction(action)) {
+			return;
+		}
+		gameEngine.playerActivateZone(currentPlayer, action);
 	}
 </script>
 
@@ -27,8 +35,8 @@
 	<h3>{$_('hud.activate_zone.current_zone')} <strong>{$_(`zone.${currentZone?.type}`)}</strong></h3>
 	{#each possibleActions as action}
 		<button
-			on:click={() => executeAction(action)}
-			disabled={gameEngine.playerCanExecuteAction(currentPlayer, action)}
+			on:click={() => checkAndExecuteAction(action)}
+			class:disabled="{!canExecuteAction(action)}"
 		>
 			{$_(`actions.${action.name}`)}
 			(
@@ -55,7 +63,14 @@
 		background: #f0f8ff;
 		padding: 0.5rem 1rem;
 		border-radius: 0.5rem;
-		&:hover {
+		&.disabled {
+			background: #f7fbff;
+			color: #888;
+			&:hover {
+				cursor: not-allowed;
+			}
+		}
+		&:hover:not(.disabled) {
 			background: #d3dfe8;
 			cursor: pointer;
 		}

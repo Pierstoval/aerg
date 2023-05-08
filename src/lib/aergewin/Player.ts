@@ -3,9 +3,8 @@ import { fromCoordinates, Grid, move } from 'honeycomb-grid';
 import { Color } from '@svgdotjs/svg.js';
 import type TerrainTile from './TerrainTile';
 import type { ResourceName } from './GameData';
-import type ZoneActivation from './ZoneActivation';
-
-export type InventoryItem = [ResourceName, number];
+import type { ZoneActivation } from './ZoneActivation';
+import AergewinGameEngine from './AergewinGameEngine';
 
 export type PlayerName = string;
 
@@ -97,8 +96,6 @@ export default class Player {
 
 			return p;
 		});
-
-		this.dispatch(PlayerEvent.MOVE);
 	}
 
 	public moveTo(hex: Hex) {
@@ -109,7 +106,6 @@ export default class Player {
 		}
 		this._actionsSpent += distance;
 		this._position = hex;
-		this.dispatch(PlayerEvent.MOVE);
 	}
 
 	public explore(hex: Hex) {
@@ -120,11 +116,12 @@ export default class Player {
 		}
 		this._actionsSpent += distance + this.explorationCost();
 		this._position = hex;
-		this.dispatch(PlayerEvent.MOVE);
 	}
 
 	public canMove(): boolean {
-		return this._actionsSpent + this.movementCost(1) <= 7;
+		const totalCost = this._actionsSpent + this.movementCost(1);
+
+		return totalCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
 	}
 
 	public canMoveTo(hex: Hex): boolean {
@@ -133,7 +130,9 @@ export default class Player {
 			return false;
 		}
 
-		return this._actionsSpent + this.movementCost(distance) <= 7;
+		const totalCost = this._actionsSpent + this.movementCost(distance);
+
+		return totalCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
 	}
 
 	public canExplore(hex: Hex): boolean {
@@ -142,7 +141,9 @@ export default class Player {
 			return false;
 		}
 
-		return this._actionsSpent + distance + this.explorationCost() <= 7;
+		const totalCost = this._actionsSpent + distance + this.explorationCost();
+
+		return totalCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
 	}
 
 	public canActivateZone(terrain: TerrainTile) {
@@ -154,7 +155,9 @@ export default class Player {
 		// TODO: calculate depending on terrain type.
 		const minimumTerrainActivationCost = 1;
 
-		return this._actionsSpent + minimumTerrainActivationCost <= 7;
+		const totalCost = this._actionsSpent + minimumTerrainActivationCost;
+
+		return totalCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
 	}
 
 	public gatherFoodAt(action: ZoneActivation, zone: TerrainTile) {
@@ -181,7 +184,7 @@ export default class Player {
 		this._actionsSpent += action.cost;
 	}
 
-	healAt(action: ZoneActivation, playerZone: TerrainTile) {
+	public healAt(action: ZoneActivation, playerZone: TerrainTile) {
 		// TODO: calculate amount based on player type and zone.
 		const amount = 1;
 
@@ -189,11 +192,20 @@ export default class Player {
 		this._actionsSpent += action.cost;
 	}
 
-	public on(event: PlayerEvent, callback: any): void {
-		const events = this.eventListeners.get(event) || [];
-		events.push(callback);
+	public hasResource(resource: ResourceName, amount: number = 1) {
+		let currentAmount = this._inventory.get(resource) || 0;
 
-		this.eventListeners.set(event, events);
+		return currentAmount >= amount;
+	}
+
+	public isFullHp() {
+		return this._hp === 10; // FIXME when we have classes
+	}
+
+	public canFight(): boolean {
+		const fightCost = 1; // FIXME when we have classes
+
+		return this._actionsSpent + fightCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
 	}
 
 	private addItemToInventory(resource: ResourceName, amount: number = 1) {
@@ -210,21 +222,5 @@ export default class Player {
 	private explorationCost() {
 		// TODO: "Explorator" may have a bonus here
 		return 1;
-	}
-
-	private dispatch(event: PlayerEvent): void {
-		const events = this.eventListeners.get(event) || [];
-
-		events.forEach((callback: PlayerEventCallback) => callback(this));
-	}
-
-	hasResource(resource: ResourceName, amount: number = 1) {
-		let currentAmount = this._inventory.get(resource) || 0;
-
-		return currentAmount >= amount;
-	}
-
-	isFullHp() {
-		return this._hp == 10; // FIXME when we have classes
 	}
 }

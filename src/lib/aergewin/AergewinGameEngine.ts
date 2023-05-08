@@ -8,10 +8,14 @@ import type { GameEventCallback, GameEventType } from './Event';
 import { TickEvent, GameEvent } from './Event';
 import type Foe from './Foe';
 import type { TerrainType } from './GameData';
-import { Assets, TerrainsDecks } from './GameData';
+import { Assets, TerrainsDecks, type ResourceName } from './GameData';
 import type { ZoneActivation, ResourceCost } from './ZoneActivation';
 
+type TerrainInventoryItem = { position: Hex; inventory: Map<ResourceName, number> };
+
 export default class AergewinGameEngine {
+	public static readonly MAX_ACTIONS_COUNT_PER_TURN = 7;
+
 	public static readonly options = {
 		hexSize: 70,
 		hexOrientation: Orientation.FLAT
@@ -24,6 +28,8 @@ export default class AergewinGameEngine {
 	private readonly _terrain: Array<TerrainTile>;
 	private readonly _terrainDeck: Array<TerrainType>;
 	private readonly _foes: Array<Foe> = [];
+	private _villageHp = 10;
+	private _terrainsInventory: Array<TerrainInventoryItem> = [];
 
 	private started: boolean = false;
 	private eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
@@ -82,6 +88,10 @@ export default class AergewinGameEngine {
 	}
 
 	public playerCanFight(player: Player) {
+		if (!player.canFight()) {
+			return false;
+		}
+
 		let canFight = false;
 
 		this._foes.forEach((foe: Foe) => {
@@ -91,18 +101,6 @@ export default class AergewinGameEngine {
 		});
 
 		return canFight;
-	}
-
-	public playerCanActivateZone(player: Player) {
-		let canActivate = false;
-
-		this._terrain.forEach((terrain: TerrainTile) => {
-			if (terrain.position.toString() === player.position.toString()) {
-				canActivate = player.canActivateZone(terrain);
-			}
-		});
-
-		return canActivate;
 	}
 
 	public getCurrentPlayer(): Player {
@@ -142,7 +140,7 @@ export default class AergewinGameEngine {
 		this.eventListeners.set(eventType, listeners);
 	}
 
-	public playerCanExecuteAction(player: Player, action: ZoneActivation): boolean {
+	public playerCanActivateZone(player: Player, action: ZoneActivation): boolean {
 		const playerActionSpent = player.actionsSpent;
 		const currentZone = this.getPlayerZone(player);
 
@@ -153,7 +151,9 @@ export default class AergewinGameEngine {
 			}
 		});
 
-		const canExecute = playerActionSpent + action.cost <= 7 && hasResource;
+		const canExecute =
+			hasResource &&
+			playerActionSpent + action.cost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
 
 		if (!canExecute) {
 			return false;
@@ -161,7 +161,7 @@ export default class AergewinGameEngine {
 
 		switch (action.name) {
 			case 'repair_village':
-				return currentZone.isType('village');
+				return this._villageHp < 10 && currentZone.isType('village');
 			case 'build_barricade':
 				return currentZone.isType('village');
 			case 'heal_self':
@@ -175,9 +175,11 @@ export default class AergewinGameEngine {
 			case 'gather_minerals':
 				return currentZone.isType('mine');
 		}
+
+		throw new Error(`Unrecoverable error: Unsupported action "${action.name}".`);
 	}
 
-	public playerExecuteAction(player: Player, action: ZoneActivation) {
+	public playerActivateZone(player: Player, action: ZoneActivation) {
 		switch (action.name) {
 			case 'repair_village':
 				alert('TODO: repair village');

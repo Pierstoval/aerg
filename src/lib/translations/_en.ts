@@ -27,5 +27,7 @@ export default {
 	'zone.mountain': 'Mountain',
 	'zone.lake': 'Lake',
 	'zone.forest': 'Forest',
-	'zone.plains': 'Plains'
+	'zone.mine': 'Mine',
+	'zone.plains': 'Plains',
+	'zone.sanctuary': 'Sanctuary'
 };
