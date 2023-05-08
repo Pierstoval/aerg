@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type SceneManager from '../game/SceneManager';
 	import GameHexBoard from './GameHexBoard.svelte';
-	import {_} from "svelte-i18n";
+	import { _ } from 'svelte-i18n';
 
 	export let game: SceneManager;
 

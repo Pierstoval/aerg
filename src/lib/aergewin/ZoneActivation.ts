@@ -24,12 +24,18 @@ export function getTerrainActions(terrain: TerrainTile): ZoneActivation[] {
 		case 'plains':
 			return [];
 
+		case 'mine':
+			return [new ZoneActivation('gather_minerals', 2)];
+
+		case 'sanctuary':
+			return [new ZoneActivation('heal_self', 2)];
+
 		default:
 			throw new Error(`Unrecoverable error: Unknown terrain type "${terrain.type}".`);
 	}
 }
 
-export default class ZoneActivation {
+export class ZoneActivation {
 	public readonly name: ActionName;
 	public readonly cost: number;
 	public readonly experienceGain: number;

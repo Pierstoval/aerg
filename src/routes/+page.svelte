@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {_} from "svelte-i18n";
+	import { _ } from 'svelte-i18n';
 </script>
 
 <nav>
@@ -37,7 +37,7 @@
 					border: solid 1px transparent;
 					border-radius: 1rem;
 					background-color: #f1f1f1;
-					color: #4169E1;
+					color: #4169e1;
 					&:hover {
 						background-color: #e1e1e1;
 						border-color: #ddd;

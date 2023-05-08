@@ -2,8 +2,8 @@ import type { Direction, Hex } from 'honeycomb-grid';
 import { fromCoordinates, Grid, move } from 'honeycomb-grid';
 import { Color } from '@svgdotjs/svg.js';
 import type TerrainTile from './TerrainTile';
-import type {ResourceName} from "./GameData";
-import type ZoneActivation from "./ZoneActivation";
+import type { ResourceName } from './GameData';
+import type ZoneActivation from './ZoneActivation';
 
 export type InventoryItem = [ResourceName, number];
 
@@ -216,5 +216,15 @@ export default class Player {
 		const events = this.eventListeners.get(event) || [];
 
 		events.forEach((callback: PlayerEventCallback) => callback(this));
+	}
+
+	hasResource(resource: ResourceName, amount: number = 1) {
+		let currentAmount = this._inventory.get(resource) || 0;
+
+		return currentAmount >= amount;
+	}
+
+	isFullHp() {
+		return this._hp == 10; // FIXME when we have classes
 	}
 }

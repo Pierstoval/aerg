@@ -1,7 +1,8 @@
 import type { Hex } from 'honeycomb-grid';
 import type { Grid } from 'honeycomb-grid';
-import ZoneActivation, { getTerrainActions } from './ZoneActivation';
+import { type ZoneActivation, getTerrainActions } from './ZoneActivation';
 import type { TerrainType } from './GameData';
+import { Assets } from './GameData';
 
 export default class TerrainTile {
 	private readonly _type: TerrainType;
@@ -28,19 +29,16 @@ export default class TerrainTile {
 	}
 
 	get image() {
-		switch (this.type) {
-			case 'village':
-				return '/tiles/compass.png';
-			case 'mountain':
-				return '/tiles/montagnes.png';
-			case 'lake':
-				return '/tiles/etang.png';
-			case 'forest':
-				return '/tiles/foret.png';
-			case 'plains':
-				return '/tiles/plaines.png';
-			default:
-				throw new Error(`Unrecoverable error: Unknown terrain type "${this.type}".`);
+		const asset: string | undefined = Assets[`tile.${this.type}`];
+
+		if (!asset) {
+			throw new Error(`Inexistent asset for tile type "${this.type}".`);
 		}
+
+		return asset;
+	}
+
+	public isType(type: TerrainType) {
+		return this.type === type;
 	}
 }

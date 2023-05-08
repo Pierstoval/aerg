@@ -8,8 +8,8 @@ import type { GameEventCallback, GameEventType } from './Event';
 import { TickEvent, GameEvent } from './Event';
 import type Foe from './Foe';
 import type { TerrainType } from './GameData';
-import { TerrainsDecks } from './GameData';
-import type ZoneActivation from "./ZoneActivation";
+import { Assets, TerrainsDecks } from './GameData';
+import type { ZoneActivation, ResourceCost } from './ZoneActivation';
 
 export default class AergewinGameEngine {
 	public static readonly options = {
@@ -62,9 +62,11 @@ export default class AergewinGameEngine {
 		}
 		this.started = true;
 
-		this.getFirstPlayer().play();
+		Promise.all([this.loadAssets()]).then(() => {
+			this.getFirstPlayer().play();
 
-		this.tick();
+			this.tick();
+		});
 	}
 
 	public click(e: MouseEvent) {
@@ -140,24 +142,59 @@ export default class AergewinGameEngine {
 		this.eventListeners.set(eventType, listeners);
 	}
 
+	public playerCanExecuteAction(player: Player, action: ZoneActivation): boolean {
+		const playerActionSpent = player.actionsSpent;
+		const currentZone = this.getPlayerZone(player);
+
+		let hasResource = true;
+		action.resourceCost.forEach((cost: ResourceCost) => {
+			if (!player.hasResource(cost[0], cost[1])) {
+				hasResource = false;
+			}
+		});
+
+		const canExecute = playerActionSpent + action.cost <= 7 && hasResource;
+
+		if (!canExecute) {
+			return false;
+		}
+
+		switch (action.name) {
+			case 'repair_village':
+				return currentZone.isType('village');
+			case 'build_barricade':
+				return currentZone.isType('village');
+			case 'heal_self':
+				return (
+					!player.isFullHp() && (currentZone.isType('village') || currentZone.isType('sanctuary'))
+				);
+			case 'gather_food':
+				return currentZone.isType('lake') || currentZone.isType('forest');
+			case 'gather_wood':
+				return currentZone.isType('forest');
+			case 'gather_minerals':
+				return currentZone.isType('mine');
+		}
+	}
+
 	public playerExecuteAction(player: Player, action: ZoneActivation) {
 		switch (action.name) {
-			case "repair_village":
+			case 'repair_village':
 				alert('TODO: repair village');
 				break;
-			case "build_barricade":
+			case 'build_barricade':
 				alert('TODO: build barricade');
 				break;
-			case "heal_self":
+			case 'heal_self':
 				player.healAt(action, this.getPlayerZone(player));
 				break;
-			case "gather_food":
+			case 'gather_food':
 				player.gatherFoodAt(action, this.getPlayerZone(player));
 				break;
-			case "gather_wood":
+			case 'gather_wood':
 				player.gatherWoodAt(action, this.getPlayerZone(player));
 				break;
-			case "gather_minerals":
+			case 'gather_minerals':
 				player.gatherMineralsAt(action, this.getPlayerZone(player));
 				break;
 		}
@@ -378,7 +415,7 @@ export default class AergewinGameEngine {
 
 	private goToNextPlayer() {
 		this._currentPlayer = this.getNextPlayer(this._currentPlayer);
-	};
+	}
 
 	private hoverCurrentPlayerPath(hexCoordinates: Hex | undefined) {
 		const player = this.getCurrentPlayer();
@@ -389,5 +426,19 @@ export default class AergewinGameEngine {
 			];
 			this._renderer.updateHoverPositions(hoverList);
 		}
+	}
+
+	private async loadAssets() {
+		return Promise.all(
+			Object.values(Assets).map((assetUrl) => {
+				return fetch(assetUrl).then((res) => {
+					if (res.ok) {
+						console.info(`Successfully loaded "${assetUrl}".`);
+					} else {
+						throw new Error(`Could not load "${assetUrl}".`);
+					}
+				});
+			})
+		);
 	}
 }
