@@ -2,7 +2,7 @@ import type { PlayerName } from './Player';
 import Player, { type PlayerConstructor, PlayerEvent } from './Player';
 import { defineHex, Direction, Grid, type Hex, line, Orientation, spiral } from 'honeycomb-grid';
 import Renderer from './Renderer';
-import type SceneManager from '../game/SceneManager';
+import type SceneManager from '../SceneManagement/SceneManager';
 import TerrainTile from './TerrainTile';
 import type { GameEventCallback, GameEventType } from './Event';
 import { TickEvent, GameEvent } from './Event';
@@ -10,6 +10,7 @@ import type Foe from './Foe';
 import type { TerrainType } from './GameData';
 import { Assets, TerrainsDecks, type ResourceName } from './GameData';
 import type { ZoneActivation, ResourceCost } from './ZoneActivation';
+import type DailyEvent from './DailyEvent';
 
 type TerrainInventoryItem = { position: Hex; inventory: Map<ResourceName, number> };
 
@@ -24,6 +25,7 @@ export default class AergewinGameEngine {
 	private readonly _game: SceneManager;
 	private readonly _grid: Grid<Hex>;
 	private readonly _renderer: Renderer;
+	private readonly _currentEvents: Map<'first' | 'second', DailyEvent> = new Map();
 	private readonly _players: Map<string, Player>;
 	private readonly _terrain: Array<TerrainTile>;
 	private readonly _terrainDeck: Array<TerrainType>;
@@ -77,9 +79,7 @@ export default class AergewinGameEngine {
 		this.started = true;
 
 		Promise.all([this.loadAssets()]).then(() => {
-			this.getFirstPlayer().play();
-
-			this.tick();
+			this.newTurn();
 		});
 	}
 
@@ -370,6 +370,7 @@ export default class AergewinGameEngine {
 				this._grid.setHexes(newHexes);
 			}
 		});
+
 		this._players.forEach((player: Player) => {
 			const newHexes = this.getNewHexesAroundPosition(player.position);
 			if (newHexes.length) {
@@ -474,5 +475,21 @@ export default class AergewinGameEngine {
 				});
 			})
 		);
+	}
+
+	private newTurn() {
+		this._currentPlayer = this.getFirstPlayerName();
+		this.getFirstPlayer().play();
+
+		this._players.forEach((player: Player) => {
+			player.resetActions();
+		});
+		this.pickNewEvent();
+
+		this.tick();
+	}
+
+	private pickNewEvent() {
+		this._currentEvents;
 	}
 }

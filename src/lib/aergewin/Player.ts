@@ -80,15 +80,15 @@ export default class Player {
 		return this._hp;
 	}
 
-	public play() {
+	play() {
 		this._isActive = true;
 	}
 
-	public stopPlaying() {
+	stopPlaying() {
 		this._isActive = false;
 	}
 
-	public goToDirection(direction: Direction) {
+	goToDirection(direction: Direction) {
 		this._grid.traverse([fromCoordinates(this._position), move(direction)]).map((p: Hex) => {
 			const distance = this._grid.distance(this._position, p);
 			this._actionsSpent += distance;
@@ -98,7 +98,7 @@ export default class Player {
 		});
 	}
 
-	public moveTo(hex: Hex) {
+	moveTo(hex: Hex) {
 		const distance = this._grid.distance(this._position, hex);
 		if (distance === 0) {
 			// Do nothing if player is not moving.
@@ -108,7 +108,7 @@ export default class Player {
 		this._position = hex;
 	}
 
-	public explore(hex: Hex) {
+	explore(hex: Hex) {
 		const distance = this._grid.distance(this._position, hex);
 		if (distance === 0) {
 			// Do nothing if player is not moving.
@@ -118,13 +118,13 @@ export default class Player {
 		this._position = hex;
 	}
 
-	public canMove(): boolean {
+	canMove(): boolean {
 		const totalCost = this._actionsSpent + this.movementCost(1);
 
 		return totalCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
 	}
 
-	public canMoveTo(hex: Hex): boolean {
+	canMoveTo(hex: Hex): boolean {
 		const distance = this._grid.distance(this._position, hex);
 		if (distance === 0) {
 			return false;
@@ -135,7 +135,7 @@ export default class Player {
 		return totalCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
 	}
 
-	public dropResource(resource: ResourceName) {
+	dropResource(resource: ResourceName) {
 		let currentAmount = this._inventory.get(resource) || 0;
 		if (currentAmount === 0) {
 			throw new Error(
@@ -149,7 +149,7 @@ export default class Player {
 		}
 	}
 
-	public canExplore(hex: Hex): boolean {
+	canExplore(hex: Hex): boolean {
 		const distance = this._grid.distance(this._position, hex);
 		if (distance === 0) {
 			return false;
@@ -160,7 +160,7 @@ export default class Player {
 		return totalCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
 	}
 
-	public canActivateZone(terrain: TerrainTile) {
+	canActivateZone(terrain: TerrainTile) {
 		if (terrain.possibleActions.length === 0) {
 			// No actions possible.
 			return false;
@@ -174,7 +174,7 @@ export default class Player {
 		return totalCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
 	}
 
-	public gatherFoodAt(action: ZoneActivation, zone: TerrainTile) {
+	gatherFoodAt(action: ZoneActivation, zone: TerrainTile) {
 		// TODO: calculate amount based on player type and zone.
 		const amount = 1;
 
@@ -182,7 +182,7 @@ export default class Player {
 		this._actionsSpent += action.cost;
 	}
 
-	public gatherWoodAt(action: ZoneActivation, zone: TerrainTile) {
+	gatherWoodAt(action: ZoneActivation, zone: TerrainTile) {
 		// TODO: calculate amount based on player type and zone.
 		const amount = 1;
 
@@ -190,7 +190,7 @@ export default class Player {
 		this._actionsSpent += action.cost;
 	}
 
-	public gatherMineralsAt(action: ZoneActivation, zone: TerrainTile) {
+	gatherMineralsAt(action: ZoneActivation, zone: TerrainTile) {
 		// TODO: calculate amount based on player type and zone.
 		const amount = 1;
 
@@ -198,7 +198,7 @@ export default class Player {
 		this._actionsSpent += action.cost;
 	}
 
-	public healAt(action: ZoneActivation, playerZone: TerrainTile) {
+	healAt(action: ZoneActivation, playerZone: TerrainTile) {
 		// TODO: calculate amount based on player type and zone.
 		const amount = 1;
 
@@ -206,20 +206,24 @@ export default class Player {
 		this._actionsSpent += action.cost;
 	}
 
-	public hasResource(resource: ResourceName, amount: number = 1) {
+	hasResource(resource: ResourceName, amount: number = 1) {
 		let currentAmount = this._inventory.get(resource) || 0;
 
 		return currentAmount >= amount;
 	}
 
-	public isFullHp() {
+	isFullHp() {
 		return this._hp === 10; // FIXME when we have classes
 	}
 
-	public canFight(): boolean {
+	canFight(): boolean {
 		const fightCost = 1; // FIXME when we have classes
 
 		return this._actionsSpent + fightCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
+	}
+
+	resetActions() {
+		this._actionsSpent = 0;
 	}
 
 	private addItemToInventory(resource: ResourceName, amount: number = 1) {

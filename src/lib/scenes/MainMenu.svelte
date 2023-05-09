@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type SceneManager from '../game/SceneManager';
+	import type SceneManager from '../SceneManagement/SceneManager';
 	import GameHexBoard from './GameHexBoard.svelte';
 	import { _ } from 'svelte-i18n';
 

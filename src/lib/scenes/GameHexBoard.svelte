@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { afterUpdate, onMount } from 'svelte';
 	import AergewinGameEngine from '../aergewin/AergewinGameEngine';
-	import SceneManager from '../game/SceneManager';
+	import SceneManager from '../SceneManagement/SceneManager';
 	import type { TickEvent } from '../aergewin/Event';
 
 	export let game: SceneManager;
