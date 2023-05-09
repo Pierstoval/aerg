@@ -44,99 +44,120 @@ export const Assets = {
 	'tile.mine': '/tiles/mine.png'
 };
 
-type ActionCondition = ['movement', TerrainType] | 'new_turn';
+type ActionCondition = ['movement' | 'gather_food', TerrainType] | 'new_turn';
 
-type Operator = 'add' | 'remove' | 'multiply' | 'divide_floor' | 'divide_ceil';
+type Operator = 'add' | 'substract' | 'multiply' | 'divide_floor' | 'divide_ceil';
+
+type AlterationTarget = 'village' | 'current_player' | 'all_players';
 
 type EventCondition = ActionCondition;
 type EventAlteration = {
 	alterActionCost?: [Operator, number];
+	alterResourceQuantity?: [AlterationTarget, Operator, number, ResourceName];
 };
 
 type DailyEvent = [
 	string,
 	'malus' | 'bonus',
-	'persistant' | 'ponctuel',
+	'persistent' | 'one-off',
 	Array<EventCondition>,
 	EventAlteration
 ];
 
 export const DailyEvents: DailyEvent[] = [
-	['Blizzard', 'malus', 'persistant', [['movement', 'mountain']], { alterActionCost: ['add', 1] }],
+	['Blizzard', 'malus', 'persistent', [['movement', 'mountain']], { alterActionCost: ['add', 1] }],
 
-	['Brume', 'malus', 'persistant', [['movement', 'forest']], { alterActionCost: ['add', 1] }],
+	['Brume', 'malus', 'persistent', [['movement', 'forest']], { alterActionCost: ['add', 1] }],
 
-	['Crue', 'malus', 'persistant', [['movement', 'lake']], { alterActionCost: ['add', 1] }],
+	['Crue', 'malus', 'persistent', [['movement', 'lake']], { alterActionCost: ['add', 1] }],
 
-	['Famine', 'malus', 'persistant', ['new_turn'], {}],
+	[
+		'Famine',
+		'malus',
+		'persistent',
+		['new_turn'],
+		{ alterResourceQuantity: ['village', 'substract', 1, 'food'] }
+	],
 
 	[
 		'Glissement de terrain',
 		'malus',
-		'persistant',
+		'persistent',
 		[['movement', 'plains']],
 		{ alterActionCost: ['add', 1] }
 	],
 
-	['Mauvaises récoltes', 'malus', 'persistant', [], {}],
+	[
+		'Mauvaises récoltes',
+		'malus',
+		'persistent',
+		[['gather_food', 'lake']],
+		{ alterActionCost: ['add', 1] }
+	],
 
-	['Surchauffe de métal', 'malus', 'persistant', [], {}],
+	// ['Surchauffe de métal', 'malus', 'persistent', [], {}],
 
-	['Pandémie', 'malus', 'persistant', [], {}],
+	[
+		'Pandémie',
+		'malus',
+		'persistent',
+		['new_turn'],
+		{ alterResourceQuantity: ['all_players', 'substract', 1, 'food'] }
+	],
 
-	['Blessure', 'malus', 'ponctuel', [], {}],
+	// ['Blessure', 'malus', 'one-off', [], {}],
 
-	['Chute de pierres', 'malus', 'ponctuel', [], {}],
+	['Chute de pierres', 'malus', 'one-off', [], {}],
 
-	['Incendie', 'malus', 'ponctuel', [], {}],
+	['Incendie', 'malus', 'one-off', [], {}],
 
-	['Invasion', 'malus', 'ponctuel', [], {}],
+	['Invasion', 'malus', 'one-off', [], {}],
 
-	['Malédiction', 'malus', 'ponctuel', [], {}],
+	['Malédiction', 'malus', 'one-off', [], {}],
 
-	['Mouvement du chaos', 'malus', 'ponctuel', [], {}],
+	['Mouvement du chaos', 'malus', 'one-off', [], {}],
 
-	['Serpents', 'malus', 'ponctuel', [], {}],
+	['Serpents', 'malus', 'one-off', [], {}],
 
-	['Spectres', 'malus', 'ponctuel', [], {}],
+	['Spectres', 'malus', 'one-off', [], {}],
 
-	['Termites', 'malus', 'ponctuel', [], {}],
+	['Termites', 'malus', 'one-off', [], {}],
 
-	['Vermine', 'malus', 'ponctuel', [], {}],
+	['Vermine', 'malus', 'one-off', [], {}],
 
-	['Beau temps', 'bonus', 'persistant', [], {}],
+	['Beau temps', 'bonus', 'persistent', [], {}],
 
-	['Bon filon', 'bonus', 'persistant', [], {}],
+	['Bon filon', 'bonus', 'persistent', [], {}],
 
-	['Chants guerriers', 'bonus', 'persistant', [], {}],
+	['Chants guerriers', 'bonus', 'persistent', [], {}],
 
-	['Haches neuves', 'bonus', 'persistant', [], {}],
+	['Haches neuves', 'bonus', 'persistent', [], {}],
 
-	['Jour des esprits', 'bonus', 'persistant', [], {}],
+	['Jour des esprits', 'bonus', 'persistent', [], {}],
 
-	['Moisson', 'bonus', 'persistant', [], {}],
+	['Moisson', 'bonus', 'persistent', [], {}],
 
-	['Outillage parfait', 'bonus', 'persistant', [], {}],
+	['Outillage parfait', 'bonus', 'persistent', [], {}],
 
-	['Bénédiction', 'bonus', 'persistant', [], {}],
+	['Bénédiction', 'bonus', 'persistent', [], {}],
 
-	['Nature vengeresse', 'bonus', 'ponctuel', [], {}],
+	['Nature vengeresse', 'bonus', 'one-off', [], {}],
 
-	['Formation martiale', 'bonus', 'ponctuel', [], {}],
+	['Formation martiale', 'bonus', 'one-off', [], {}],
 
-	['Menuisier performant', 'bonus', 'ponctuel', [], {}],
+	['Menuisier performant', 'bonus', 'one-off', [], {}],
 
-	['Motivation', 'bonus', 'ponctuel', [], {}],
+	['Motivation', 'bonus', 'one-off', [], {}],
 
-	['Abondance', 'bonus', 'ponctuel', [], {}],
+	['Abondance', 'bonus', 'one-off', [], {}],
 
-	['Scierie', 'bonus', 'ponctuel', [], {}],
+	['Scierie', 'bonus', 'one-off', [], {}],
 
-	['Recyclage', 'bonus', 'ponctuel', [], {}],
+	['Recyclage', 'bonus', 'one-off', [], {}],
 
-	['Médecins de guerre', 'bonus', 'ponctuel', [], {}],
+	['Médecins de guerre', 'bonus', 'one-off', [], {}],
 
-	['Mine cachée', 'bonus', 'ponctuel', [], {}],
+	['Mine cachée', 'bonus', 'one-off', [], {}],
 
-	['Voyance', 'bonus', 'ponctuel', [], {}]
+	['Voyance', 'bonus', 'one-off', [], {}]
 ];
