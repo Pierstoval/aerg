@@ -28,16 +28,19 @@
 </script>
 
 <section>
-    <h2>{$_('hud.village.title')}</h2>
-    {#each [...resources.entries()] as [resource, amount]}
-        <p>{$_(`resource.${resource}`)} ({amount})</p>
-    {/each}
-    <h3>{$_('hud.village.current_events')}</h3>
-    <ol>
-        {#each currentEvents as currentEvent}
-            <li>{currentEvent.name} : {currentEvent.description}</li>
+    {#if resources.size > 0}
+        <h2>{$_('hud.village.title')}</h2>
+        {#each [...resources.entries()] as [resource, amount]}
+            <p>{$_(`resource.${resource}`)} ({amount})</p>
         {/each}
-    </ol>
+    {/if}
+
+    {#if currentEvents.length > 0}
+        <h3>{$_('hud.village.current_events')}</h3>
+        {#each currentEvents as currentEvent}
+            <p class="daily_event {currentEvent.type}">{currentEvent.name} : {currentEvent.description}</p>
+        {/each}
+    {/if}
 </section>
 
 <style lang="scss">
@@ -50,5 +53,15 @@
         h2 {
             text-align: center;
         }
+      .daily_event {
+        border-left: solid 0.5rem transparent;
+        padding-left: 0.25rem;
+        &.bonus {
+          border-color: green;
+        }
+        &.malus {
+          border-color: red;
+        }
+      }
     }
 </style>

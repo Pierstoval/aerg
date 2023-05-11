@@ -41,23 +41,23 @@ export const Assets = {
 	'tile.mine': '/tiles/mine.png'
 };
 
-type TerrainTypeCondition = TerrainType | 'any';
+export type TerrainTypeCondition = TerrainType | 'any';
 
-type ActionCondition = [
+export type ActionCondition = [
 	ZoneActionName | 'movement' | 'positioned_at',
 	TerrainTypeCondition | Array<TerrainTypeCondition>
 ];
 
-type Operator = 'add' | 'substract' | 'multiply' | 'divide_floor' | 'divide_ceil';
+export type Operator = 'add' | 'substract' | 'multiply' | 'divide_floor' | 'divide_ceil';
 
-type AlterationTarget = 'village' | 'current_player' | 'all_players';
+export type AlterationTarget = 'village' | 'current_player' | 'all_players';
 
-type Reward = ResourceName;
+export type Reward = ResourceName;
 
-type TargetProperty = 'hp';
+export type TargetProperty = 'hp';
 
-type EventCondition = ActionCondition;
-type EventAlteration = {
+export type EventCondition = ActionCondition;
+export type EventAlteration = {
 	alterActionCost?: { action: Operator; amount: number; cumulative: boolean };
 	alterActionReward?: { action: Operator; amount: number; reward: Reward; cumulative: boolean };
 	alterResourceQuantity?: [AlterationTarget, Operator, number, ResourceName];

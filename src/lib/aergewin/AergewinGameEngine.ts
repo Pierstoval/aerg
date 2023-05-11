@@ -11,10 +11,12 @@ import type { ZoneActivation, ResourceCost } from './ZoneActivation';
 import {
 	Assets,
 	TerrainsDecks,
+	DailyEventsDeck,
 	type TerrainType,
 	type DailyEvent,
 	type ResourceName,
-	DailyEventsDeck
+	type EventCondition,
+	type EventAlteration
 } from './GameData';
 
 type TerrainInventoryItem = { position: Hex; inventory: Map<ResourceName, number> };
@@ -31,16 +33,18 @@ export default class AergewinGameEngine {
 	private readonly _grid: Grid<Hex>;
 	private readonly _renderer: Renderer;
 	private readonly _currentEvents: Array<DailyEvent> = [];
-	private _eventsDeck: Array<DailyEvent>;
 	private readonly _players: Map<string, Player>;
 	private readonly _terrain: Array<TerrainTile>;
 	private readonly _terrainDeck: Array<TerrainType>;
 	private readonly _foes: Array<Foe> = [];
-	private _villageHp = 10;
-	private _terrainsInventory: Array<TerrainInventoryItem> = [];
 
-	private started = false;
-	private eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
+	private _started = false;
+	private _eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
+	private _eventsDeck: Array<DailyEvent>;
+	private _villageHp = 10;
+	private _currentTurnIndex = 0;
+	private _terrainsInventory: Array<TerrainInventoryItem> = [];
+	private _currentTurnFirstPlayer: PlayerName;
 	private _currentPlayer: PlayerName;
 
 	constructor(
@@ -53,10 +57,11 @@ export default class AergewinGameEngine {
 		this._grid = this.createGrid();
 		this._players = this.createPlayers(players);
 		this._terrain = this.createTerrain();
+		this._currentTurnFirstPlayer = this.getFirstPlayerName();
 		this._currentPlayer = this.getFirstPlayerName();
 		this._renderer = new Renderer(this, hexGridElement, hudElement);
 		this._terrainDeck = TerrainsDecks;
-		this._eventsDeck = DailyEventsDeck;
+		this._eventsDeck = [...DailyEventsDeck];
 	}
 
 	get grid(): Grid<Hex> {
@@ -72,7 +77,7 @@ export default class AergewinGameEngine {
 	}
 
 	get isRunning(): boolean {
-		return this.started;
+		return this._started;
 	}
 
 	get terrainsInventory(): Array<TerrainInventoryItem> {
@@ -83,30 +88,38 @@ export default class AergewinGameEngine {
 		return this._currentEvents;
 	}
 
-	public start() {
-		if (this.started) {
+	get currentTurnFirstPlayer(): PlayerName {
+		return this._currentTurnFirstPlayer;
+	}
+
+	get currentTurn(): number {
+		return this._currentTurnIndex;
+	}
+
+	start() {
+		if (this._started) {
 			throw new Error('Game already running.');
 		}
-		this.started = true;
+		this._started = true;
 
 		Promise.all([this.loadAssets()]).then(() => {
 			this.newTurn();
 		});
 	}
 
-	public click(e: MouseEvent) {
+	click(e: MouseEvent) {
 		this.checkGameIsRunning();
 
 		this.moveCurrentPlayerTo(this.getHexFromMouseEvent(e));
 	}
 
-	public mouseMove(e: MouseEvent) {
+	mouseMove(e: MouseEvent) {
 		this.checkGameIsRunning();
 
 		this.hoverCurrentPlayerPath(this.getHexFromMouseEvent(e));
 	}
 
-	public playerCanFight(player: Player) {
+	playerCanFight(player: Player) {
 		if (!player.canFight()) {
 			return false;
 		}
@@ -122,7 +135,7 @@ export default class AergewinGameEngine {
 		return canFight;
 	}
 
-	public getCurrentPlayer(): Player {
+	getCurrentPlayer(): Player {
 		this.checkGameIsRunning();
 
 		const player = this._players.get(this._currentPlayer);
@@ -134,7 +147,7 @@ export default class AergewinGameEngine {
 		return player;
 	}
 
-	public getPlayerZone(player: Player): TerrainTile {
+	getPlayerZone(player: Player): TerrainTile {
 		this.checkGameIsRunning();
 
 		let zone: TerrainTile | undefined;
@@ -152,14 +165,14 @@ export default class AergewinGameEngine {
 		return zone;
 	}
 
-	public on(eventType: GameEventType, callback: GameEventCallback): void {
-		const listeners = this.eventListeners.get(eventType) || [];
+	on(eventType: GameEventType, callback: GameEventCallback): void {
+		const listeners = this._eventListeners.get(eventType) || [];
 		listeners.push(callback);
 
-		this.eventListeners.set(eventType, listeners);
+		this._eventListeners.set(eventType, listeners);
 	}
 
-	public playerCanActivateZone(player: Player, action: ZoneActivation): boolean {
+	playerCanActivateZone(player: Player, action: ZoneActivation): boolean {
 		const playerActionSpent = player.actionsSpent;
 		const currentZone = this.getPlayerZone(player);
 
@@ -198,7 +211,7 @@ export default class AergewinGameEngine {
 		throw new Error(`Unrecoverable error: Unsupported action "${action.name}".`);
 	}
 
-	public playerActivateZone(player: Player, action: ZoneActivation) {
+	playerActivateZone(player: Player, action: ZoneActivation) {
 		switch (action.name) {
 			case 'repair_village':
 				alert('TODO: repair village');
@@ -223,7 +236,7 @@ export default class AergewinGameEngine {
 		this.goToNextPlayer();
 	}
 
-	public addResourceAt(resource: ResourceName, position: Hex) {
+	addResourceAt(resource: ResourceName, position: Hex) {
 		const positionAsString = position.toString();
 		const terrainsAtPosition = this._terrainsInventory.filter((item: TerrainInventoryItem) => {
 			return item.position.toString() === positionAsString;
@@ -248,8 +261,34 @@ export default class AergewinGameEngine {
 		this.tick();
 	}
 
-	public goToNextPlayer() {
-		this._currentPlayer = this.getNextPlayer(this._currentPlayer);
+	goToNextPlayer() {
+		this._players.forEach((p: Player) => {
+			p.stopPlaying();
+		});
+		this._currentPlayer = this.getNextPlayerName();
+		this.getCurrentPlayer().play();
+		this.tick();
+	}
+
+	newTurn() {
+		if (this._currentTurnIndex === 0) {
+			this._currentPlayer = this.getFirstPlayerName();
+		} else {
+			this._currentPlayer = this.getNextPlayerName();
+		}
+		this._currentTurnIndex++;
+
+		this._currentTurnFirstPlayer = this._currentPlayer;
+
+		this._players.forEach((player: Player) => {
+			player.stopPlaying();
+			player.resetActions();
+		});
+
+		this.pickNewDailyEvent();
+
+		this.getCurrentPlayer().play();
+
 		this.tick();
 	}
 
@@ -284,43 +323,36 @@ export default class AergewinGameEngine {
 		);
 	}
 
-	private getNextPlayer(currentPlayer: PlayerName): PlayerName {
-		const firstPlayerName = this.getFirstPlayerName();
-		const entries = this._players.entries();
-		this._players.forEach((p: Player) => {
-			p.stopPlaying();
-		});
+	private getNextPlayerName(): PlayerName {
+		const currentPlayerName = this._currentPlayer;
+		const playersNames = [...this._players.keys()];
 
 		let found = false;
 
-		do {
-			const entry = entries.next();
-			if (entry.done) {
-				// Last item, no value here
-				this._currentPlayer = firstPlayerName;
-				this.getFirstPlayer().play();
-				return this._currentPlayer;
-			}
-
-			const player: Player = entry.value[1];
-
+		for (const playerName of playersNames) {
 			if (found) {
-				this._currentPlayer = player.name;
-				player.play();
-				return this._currentPlayer;
+				return playerName;
 			}
 
-			if (player.name === currentPlayer) {
+			if (playerName === currentPlayerName) {
 				// Set flag to "true" so *next iteration* will set next player.
 				// If next iteration is empty (thus current iteration = last item),
 				//   then next player is the first player in the list.
 				found = true;
 			}
-		} while (true);
+		}
+
+		if (!found) {
+			throw new Error('Unrecoverable error: could not determine next player.');
+		}
+
+		// If found but it reaches this code, it means it iterated to the last item,
+		// and did not iterate again, so this means next player is the first player in the list.
+		return this._players.keys().next().value;
 	}
 
 	private checkGameIsRunning() {
-		if (!this.started) {
+		if (!this._started) {
 			throw new Error('Game not running yet. Have you forgotten to run "game.start()"?');
 		}
 	}
@@ -391,7 +423,7 @@ export default class AergewinGameEngine {
 	}
 
 	private dispatch(eventType: GameEventType, event: GameEvent): void {
-		const events = this.eventListeners.get(eventType) || [];
+		const events = this._eventListeners.get(eventType) || [];
 
 		events.forEach((callback: GameEventCallback) => callback(event));
 	}
@@ -491,19 +523,7 @@ export default class AergewinGameEngine {
 		);
 	}
 
-	private newTurn() {
-		this._currentPlayer = this.getFirstPlayerName();
-		this.getFirstPlayer().play();
-
-		this._players.forEach((player: Player) => {
-			player.resetActions();
-		});
-		this.pickNewEvent();
-
-		this.tick();
-	}
-
-	private pickNewEvent() {
+	private pickNewDailyEvent() {
 		if (!this._eventsDeck.length) {
 			this.resetEventDeck();
 		}
@@ -515,7 +535,7 @@ export default class AergewinGameEngine {
 
 		const newEvent: DailyEvent = spliceResult[0];
 		if (newEvent.duration === 'one-off') {
-			this.applyDailyEvent(newEvent);
+			this.applyOneOffDailyEvent(newEvent);
 			return;
 		}
 
@@ -528,12 +548,23 @@ export default class AergewinGameEngine {
 		this._currentEvents.unshift(newEvent);
 	}
 
-	private applyDailyEvent(event: DailyEvent) {
+	private applyOneOffDailyEvent(event: DailyEvent) {
+		if (event.duration === 'one-off') {
+			const alterations = Array.isArray(event.alterations)
+				? event.alterations
+				: [event.alterations];
+
+			alterations.forEach((alteration: EventAlteration) => {
+				this.applyOneOffAlteration(event.conditions, alteration);
+			});
+
+			return;
+		}
 		alert('Apply event: ' + JSON.stringify(event));
 	}
 
 	private resetEventDeck() {
-		this._eventsDeck = DailyEventsDeck.filter((event: DailyEvent) => {
+		this._eventsDeck = [...DailyEventsDeck].filter((event: DailyEvent) => {
 			let useEvent = true;
 
 			this._currentEvents.forEach((currentEvent: DailyEvent) => {
@@ -544,5 +575,23 @@ export default class AergewinGameEngine {
 
 			return useEvent;
 		});
+	}
+
+	private applyOneOffAlteration(conditions: Array<EventCondition>, alteration: EventAlteration) {
+		if (alteration.alterActionCost) {
+			throw new Error('Altering action cost in one-off daily event is not supported.');
+		}
+		if (alteration.alterActionReward) {
+			throw new Error('Altering action reward in one-off daily event is not supported.');
+		}
+		if (alteration.alterResourceQuantity) {
+			console.info('TODO');
+		}
+		if (alteration.alterProperty) {
+			console.info('TODO');
+		}
+		if (alteration.replaceClosestTerrain) {
+			console.info('TODO');
+		}
 	}
 }

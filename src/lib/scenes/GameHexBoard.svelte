@@ -34,6 +34,8 @@
 		});
 
 		gameEngine.start();
+
+		window.gameEngine = gameEngine;
 	}
 
 	onMount(start);
