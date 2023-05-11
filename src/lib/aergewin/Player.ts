@@ -12,21 +12,13 @@ export type PlayerConstructor = {
 	name: string;
 };
 
-export enum PlayerEvent {
-	MOVE = 'move'
-}
-
-export type PlayerEventCallback = (player: Player) => void;
-
 export default class Player {
-	private eventListeners: Map<PlayerEvent, PlayerEventCallback[]> = new Map();
-
 	private readonly _name: string;
 	private readonly _orderIndex: number;
 	private readonly _color: Color;
 	private _position: Hex;
 	private _grid: Grid<Hex>;
-	private _isActive: boolean = false;
+	private _isActive = false;
 	private _inventory: Map<ResourceName, number> = new Map();
 	private _hp: number;
 

@@ -2,10 +2,12 @@
     import AergewinGameEngine from "../AergewinGameEngine";
     import {_} from "svelte-i18n";
     import type {ResourceName} from "../GameData";
+    import type DailyEvent from "$lib/aergewin/DailyEvent";
 
     export let gameEngine: AergewinGameEngine;
 
     let resources: Map<ResourceName, number> = new Map();
+    let currentEvents: Array<DailyEvent> = [];
 
     gameEngine.on('tick', () => {
         const villagePosition = gameEngine.grid.createHex([0, 0]).toString();
@@ -20,6 +22,8 @@
         if (villageResources.length === 1) {
             resources = villageResources[0].inventory;
         }
+
+        currentEvents = gameEngine.currentEvents;
     });
 </script>
 
@@ -28,6 +32,12 @@
     {#each [...resources.entries()] as [resource, amount]}
         <p>{$_(`resource.${resource}`)} ({amount})</p>
     {/each}
+    <h3>{$_('hud.village.current_events')}</h3>
+    <ol>
+        {#each currentEvents as currentEvent}
+            <li>{currentEvent.name} : {currentEvent.description}</li>
+        {/each}
+    </ol>
 </section>
 
 <style lang="scss">

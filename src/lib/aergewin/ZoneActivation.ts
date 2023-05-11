@@ -1,5 +1,5 @@
 import type TerrainTile from './TerrainTile';
-import type { ActionName, ResourceName } from './GameData';
+import type { ZoneActionName, ResourceName } from './GameData';
 
 export type ResourceCost = [ResourceName, number];
 
@@ -36,13 +36,13 @@ export function getTerrainActions(terrain: TerrainTile): ZoneActivation[] {
 }
 
 export class ZoneActivation {
-	public readonly name: ActionName;
+	public readonly name: ZoneActionName;
 	public readonly cost: number;
 	public readonly experienceGain: number;
 	public readonly resourceCost: ResourceCost[];
 
 	constructor(
-		name: ActionName,
+		name: ZoneActionName,
 		actionCost: number,
 		resourceCost: ResourceCost[] = [],
 		experienceGain: number = 0

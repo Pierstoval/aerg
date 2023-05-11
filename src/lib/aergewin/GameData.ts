@@ -1,6 +1,3 @@
-import type Player from './Player';
-import type { ZoneActivation } from './ZoneActivation';
-
 export type ResourceName = 'wood' | 'food' | 'minerals';
 
 export type TerrainType =
@@ -12,7 +9,7 @@ export type TerrainType =
 	| 'sanctuary'
 	| 'mine';
 
-export type ActionName =
+export type ZoneActionName =
 	| 'repair_village'
 	| 'build_barricade'
 	| 'heal_self'
@@ -20,7 +17,7 @@ export type ActionName =
 	| 'gather_wood'
 	| 'gather_minerals';
 
-export const TerrainsDecks: TerrainType[] = [
+export const TerrainsDecks: Array<TerrainType> = [
 	['mountain', 2],
 	['lake', 2],
 	['forest', 2],
@@ -32,7 +29,7 @@ export const TerrainsDecks: TerrainType[] = [
 		finalArray.push(terrainType as TerrainType);
 	}
 	return finalArray;
-}, []);
+}, [] as Array<TerrainType>);
 
 export const Assets = {
 	'tile.village': '/tiles/compass.png',
@@ -44,120 +41,334 @@ export const Assets = {
 	'tile.mine': '/tiles/mine.png'
 };
 
-type ActionCondition = ['movement' | 'gather_food', TerrainType] | 'new_turn';
+type TerrainTypeCondition = TerrainType | 'any';
+
+type ActionCondition = [
+	ZoneActionName | 'movement' | 'positioned_at',
+	TerrainTypeCondition | Array<TerrainTypeCondition>
+];
 
 type Operator = 'add' | 'substract' | 'multiply' | 'divide_floor' | 'divide_ceil';
 
 type AlterationTarget = 'village' | 'current_player' | 'all_players';
 
+type Reward = ResourceName;
+
+type TargetProperty = 'hp';
+
 type EventCondition = ActionCondition;
 type EventAlteration = {
-	alterActionCost?: [Operator, number];
+	alterActionCost?: { action: Operator; amount: number; cumulative: boolean };
+	alterActionReward?: { action: Operator; amount: number; reward: Reward; cumulative: boolean };
 	alterResourceQuantity?: [AlterationTarget, Operator, number, ResourceName];
+	alterProperty?: [AlterationTarget, Operator, number, TargetProperty];
+	replaceClosestTerrain?: { from: TerrainType; to: TerrainType };
 };
 
-type DailyEvent = [
-	string,
-	'malus' | 'bonus',
-	'persistent' | 'one-off',
-	Array<EventCondition>,
-	EventAlteration
-];
+export type DailyEvent = {
+	name: string;
+	description: string;
+	type: 'malus' | 'bonus';
+	duration: 'persistent' | 'one-off';
+	conditions: Array<EventCondition>;
+	alterations: EventAlteration | Array<EventAlteration>;
+};
 
-export const DailyEvents: DailyEvent[] = [
-	['Blizzard', 'malus', 'persistent', [['movement', 'mountain']], { alterActionCost: ['add', 1] }],
-
-	['Brume', 'malus', 'persistent', [['movement', 'forest']], { alterActionCost: ['add', 1] }],
-
-	['Crue', 'malus', 'persistent', [['movement', 'lake']], { alterActionCost: ['add', 1] }],
-
-	[
-		'Famine',
-		'malus',
-		'persistent',
-		['new_turn'],
-		{ alterResourceQuantity: ['village', 'substract', 1, 'food'] }
-	],
-
-	[
-		'Glissement de terrain',
-		'malus',
-		'persistent',
-		[['movement', 'plains']],
-		{ alterActionCost: ['add', 1] }
-	],
-
-	[
-		'Mauvaises récoltes',
-		'malus',
-		'persistent',
-		[['gather_food', 'lake']],
-		{ alterActionCost: ['add', 1] }
-	],
-
-	// ['Surchauffe de métal', 'malus', 'persistent', [], {}],
-
-	[
-		'Pandémie',
-		'malus',
-		'persistent',
-		['new_turn'],
-		{ alterResourceQuantity: ['all_players', 'substract', 1, 'food'] }
-	],
-
-	// ['Blessure', 'malus', 'one-off', [], {}],
-
-	['Chute de pierres', 'malus', 'one-off', [], {}],
-
-	['Incendie', 'malus', 'one-off', [], {}],
-
-	['Invasion', 'malus', 'one-off', [], {}],
-
-	['Malédiction', 'malus', 'one-off', [], {}],
-
-	['Mouvement du chaos', 'malus', 'one-off', [], {}],
-
-	['Serpents', 'malus', 'one-off', [], {}],
-
-	['Spectres', 'malus', 'one-off', [], {}],
-
-	['Termites', 'malus', 'one-off', [], {}],
-
-	['Vermine', 'malus', 'one-off', [], {}],
-
-	['Beau temps', 'bonus', 'persistent', [], {}],
-
-	['Bon filon', 'bonus', 'persistent', [], {}],
-
-	['Chants guerriers', 'bonus', 'persistent', [], {}],
-
-	['Haches neuves', 'bonus', 'persistent', [], {}],
-
-	['Jour des esprits', 'bonus', 'persistent', [], {}],
-
-	['Moisson', 'bonus', 'persistent', [], {}],
-
-	['Outillage parfait', 'bonus', 'persistent', [], {}],
-
-	['Bénédiction', 'bonus', 'persistent', [], {}],
-
-	['Nature vengeresse', 'bonus', 'one-off', [], {}],
-
-	['Formation martiale', 'bonus', 'one-off', [], {}],
-
-	['Menuisier performant', 'bonus', 'one-off', [], {}],
-
-	['Motivation', 'bonus', 'one-off', [], {}],
-
-	['Abondance', 'bonus', 'one-off', [], {}],
-
-	['Scierie', 'bonus', 'one-off', [], {}],
-
-	['Recyclage', 'bonus', 'one-off', [], {}],
-
-	['Médecins de guerre', 'bonus', 'one-off', [], {}],
-
-	['Mine cachée', 'bonus', 'one-off', [], {}],
-
-	['Voyance', 'bonus', 'one-off', [], {}]
+export const DailyEventsDeck: Array<DailyEvent> = [
+	{
+		name: 'Blizzard',
+		description: 'Coûte une action de plus de se déplacer à travers une montagne',
+		type: 'malus',
+		duration: 'persistent',
+		conditions: [['movement', 'mountain']],
+		alterations: { alterActionCost: { action: 'add', amount: 1, cumulative: true } }
+	},
+	{
+		name: 'Brume',
+		description: 'Coûte une action de plus de se déplacer à travers une forêt',
+		type: 'malus',
+		duration: 'persistent',
+		conditions: [['movement', 'forest']],
+		alterations: { alterActionCost: { action: 'add', amount: 1, cumulative: true } }
+	},
+	{
+		name: 'Crue',
+		description: 'Coûte une action de plus de se déplacer à travers un lac',
+		type: 'malus',
+		duration: 'persistent',
+		conditions: [['movement', 'lake']],
+		alterations: { alterActionCost: { action: 'add', amount: 1, cumulative: true } }
+	},
+	{
+		name: 'Famine',
+		description: 'Le village consomme 1 nourriture de plus à chaque nouvelle journée',
+		type: 'malus',
+		duration: 'persistent',
+		conditions: [],
+		alterations: { alterResourceQuantity: ['village', 'substract', 1, 'food'] }
+	},
+	{
+		name: 'Glissement de terrain',
+		description: 'Coûte une action de plus de se déplacer à travers une plaine',
+		type: 'malus',
+		duration: 'persistent',
+		conditions: [['movement', 'plains']],
+		alterations: { alterActionCost: { action: 'add', amount: 1, cumulative: true } }
+	},
+	{
+		name: 'Mauvaises récoltes',
+		description: 'Chaque récolte de nourriture coûte 1 action de plus',
+		type: 'malus',
+		duration: 'persistent',
+		conditions: [['gather_food', 'lake']],
+		alterations: { alterActionCost: { action: 'add', amount: 1, cumulative: true } }
+	},
+	// {
+	// 	name: 'Surchauffe de métal',
+	// 	description: "La Forge est inutilisable",
+	// 	type: 'malus',
+	// 	duration: 'persistent',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	{
+		name: 'Pandémie',
+		description: "À l'aube, chaque joueur doit consommer 1 nourriture ou perdre 1 PV",
+		type: 'malus',
+		duration: 'persistent',
+		conditions: [],
+		alterations: { alterResourceQuantity: ['all_players', 'substract', 1, 'food'] }
+	},
+	// {
+	// 	name: 'Blessure',
+	// 	description: "Un soldat est retiré du jeu. S'il n'y a pas de soldat, le village 2 PV",
+	// 	type: 'malus',
+	// 	duration: 'one-off',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	{
+		name: 'Chute de pierres',
+		description: 'Tous les personnages sur des cases Montagne subissent 2 points de dégâts',
+		type: 'malus',
+		duration: 'one-off',
+		conditions: [['positioned_at', 'mountain']],
+		alterations: { alterProperty: ['all_players', 'substract', 2, 'hp'] }
+	},
+	{
+		name: 'Incendie',
+		description:
+			"La forêt la plus proche est incendiée. La tuile est retournée et est considérée comme une plaine jusqu'à la fin du jeu",
+		type: 'malus',
+		duration: 'one-off',
+		conditions: [],
+		alterations: { replaceClosestTerrain: { from: 'forest', to: 'plains' } }
+	},
+	// {
+	// 	name: 'Invasion',
+	// 	description: "2 monstres supplémentaires apparaissent",
+	// 	type: 'malus',
+	// 	duration: 'one-off',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	// {
+	// 	name: 'Malédiction',
+	// 	description: "1 monstre apparait sur le cimetière",
+	// 	type: 'malus',
+	// 	duration: 'one-off',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	// {
+	// 	name: 'Mouvement du chaos',
+	// 	description: "Chaque monstre se déplace vers le village",
+	// 	type: 'malus',
+	// 	duration: 'one-off',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	// {
+	// 	name: 'Serpents',
+	// 	description: "Tous les joueurs ou soldats présents dans le village le quittent immédiatement vers une tuile adjacente",
+	// 	type: 'malus',
+	// 	duration: 'one-off',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	// {
+	// 	name: 'Spectres',
+	// 	description: "Tous les joueurs à 2 cases ou moins du Cimetière perdent 1 action",
+	// 	type: 'malus',
+	// 	duration: 'one-off',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	// {
+	// 	name: 'Termites',
+	// 	description: "Détruisez 2 barricades autour du village (aidez-vous de la tuile \"Directions\" pour déterminer lesquelles)",
+	// 	type: 'malus',
+	// 	duration: 'one-off',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	{
+		name: 'Vermine',
+		description:
+			'Le village perd immédiatement 2 unités de nourriture, et perd 1 PV pour chaque unité nourriture manquante.',
+		type: 'malus',
+		duration: 'one-off',
+		conditions: [],
+		alterations: { alterProperty: ['village', 'substract', 2, 'hp'] }
+	},
+	{
+		name: 'Beau temps',
+		description: 'Le premier déplacement de la journée coûte 1 action de moins',
+		type: 'bonus',
+		duration: 'persistent',
+		conditions: [['movement', 'any']],
+		alterations: { alterActionCost: { action: 'substract', amount: 1, cumulative: false } }
+	},
+	{
+		name: 'Bon filon',
+		description: '+1 unité de minerai à chaque récolte',
+		type: 'bonus',
+		duration: 'persistent',
+		conditions: [['gather_minerals', 'mine']],
+		alterations: {
+			alterActionReward: { action: 'add', amount: 1, reward: 'minerals', cumulative: true }
+		}
+	},
+	// {
+	// 	name: 'Chants guerriers',
+	// 	description: "Chaque personnage ou soldat qui combat ce jour-ci bénéficie d’un bonus de 1 à l’attaque",
+	// 	type: 'bonus',
+	// 	duration: 'persistent',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	{
+		name: 'Haches neuves',
+		description: '+1 unité de bois à chaque récolte',
+		type: 'bonus',
+		duration: 'persistent',
+		conditions: [['gather_wood', 'forest']],
+		alterations: {
+			alterActionReward: { action: 'add', amount: 1, reward: 'wood', cumulative: true }
+		}
+	},
+	// {
+	// 	name: 'Jour des esprits',
+	// 	description: "Pendant la Nuit, chaque personnage ou soldat à 1 cases ou moins du Sanctuaire regagne 2 PV",
+	// 	type: 'bonus',
+	// 	duration: 'persistent',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	{
+		name: 'Moisson',
+		description: '+1 unité de nourriture à chaque récolte',
+		type: 'bonus',
+		duration: 'persistent',
+		conditions: [['gather_food', ['forest', 'lake']]],
+		alterations: {
+			alterActionReward: { action: 'add', amount: 1, reward: 'food', cumulative: true }
+		}
+	},
+	// {
+	// 	name: 'Outillage parfait',
+	// 	description: "Forger ou améliorer une arme coûte 1 minerai de moins",
+	// 	type: 'bonus',
+	// 	duration: 'persistent',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	// {
+	// 	name: 'Bénédiction',
+	// 	description: "Pour 1 action supplémentaire, le sanctuaire permet de blesser 1 ennemi supplémentaire",
+	// 	type: 'bonus',
+	// 	duration: 'persistent',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	// {
+	// 	name: 'Nature vengeresse',
+	// 	description: "Tout monstre à 2 cases ou moins du sanctuaire subit 4 points de dégâts",
+	// 	type: 'bonus',
+	// 	duration: 'one-off',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	// {
+	// 	name: 'Formation martiale',
+	// 	description: "Ajoutez un soldat sur le village",
+	// 	type: 'bonus',
+	// 	duration: 'one-off',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	// {
+	// 	name: 'Menuisier performant',
+	// 	description: "Posez une nouvelle barricade sur l'un des côtés du village",
+	// 	type: 'bonus',
+	// 	duration: 'one-off',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	// {
+	// 	name: 'Motivation',
+	// 	description: "Tous les joueurs disposent d'une action supplémentaire aujourd'hui",
+	// 	type: 'bonus',
+	// 	duration: 'one-off',
+	// 	conditions: [],
+	// 	alterations: {}
+	// },
+	{
+		name: 'Abondance',
+		description: 'Le village gagne 1 unité de nourriture',
+		type: 'bonus',
+		duration: 'one-off',
+		conditions: [],
+		alterations: { alterResourceQuantity: ['village', 'add', 1, 'food'] }
+	},
+	{
+		name: 'Scierie',
+		description: 'Le village gagne 1 unité de bois',
+		type: 'bonus',
+		duration: 'one-off',
+		conditions: [],
+		alterations: { alterResourceQuantity: ['village', 'add', 1, 'wood'] }
+	},
+	{
+		name: 'Recyclage',
+		description: 'Le village gagne 1 minerai',
+		type: 'bonus',
+		duration: 'one-off',
+		conditions: [],
+		alterations: { alterResourceQuantity: ['village', 'add', 1, 'minerals'] }
+	},
+	{
+		name: 'Médecins de guerre',
+		description: 'Tous les alliés, personnages et soldats, regagnent 2 PV',
+		type: 'bonus',
+		duration: 'one-off',
+		conditions: [],
+		alterations: { alterProperty: ['all_players', 'add', 2, 'hp'] }
+	},
+	{
+		name: 'Mine cachée',
+		description: 'La tuile Montagne la plus proche devient une tuile Mine',
+		type: 'bonus',
+		duration: 'one-off',
+		conditions: [],
+		alterations: { replaceClosestTerrain: { from: 'mountain', to: 'mine' } }
+	}
+	// {
+	// 	name: 'Voyance',
+	// 	description: "Regardez la prochaine carte Monstre. Vous pouvez la défausser au prix de 2 minerais.",
+	// 	type: 'bonus',
+	// 	duration: 'one-off',
+	// 	conditions: [],
+	// 	alterations: {}
+	// }
 ];

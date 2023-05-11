@@ -1,5 +1,5 @@
 import type { PlayerName } from './Player';
-import Player, { type PlayerConstructor, PlayerEvent } from './Player';
+import Player, { type PlayerConstructor } from './Player';
 import { defineHex, Direction, Grid, type Hex, line, Orientation, spiral } from 'honeycomb-grid';
 import Renderer from './Renderer';
 import type SceneManager from '../SceneManagement/SceneManager';
@@ -7,10 +7,15 @@ import TerrainTile from './TerrainTile';
 import type { GameEventCallback, GameEventType } from './Event';
 import { TickEvent, GameEvent } from './Event';
 import type Foe from './Foe';
-import type { TerrainType } from './GameData';
-import { Assets, TerrainsDecks, type ResourceName } from './GameData';
 import type { ZoneActivation, ResourceCost } from './ZoneActivation';
-import type DailyEvent from './DailyEvent';
+import {
+	Assets,
+	TerrainsDecks,
+	type TerrainType,
+	type DailyEvent,
+	type ResourceName,
+	DailyEventsDeck
+} from './GameData';
 
 type TerrainInventoryItem = { position: Hex; inventory: Map<ResourceName, number> };
 
@@ -25,7 +30,8 @@ export default class AergewinGameEngine {
 	private readonly _game: SceneManager;
 	private readonly _grid: Grid<Hex>;
 	private readonly _renderer: Renderer;
-	private readonly _currentEvents: Map<'first' | 'second', DailyEvent> = new Map();
+	private readonly _currentEvents: Array<DailyEvent> = [];
+	private _eventsDeck: Array<DailyEvent>;
 	private readonly _players: Map<string, Player>;
 	private readonly _terrain: Array<TerrainTile>;
 	private readonly _terrainDeck: Array<TerrainType>;
@@ -33,7 +39,7 @@ export default class AergewinGameEngine {
 	private _villageHp = 10;
 	private _terrainsInventory: Array<TerrainInventoryItem> = [];
 
-	private started: boolean = false;
+	private started = false;
 	private eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
 	private _currentPlayer: PlayerName;
 
@@ -50,6 +56,7 @@ export default class AergewinGameEngine {
 		this._currentPlayer = this.getFirstPlayerName();
 		this._renderer = new Renderer(this, hexGridElement, hudElement);
 		this._terrainDeck = TerrainsDecks;
+		this._eventsDeck = DailyEventsDeck;
 	}
 
 	get grid(): Grid<Hex> {
@@ -70,6 +77,10 @@ export default class AergewinGameEngine {
 
 	get terrainsInventory(): Array<TerrainInventoryItem> {
 		return this._terrainsInventory;
+	}
+
+	get currentEvents(): Array<DailyEvent> {
+		return this._currentEvents;
 	}
 
 	public start() {
@@ -413,14 +424,15 @@ export default class AergewinGameEngine {
 	}
 
 	private createNewTerrainAt(hexCoordinates: Hex) {
+		if (!this._terrainDeck.length) {
+			throw new Error('Tried to get new terrain but deck is empty.');
+		}
+
 		// Pop one random terrain off the deck.
 		const spliceResult = this._terrainDeck.splice(
 			Math.floor(Math.random() * this._terrainDeck.length),
 			1
 		);
-		if (!spliceResult.length) {
-			throw new Error('Tried to get new terrain but deck is empty.');
-		}
 
 		return new TerrainTile(spliceResult[0], hexCoordinates, this._grid);
 	}
@@ -435,6 +447,7 @@ export default class AergewinGameEngine {
 		const currentPlayer = this.getCurrentPlayer();
 
 		if (!this.hexContainsTerrain(hexCoordinates)) {
+			// Exploration
 			if (currentPlayer.canExplore(hexCoordinates)) {
 				// Exploration
 				this._terrain.push(this.createNewTerrainAt(hexCoordinates));
@@ -444,6 +457,7 @@ export default class AergewinGameEngine {
 				return;
 			}
 		} else if (currentPlayer.canMoveTo(hexCoordinates)) {
+			// Simple movement
 			currentPlayer.moveTo(hexCoordinates);
 		} else {
 			return;
@@ -490,6 +504,45 @@ export default class AergewinGameEngine {
 	}
 
 	private pickNewEvent() {
-		this._currentEvents;
+		if (!this._eventsDeck.length) {
+			this.resetEventDeck();
+		}
+
+		const spliceResult = this._eventsDeck.splice(
+			Math.floor(Math.random() * this._eventsDeck.length),
+			1
+		);
+
+		const newEvent: DailyEvent = spliceResult[0];
+		if (newEvent.duration === 'one-off') {
+			this.applyDailyEvent(newEvent);
+			return;
+		}
+
+		if (this._currentEvents.length === 2) {
+			// Remove last element if there are more than 2
+			this._currentEvents.pop();
+		}
+
+		// Add event to the beginning of the current events
+		this._currentEvents.unshift(newEvent);
+	}
+
+	private applyDailyEvent(event: DailyEvent) {
+		alert('Apply event: ' + JSON.stringify(event));
+	}
+
+	private resetEventDeck() {
+		this._eventsDeck = DailyEventsDeck.filter((event: DailyEvent) => {
+			let useEvent = true;
+
+			this._currentEvents.forEach((currentEvent: DailyEvent) => {
+				if (currentEvent == event || currentEvent === event) {
+					useEvent = false;
+				}
+			});
+
+			return useEvent;
+		});
 	}
 }
