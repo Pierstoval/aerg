@@ -35,7 +35,7 @@ export default class Player {
 		this._orderIndex = orderIndex;
 		this._grid = grid;
 		this._position = position;
-		this._color = new Color(((orderIndex - 1) / numberOfPlayers) * 360, 90, 50, 'hsl');
+		this._color = new Color(((orderIndex - 1) / numberOfPlayers) * 360, 90, 40, 'hsl');
 		this._grid.setHexes([position]);
 		this._hp = 10; // TODO: implement player classes to customize HP
 	}

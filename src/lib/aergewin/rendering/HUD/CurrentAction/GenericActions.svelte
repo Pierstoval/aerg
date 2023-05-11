@@ -1,23 +1,14 @@
 <script lang="ts">
-    import AergewinGameEngine from '../../AergewinGameEngine';
+    import AergewinGameEngine from '../../../AergewinGameEngine';
     import { _ } from 'svelte-i18n';
-    import type Player from '../../Player';
-    import type {ResourceName} from "../../GameData";
+    import type Player from '../../../Player';
+    import type {ResourceName} from "../../../GameData";
 
     export let gameEngine: AergewinGameEngine;
     let currentPlayer: Player;
     let hasItemsToDeposit = false;
-    let allPlayersHavePlayed = false;
 
     gameEngine.on('tick', () => {
-        const playersThatHavePlayed = [...gameEngine.players.values()].reduce((numberThatHavePlayed: number, player: Player) => {
-            if (player.actionsSpent === AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN) {
-                numberThatHavePlayed++;
-            }
-            return numberThatHavePlayed;
-        }, 0);
-
-        allPlayersHavePlayed = playersThatHavePlayed === gameEngine.players.size;
         currentPlayer = gameEngine.getCurrentPlayer();
         hasItemsToDeposit = currentPlayer.inventory.size > 0;
     });
@@ -44,11 +35,9 @@
         {$_('hud.generic_actions.next_player')}
     </button>
 
-    {#if allPlayersHavePlayed}
-        <button on:click={newTurn}>
-            {$_('hud.generic_actions.new_turn')}
-        </button>
-    {/if}
+    <button on:click={newTurn}>
+        {$_('hud.generic_actions.new_turn')}
+    </button>
 
     {#if hasItemsToDeposit}
         <h2>{$_(`actions.drop_items`)}</h2>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
-	import Player, {type PlayerName} from '../Player';
-	import AergewinGameEngine from '../AergewinGameEngine';
+	import Player, {type PlayerName} from '../../Player';
+	import AergewinGameEngine from '../../AergewinGameEngine';
 
 	export let gameEngine: AergewinGameEngine;
 

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type AergewinGameEngine from '../../AergewinGameEngine';
-	import type { ZoneActivation } from '../../ZoneActivation';
+	import type AergewinGameEngine from '../../../AergewinGameEngine';
+	import type { ZoneActivation } from '../../../ZoneActivation';
 	import { _ } from 'svelte-i18n';
-	import type TerrainTile from '../../TerrainTile';
-	import type Player from '../../Player';
+	import type TerrainTile from '../../../TerrainTile';
+	import type Player from '../../../Player';
 	import {onMount} from "svelte";
 
 	export let gameEngine: AergewinGameEngine;

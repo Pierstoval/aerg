@@ -1,5 +1,5 @@
 <script lang="ts">
-    import AergewinGameEngine from "../AergewinGameEngine";
+    import AergewinGameEngine from "../../AergewinGameEngine";
     import Fight from "./CurrentAction/Fight.svelte";
     import ActivateZone from "./CurrentAction/ActivateZone.svelte";
 	import GenericActions from "./CurrentAction/GenericActions.svelte";

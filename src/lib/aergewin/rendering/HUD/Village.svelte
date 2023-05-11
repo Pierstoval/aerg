@@ -1,36 +1,23 @@
 <script lang="ts">
-    import AergewinGameEngine from "../AergewinGameEngine";
+    import AergewinGameEngine from "../../AergewinGameEngine";
     import {_} from "svelte-i18n";
-    import type {ResourceName} from "../GameData";
-    import type DailyEvent from "$lib/aergewin/DailyEvent";
+    import type {DailyEvent, ResourceName} from "../../GameData";
 
     export let gameEngine: AergewinGameEngine;
 
-    let resources: Map<ResourceName, number> = new Map();
+    let villageResources: Map<ResourceName, number> = new Map();
     let currentEvents: Array<DailyEvent> = [];
 
     gameEngine.on('tick', () => {
-        const villagePosition = gameEngine.grid.createHex([0, 0]).toString();
-        const villageResources = gameEngine.terrainsInventory.filter((item) => {
-            return item.position.toString() === villagePosition;
-        });
-
-        if (villageResources.length > 1) {
-            throw new Error('Unrecoverable error: village was found in more than one coordinates.');
-        }
-
-        if (villageResources.length === 1) {
-            resources = villageResources[0].inventory;
-        }
-
+        villageResources = gameEngine.village.inventory;
         currentEvents = gameEngine.currentEvents;
     });
 </script>
 
 <section>
-    {#if resources.size > 0}
+    {#if villageResources.size > 0}
         <h2>{$_('hud.village.title')}</h2>
-        {#each [...resources.entries()] as [resource, amount]}
+        {#each [...villageResources.entries()] as [resource, amount]}
             <p>{$_(`resource.${resource}`)} ({amount})</p>
         {/each}
     {/if}

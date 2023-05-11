@@ -1,13 +1,16 @@
 import type { Hex } from 'honeycomb-grid';
 import type { Grid } from 'honeycomb-grid';
 import { type ZoneActivation, getTerrainActions } from './ZoneActivation';
-import type { TerrainType } from './GameData';
-import { Assets } from './GameData';
+import { type TerrainType, type ResourceName, Assets } from './GameData';
+
+export type TerrainInventory = Map<ResourceName, number>;
 
 export default class TerrainTile {
 	private readonly _type: TerrainType;
 	private readonly _position: Hex;
+	private _inventory: TerrainInventory = new Map();
 	private _grid: Grid<Hex>;
+	private _riskValue = 0;
 
 	constructor(type: TerrainType, position: Hex, grid: Grid<Hex>) {
 		this._type = type;
@@ -24,6 +27,10 @@ export default class TerrainTile {
 		return this._position;
 	}
 
+	get inventory(): TerrainInventory {
+		return this._inventory;
+	}
+
 	get possibleActions(): ZoneActivation[] {
 		return getTerrainActions(this);
 	}
@@ -38,7 +45,16 @@ export default class TerrainTile {
 		return asset;
 	}
 
-	public isType(type: TerrainType) {
+	modifyRiskBy(amount: number) {
+		this._riskValue += amount;
+	}
+
+	addResource(resource: ResourceName, amountToAdd: number) {
+		const currentAmount = this._inventory.get(resource) || 0;
+		this._inventory.set(resource, currentAmount + amountToAdd);
+	}
+
+	isType(type: TerrainType) {
 		return this.type === type;
 	}
 }

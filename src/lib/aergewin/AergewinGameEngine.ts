@@ -1,7 +1,7 @@
 import type { PlayerName } from './Player';
 import Player, { type PlayerConstructor } from './Player';
 import { defineHex, Direction, Grid, type Hex, line, Orientation, spiral } from 'honeycomb-grid';
-import Renderer from './Renderer';
+import Renderer from './rendering/Renderer';
 import type SceneManager from '../SceneManagement/SceneManager';
 import TerrainTile from './TerrainTile';
 import type { GameEventCallback, GameEventType } from './Event';
@@ -19,8 +19,6 @@ import {
 	type EventAlteration
 } from './GameData';
 
-type TerrainInventoryItem = { position: Hex; inventory: Map<ResourceName, number> };
-
 export default class AergewinGameEngine {
 	public static readonly MAX_ACTIONS_COUNT_PER_TURN = 7;
 
@@ -29,7 +27,7 @@ export default class AergewinGameEngine {
 		hexOrientation: Orientation.FLAT
 	};
 
-	private readonly _game: SceneManager;
+	private readonly sceneManager: SceneManager;
 	private readonly _grid: Grid<Hex>;
 	private readonly _renderer: Renderer;
 	private readonly _currentEvents: Array<DailyEvent> = [];
@@ -43,17 +41,16 @@ export default class AergewinGameEngine {
 	private _eventsDeck: Array<DailyEvent>;
 	private _villageHp = 10;
 	private _currentTurnIndex = 0;
-	private _terrainsInventory: Array<TerrainInventoryItem> = [];
 	private _currentTurnFirstPlayer: PlayerName;
 	private _currentPlayer: PlayerName;
 
 	constructor(
-		game: SceneManager,
+		sceneManager: SceneManager,
 		hexGridElement: HTMLElement,
 		hudElement: HTMLElement,
 		players: Array<PlayerConstructor>
 	) {
-		this._game = game;
+		this.sceneManager = sceneManager;
 		this._grid = this.createGrid();
 		this._players = this.createPlayers(players);
 		this._terrain = this.createTerrain();
@@ -80,10 +77,6 @@ export default class AergewinGameEngine {
 		return this._started;
 	}
 
-	get terrainsInventory(): Array<TerrainInventoryItem> {
-		return this._terrainsInventory;
-	}
-
 	get currentEvents(): Array<DailyEvent> {
 		return this._currentEvents;
 	}
@@ -94,6 +87,17 @@ export default class AergewinGameEngine {
 
 	get currentTurn(): number {
 		return this._currentTurnIndex;
+	}
+
+	get village(): TerrainTile {
+		const terrains = this._terrain.filter((terrain) => terrain.isType('village'));
+		if (terrains.length === 0) {
+			throw new Error('Unrecoverable error: could not find village.');
+		}
+		if (terrains.length > 1) {
+			throw new Error('Unrecoverable error: found more than one village tile.');
+		}
+		return terrains[0];
 	}
 
 	start() {
@@ -238,7 +242,7 @@ export default class AergewinGameEngine {
 
 	addResourceAt(resource: ResourceName, position: Hex) {
 		const positionAsString = position.toString();
-		const terrainsAtPosition = this._terrainsInventory.filter((item: TerrainInventoryItem) => {
+		const terrainsAtPosition = this._terrain.filter((item: TerrainTile) => {
 			return item.position.toString() === positionAsString;
 		});
 
@@ -247,16 +251,10 @@ export default class AergewinGameEngine {
 		}
 
 		if (terrainsAtPosition.length === 0) {
-			const inventory: Map<ResourceName, number> = new Map();
-			inventory.set(resource, 1);
-			this._terrainsInventory.push({
-				position: this._grid.createHex(position),
-				inventory: inventory
-			});
-		} else {
-			const resourceAmount = terrainsAtPosition[0].inventory.get(resource) || 0;
-			terrainsAtPosition[0].inventory.set(resource, resourceAmount + 1);
+			throw new Error('Unrecoverable error: no terrain to add resource at');
 		}
+
+		terrainsAtPosition[0].addResource(resource, 1);
 
 		this.tick();
 	}
@@ -319,7 +317,7 @@ export default class AergewinGameEngine {
 		this.refreshGrid();
 
 		this._renderer.draw(() =>
-			this.dispatch('tick', new TickEvent(this._game, this, this._renderer))
+			this.dispatch('tick', new TickEvent(this.sceneManager, this, this._renderer))
 		);
 	}
 
@@ -500,10 +498,15 @@ export default class AergewinGameEngine {
 
 	private hoverCurrentPlayerPath(hexCoordinates: Hex | undefined) {
 		const player = this.getCurrentPlayer();
+		const currentPlayerPosition = player.position.toString();
 
 		if (hexCoordinates && this.playerCanMoveOrExplore(player, hexCoordinates)) {
 			const hoverList = [
-				...this._grid.traverse(line({ start: player.position, stop: hexCoordinates }))
+				...this._grid
+					.traverse(line({ start: player.position, stop: hexCoordinates }))
+					.filter((hex: Hex) => {
+						return hex.toString() !== currentPlayerPosition;
+					})
 			];
 			this._renderer.updateHoverPositions(hoverList);
 		}

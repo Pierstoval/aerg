@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type AergewinGameEngine from './AergewinGameEngine';
+	import type AergewinGameEngine from '../AergewinGameEngine';
 	import CharacterList from './HUD/CharacterList.svelte';
 	import CurrentPlayer from './HUD/CurrentPlayer.svelte';
 	import CurrentUserAction from './HUD/CurrentUserAction.svelte';

@@ -16,3 +16,20 @@ p {
 	padding: 0;
 	box-sizing: border-box;
 }
+
+#hexGrid {
+	svg {
+		polygon.animate-stroke {
+			stroke-dasharray: 0 10px;
+			stroke-dashoffset: 0;
+			stroke-linecap: round;
+			animation: active-polygon-animate 0.4s linear infinite;
+		}
+	}
+}
+
+@keyframes active-polygon-animate {
+	to {
+		stroke-dashoffset: 10px;
+	}
+}

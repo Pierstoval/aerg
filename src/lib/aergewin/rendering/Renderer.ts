@@ -1,12 +1,12 @@
 import type { Hex, Point } from 'honeycomb-grid';
-import type Player from './Player';
+import type Player from '../Player';
 import type { ArrayXY, Svg } from '@svgdotjs/svg.js';
 import { hexToPoint } from 'honeycomb-grid';
 import { SVG } from '@svgdotjs/svg.js';
 import HUDComponent from './HUD.svelte';
 import type { SvelteComponentTyped } from 'svelte/types/runtime/internal/dev';
-import AergewinGameEngine from './AergewinGameEngine';
-import type TerrainTile from './TerrainTile';
+import AergewinGameEngine from '../AergewinGameEngine';
+import type TerrainTile from '../TerrainTile';
 
 export default class Renderer {
 	private gameEngine: AergewinGameEngine;
@@ -141,6 +141,8 @@ export default class Renderer {
 	}
 
 	private drawGrid() {
+		const group = this.svgContainer.group().addClass('grid');
+
 		this.gameEngine.grid.forEach((hex: Hex) => {
 			// create a polygon from a hex's corner points
 			const points: ArrayXY[] = hex.corners.map(({ x, y }) => [x, y]);
@@ -148,9 +150,9 @@ export default class Renderer {
 			const polygon = this.svgContainer
 				.polygon(points)
 				.fill('none')
-				.stroke({ width: 1, color: '#ddd' });
+				.stroke({ width: 1, color: '#dddddd' });
 
-			this.svgContainer.group().add(polygon);
+			group.add(polygon);
 		});
 	}
 
@@ -159,16 +161,22 @@ export default class Renderer {
 
 		const points: ArrayXY[] = player.position.corners.map(({ x, y }) => [x, y]);
 
-		const polygon = this.svgContainer
-			.polygon(points)
-			.fill('none')
-			.stroke({ width: 4, color: player.color.toHex() });
-
-		this.svgContainer.group().add(polygon);
+		this.svgContainer
+			.group()
+			.addClass('player-position')
+			.add(
+				this.svgContainer
+					.polygon(points)
+					.fill('none')
+					.stroke({ width: 4, color: player.color.toHex() })
+					.addClass('animate-stroke')
+			);
 	}
 
 	private drawPlayers() {
 		const numberOfPlayers = this.gameEngine.players.size;
+
+		const group = this.svgContainer.group().addClass('players');
 
 		this.gameEngine.players.forEach((player: Player) => {
 			const playerPoint = hexToPoint(player.position);
@@ -177,61 +185,65 @@ export default class Renderer {
 			const distanceToTheCenter = AergewinGameEngine.options.hexSize / 2;
 			const t = (player.index - 1) / (numberOfPlayers / 2);
 
-			let x = playerPoint.x - coordinateOffset;
-			let y = playerPoint.y - coordinateOffset;
+			const x = playerPoint.x - coordinateOffset;
+			const y = playerPoint.y - coordinateOffset;
 
 			const angleInRadians = t * Math.PI;
 			const xOffset = Math.cos(angleInRadians) * distanceToTheCenter;
 			const yOffset = Math.sin(angleInRadians) * distanceToTheCenter;
 
-			this.svgContainer
-				.circle(coordinateOffset * 2)
-				.move(x - xOffset, y - yOffset)
-				.fill(player.color);
+			const playerGroup = group.group().addClass('player');
 
-			this.svgContainer
-				.text(String(player.index))
-				.move(
-					playerPoint.x - xOffset - coordinateOffset / 2,
-					playerPoint.y - yOffset - coordinateOffset * 1.25
+			playerGroup
+				.add(
+					this.svgContainer
+						.circle(coordinateOffset * 2)
+						.move(x - xOffset, y - yOffset)
+						.fill(player.color)
 				)
-				.fill('#fff');
+				.add(
+					this.svgContainer
+						.text(String(player.index))
+						.move(
+							playerPoint.x - xOffset - coordinateOffset / 2,
+							playerPoint.y - yOffset - coordinateOffset * 1.25
+						)
+						.fill('#ffffff')
+				);
 		});
 	}
 
 	private drawTerrain() {
+		const group = this.svgContainer.group().addClass('terrain');
+
 		this.gameEngine.terrain.forEach((terrainTile: TerrainTile) => {
-			const points: ArrayXY[] = terrainTile.position.corners.map(({ x, y }) => [x, y]);
-
-			const polygon = this.svgContainer
-				.polygon(points)
-				.fill('none')
-				.stroke({ width: 1, color: '#000' });
-
 			const corners = [...terrainTile.position.corners];
-			this.svgContainer
-				.image(terrainTile.image)
-				.size(this.gameEngine.grid.hexPrototype.width, this.gameEngine.grid.hexPrototype.height)
-				.move(corners[4].x, corners[5].y)
-				.stroke({ width: 1, color: '#ff0000' })
-				.fill('none');
 
-			this.svgContainer.group().add(polygon);
+			group.add(
+				this.svgContainer
+					.image(terrainTile.image)
+					.size(this.gameEngine.grid.hexPrototype.width, this.gameEngine.grid.hexPrototype.height)
+					.move(corners[4].x, corners[5].y) // Top left
+			);
 		});
 	}
 
 	private drawHoverTiles() {
+		const playerColor = this.gameEngine.getCurrentPlayer().color;
+
+		const group = this.svgContainer.group().addClass('hover');
 		this._hoverOnPositions.forEach((hex: Hex) => {
 			// create a polygon from a hex's corner points
 			const points: ArrayXY[] = hex.corners.map(({ x, y }) => [x, y]);
 
-			const polygon = this.svgContainer
-				.polygon(points)
-				.fill('#000')
-				.opacity(0.05)
-				.stroke({ width: 1, color: '#ddd' });
-
-			this.svgContainer.group().add(polygon);
+			group.add(this.svgContainer.polygon(points).fill('#ffffff').opacity(0.3));
+			group.add(
+				this.svgContainer
+					.polygon(points)
+					.opacity(0.8)
+					.fill('none')
+					.stroke({ width: 3, color: playerColor.toHex() })
+			);
 		});
 	}
 }
