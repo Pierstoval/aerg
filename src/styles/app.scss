@@ -23,7 +23,7 @@ p {
 			stroke-dasharray: 0 10px;
 			stroke-dashoffset: 0;
 			stroke-linecap: round;
-			animation: active-polygon-animate 0.4s linear infinite;
+			animation: active-polygon-animate 0.4s linear backwards infinite;
 		}
 	}
 }
