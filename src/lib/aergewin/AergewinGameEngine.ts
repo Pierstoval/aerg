@@ -263,7 +263,7 @@ export default class AergewinGameEngine {
 		this._players.forEach((p: Player) => {
 			p.stopPlaying();
 		});
-		this._currentPlayer = this.getNextPlayerName();
+		this._currentPlayer = this.getNextPlayerName(this._currentPlayer);
 		this.getCurrentPlayer().play();
 		this.tick();
 	}
@@ -272,7 +272,7 @@ export default class AergewinGameEngine {
 		if (this._currentTurnIndex === 0) {
 			this._currentPlayer = this.getFirstPlayerName();
 		} else {
-			this._currentPlayer = this.getNextPlayerName();
+			this._currentPlayer = this.getNextPlayerName(this._currentTurnFirstPlayer);
 		}
 		this._currentTurnIndex++;
 
@@ -321,8 +321,7 @@ export default class AergewinGameEngine {
 		);
 	}
 
-	private getNextPlayerName(): PlayerName {
-		const currentPlayerName = this._currentPlayer;
+	private getNextPlayerName(currentPlayerName): PlayerName {
 		const playersNames = [...this._players.keys()];
 
 		let found = false;

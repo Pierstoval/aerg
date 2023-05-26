@@ -25,7 +25,7 @@ export const TerrainsDecks: Array<TerrainType> = [
 	['sanctuary', 2],
 	['mine', 2]
 ].reduce((finalArray: TerrainType[], [terrainType, quantity]) => {
-	for (let i = 0; i < quantity; i++) {
+	for (let i = 0; i < Number(quantity); i++) {
 		finalArray.push(terrainType as TerrainType);
 	}
 	return finalArray;
