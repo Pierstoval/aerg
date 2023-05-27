@@ -1,5 +1,5 @@
 import type AergewinGameEngine from '../AergewinGameEngine';
-import type { EventAlteration } from '../GameData';
+import type { ActionCondition, EventAlteration } from '../GameData';
 import type {
 	AlterationTarget,
 	EventCondition,
@@ -17,8 +17,8 @@ export default class AlterationProcessor {
 		this.engine = engine;
 	}
 
-	public process(alterations: EventAlteration[], conditions: Array<EventCondition>) {
-		alterations.forEach((alteration: EventAlteration) => this.processOne(alteration, conditions));
+	public process(alterations: EventAlteration[]) {
+		alterations.forEach((alteration: EventAlteration) => this.processOne(alteration));
 	}
 
 	private processOne(alteration: EventAlteration, conditions: Array<EventCondition>) {

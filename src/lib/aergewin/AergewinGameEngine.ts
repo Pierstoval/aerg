@@ -14,7 +14,9 @@ import {
 	DailyEventsDeck,
 	type TerrainType,
 	type DailyEvent,
-	type ResourceName
+	type ResourceName,
+	type EventCondition,
+	type ActionCondition
 } from './GameData';
 import Village from './entities/Village';
 import AlterationProcessor from './alteration/AlterationProcessor';
@@ -565,11 +567,28 @@ export default class AergewinGameEngine {
 				'Unrecoverable error: tried to apply one-off event effets, but specified event is not one-off.'
 			);
 		}
+
+		if (!this.oneOffConditionMatches(event)) {
+			return;
+		}
+
 		const alterations = Array.isArray(event.alterations) ? event.alterations : [event.alterations];
 
-		this.alterationProcessor.process(alterations, event.conditions);
+		this.alterationProcessor.process(alterations);
 
 		return;
+	}
+
+	private oneOffConditionMatches(event: DailyEvent): boolean {
+		event.conditions.forEach((condition) => {
+			const conditionType = condition[0];
+			if (conditionType !== 'positioned_at') {
+				throw new Error(`Condition type ${conditionType} is not supported for one-off events.`);
+			}
+			const terrainCondition = condition[1];
+			// TODO
+		});
+		return false;
 	}
 
 	private resetEventDeck() {

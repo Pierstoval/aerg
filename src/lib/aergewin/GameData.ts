@@ -381,3 +381,14 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 	// 	alterations: {}
 	// }
 ];
+
+DailyEventsDeck.forEach((event) => {
+	if (event.duration === 'one-off') {
+		event.conditions.forEach((condition) => {
+			const conditionType = condition[0];
+			if (conditionType !== 'positioned_at') {
+				throw new Error(`Condition type ${conditionType} is not supported for one-off events.`);
+			}
+		});
+	}
+});
