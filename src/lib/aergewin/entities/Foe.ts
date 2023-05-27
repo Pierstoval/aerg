@@ -1,10 +1,9 @@
 import type { Direction, Hex } from 'honeycomb-grid';
 import { fromCoordinates, Grid, move } from 'honeycomb-grid';
+import AbstractGameEntity from './AbstractGameEntity';
 
-export default class Foe {
-	private readonly _type: string;
-	private _position: Hex;
-	private _grid: Grid<Hex>;
+export default class Foe extends AbstractGameEntity {
+	private readonly _type: string; // TODO: add enemies types
 
 	private _actionsSpent = 0;
 
@@ -15,10 +14,12 @@ export default class Foe {
 		position: Hex,
 		grid: Grid<Hex>
 	) {
+		super(position, grid);
 		this._type = type;
-		this._grid = grid;
-		this._position = position;
-		this._grid.setHexes([position]);
+	}
+
+	public maxHp(): number {
+		return 5; // TODO: update this depending on type
 	}
 
 	get type(): string {
@@ -33,9 +34,5 @@ export default class Foe {
 
 			return p;
 		});
-	}
-
-	get position(): Hex {
-		return this._position;
 	}
 }

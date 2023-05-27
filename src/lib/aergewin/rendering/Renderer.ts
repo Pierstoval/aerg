@@ -1,7 +1,7 @@
 import type { Hex, Point } from 'honeycomb-grid';
-import type Player from '../Player';
+import type Player from '../entities/Player';
 import type { ArrayXY, Svg } from '@svgdotjs/svg.js';
-import { hexToPoint } from 'honeycomb-grid';
+import { Grid, hexToPoint } from 'honeycomb-grid';
 import { SVG } from '@svgdotjs/svg.js';
 import HUDComponent from './HUD.svelte';
 import type { SvelteComponentTyped } from 'svelte/types/runtime/internal/dev';
@@ -9,13 +9,20 @@ import AergewinGameEngine from '../AergewinGameEngine';
 import type TerrainTile from '../TerrainTile';
 
 export default class Renderer {
-	private gameEngine: AergewinGameEngine;
-	private _hoverOnPositions: Array<Hex> = [];
+	private readonly gameEngine: AergewinGameEngine;
+	private readonly grid: Grid<Hex>;
 	private readonly svgContainer: Svg;
 	private readonly hudComponent: SvelteComponentTyped;
+	private _hoverOnPositions: Array<Hex> = [];
 
-	constructor(gameEngine: AergewinGameEngine, gridElement: HTMLElement, hudElement: HTMLElement) {
+	constructor(
+		gameEngine: AergewinGameEngine,
+		grid: Grid<Hex>,
+		gridElement: HTMLElement,
+		hudElement: HTMLElement
+	) {
 		this.gameEngine = gameEngine;
+		this.grid = grid;
 
 		// Clear the board
 		hudElement.innerHTML = '';
@@ -49,7 +56,7 @@ export default class Renderer {
 	public getMinX(): number {
 		let min = Infinity;
 
-		this.gameEngine.grid.forEach((hex: Hex) => {
+		this.grid.forEach((hex: Hex) => {
 			hex.corners.forEach((point: Point) => {
 				if (min > point.x) {
 					min = point.x;
@@ -63,7 +70,7 @@ export default class Renderer {
 	public getMinY(): number {
 		let min = Infinity;
 
-		this.gameEngine.grid.forEach((hex: Hex) => {
+		this.grid.forEach((hex: Hex) => {
 			hex.corners.forEach((point: Point) => {
 				if (min > point.y) {
 					min = point.y;
@@ -107,7 +114,7 @@ export default class Renderer {
 	private getMaxX(): number {
 		let max = -Infinity;
 
-		this.gameEngine.grid.forEach((hex: Hex) => {
+		this.grid.forEach((hex: Hex) => {
 			hex.corners.forEach((point: Point) => {
 				if (max < point.x) {
 					max = point.x;
@@ -121,7 +128,7 @@ export default class Renderer {
 	private getMaxY(): number {
 		let max = -Infinity;
 
-		this.gameEngine.grid.forEach((hex: Hex) => {
+		this.grid.forEach((hex: Hex) => {
 			hex.corners.forEach((point: Point) => {
 				if (max < point.y) {
 					max = point.y;
@@ -143,7 +150,7 @@ export default class Renderer {
 	private drawGrid() {
 		const group = this.svgContainer.group().addClass('grid');
 
-		this.gameEngine.grid.forEach((hex: Hex) => {
+		this.grid.forEach((hex: Hex) => {
 			// create a polygon from a hex's corner points
 			const points: ArrayXY[] = hex.corners.map(({ x, y }) => [x, y]);
 
@@ -157,7 +164,7 @@ export default class Renderer {
 	}
 
 	private drawCurrentPlayerPosition() {
-		const player = this.gameEngine.getCurrentPlayer();
+		const player = this.gameEngine.currentPlayer;
 
 		const points: ArrayXY[] = player.position.corners.map(({ x, y }) => [x, y]);
 
@@ -222,14 +229,14 @@ export default class Renderer {
 			group.add(
 				this.svgContainer
 					.image(terrainTile.image)
-					.size(this.gameEngine.grid.hexPrototype.width, this.gameEngine.grid.hexPrototype.height)
+					.size(this.grid.hexPrototype.width, this.grid.hexPrototype.height)
 					.move(corners[4].x, corners[5].y) // Top left
 			);
 		});
 	}
 
 	private drawHoverTiles() {
-		const playerColor = this.gameEngine.getCurrentPlayer().color;
+		const playerColor = this.gameEngine.currentPlayer.color;
 
 		const group = this.svgContainer.group().addClass('hover');
 		this._hoverOnPositions.forEach((hex: Hex) => {

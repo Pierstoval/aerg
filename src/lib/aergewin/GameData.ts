@@ -17,19 +17,26 @@ export type ZoneActionName =
 	| 'gather_wood'
 	| 'gather_minerals';
 
-export const TerrainsDecks: Array<TerrainType> = [
-	['mountain', 2],
-	['lake', 2],
-	['forest', 2],
-	['plains', 3],
-	['sanctuary', 2],
-	['mine', 2]
-].reduce((finalArray: TerrainType[], [terrainType, quantity]) => {
-	for (let i = 0; i < Number(quantity); i++) {
-		finalArray.push(terrainType as TerrainType);
-	}
-	return finalArray;
-}, [] as Array<TerrainType>);
+type TerrainDeckTypeDefinition = { type: TerrainType; quantity: number };
+
+const TerrainDecksDefinition: Array<TerrainDeckTypeDefinition> = [
+	{ type: 'mountain', quantity: 2 },
+	{ type: 'lake', quantity: 2 },
+	{ type: 'forest', quantity: 2 },
+	{ type: 'plains', quantity: 3 },
+	{ type: 'sanctuary', quantity: 2 },
+	{ type: 'mine', quantity: 2 }
+];
+
+export const TerrainsDecks: Array<TerrainType> = TerrainDecksDefinition.reduce(
+	(finalArray: TerrainType[], { type, quantity }) => {
+		for (let i = 0; i < quantity; i++) {
+			finalArray.push(type);
+		}
+		return finalArray;
+	},
+	[]
+);
 
 export const Assets = {
 	'tile.village': '/tiles/compass.png',
@@ -48,7 +55,7 @@ export type ActionCondition = [
 	TerrainTypeCondition | Array<TerrainTypeCondition>
 ];
 
-export type Operator = 'add' | 'substract' | 'multiply' | 'divide_floor' | 'divide_ceil';
+export type OperatorType = 'add' | 'substract' | 'multiply' | 'divide_floor' | 'divide_ceil';
 
 export type AlterationTarget = 'village' | 'current_player' | 'all_players';
 
@@ -56,12 +63,14 @@ export type Reward = ResourceName;
 
 export type TargetProperty = 'hp';
 
+export type ResourceQuantityAlteration = [AlterationTarget, OperatorType, number, ResourceName];
+
 export type EventCondition = ActionCondition;
 export type EventAlteration = {
-	alterActionCost?: { action: Operator; amount: number; cumulative: boolean };
-	alterActionReward?: { action: Operator; amount: number; reward: Reward; cumulative: boolean };
-	alterResourceQuantity?: [AlterationTarget, Operator, number, ResourceName];
-	alterProperty?: [AlterationTarget, Operator, number, TargetProperty];
+	alterActionCost?: { action: OperatorType; amount: number; cumulative: boolean };
+	alterActionReward?: { action: OperatorType; amount: number; reward: Reward; cumulative: boolean };
+	alterResourceQuantity?: ResourceQuantityAlteration;
+	alterProperty?: [AlterationTarget, OperatorType, number, TargetProperty];
 	replaceClosestTerrain?: { from: TerrainType; to: TerrainType };
 };
 

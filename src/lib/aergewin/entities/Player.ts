@@ -1,10 +1,11 @@
 import type { Direction, Hex } from 'honeycomb-grid';
 import { fromCoordinates, Grid, move } from 'honeycomb-grid';
 import { Color } from '@svgdotjs/svg.js';
-import type TerrainTile from './TerrainTile';
-import type { ResourceName } from './GameData';
-import type { ZoneActivation } from './ZoneActivation';
-import AergewinGameEngine from './AergewinGameEngine';
+import type TerrainTile from '../TerrainTile';
+import type { ResourceName } from '../GameData';
+import type { ZoneActivation } from '../ZoneActivation';
+import AergewinGameEngine from '../AergewinGameEngine';
+import AbstractGameEntity from './AbstractGameEntity';
 
 export type PlayerName = string;
 
@@ -12,16 +13,11 @@ export type PlayerConstructor = {
 	name: string;
 };
 
-export default class Player {
+export default class Player extends AbstractGameEntity {
 	private readonly _name: string;
 	private readonly _orderIndex: number;
 	private readonly _color: Color;
-	private _position: Hex;
-	private _grid: Grid<Hex>;
 	private _isActive = false;
-	private _inventory: Map<ResourceName, number> = new Map();
-	private _hp: number;
-
 	private _actionsSpent = 0;
 
 	constructor(
@@ -31,13 +27,14 @@ export default class Player {
 		position: Hex,
 		grid: Grid<Hex>
 	) {
+		super(position, grid);
 		this._name = name;
 		this._orderIndex = orderIndex;
-		this._grid = grid;
-		this._position = position;
 		this._color = new Color(((orderIndex - 1) / numberOfPlayers) * 360, 90, 40, 'hsl');
-		this._grid.setHexes([position]);
-		this._hp = 10; // TODO: implement player classes to customize HP
+	}
+
+	public maxHp(): number {
+		return 10; // TODO: implement player classes to customize HP
 	}
 
 	get color(): Color {
@@ -52,20 +49,12 @@ export default class Player {
 		return this._name;
 	}
 
-	get inventory(): Map<ResourceName, number> {
-		return this._inventory;
-	}
-
 	get actionsSpent(): number {
 		return this._actionsSpent;
 	}
 
 	get isActive(): boolean {
 		return this._isActive;
-	}
-
-	get position(): Hex {
-		return this._position;
 	}
 
 	get hp(): number {
@@ -198,12 +187,6 @@ export default class Player {
 		this._actionsSpent += action.cost;
 	}
 
-	hasResource(resource: ResourceName, amount: number = 1) {
-		let currentAmount = this._inventory.get(resource) || 0;
-
-		return currentAmount >= amount;
-	}
-
 	isFullHp() {
 		return this._hp === 10; // FIXME when we have classes
 	}
@@ -214,14 +197,8 @@ export default class Player {
 		return this._actionsSpent + fightCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
 	}
 
-	resetActions() {
+	newTurn() {
 		this._actionsSpent = 0;
-	}
-
-	private addItemToInventory(resource: ResourceName, amount: number = 1) {
-		let currentAmount = this._inventory.get(resource) || 0;
-
-		this._inventory.set(resource, currentAmount + amount);
 	}
 
 	private movementCost(distance: number) {

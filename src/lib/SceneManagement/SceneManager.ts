@@ -11,8 +11,8 @@ export default class SceneManager {
 
 	private _scenesCache: Map<SceneConstructor, SceneInstance> = new Map();
 
-	constructor(gameContainerElement: HTMLElement, options?: Partial<SceneManagerOptions>) {
-		this._options = getConfig(options as SceneManagerOptions);
+	constructor(gameContainerElement: HTMLElement, options: Partial<SceneManagerOptions>) {
+		this._options = getConfig(options);
 
 		this.gameContainerElement = gameContainerElement;
 		this.gameContainerElement.innerHTML = '';

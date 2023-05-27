@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
-	import Player, {type PlayerName} from '../../Player';
+	import Player, {type PlayerName} from '../../entities/Player';
 	import AergewinGameEngine from '../../AergewinGameEngine';
 
 	export let gameEngine: AergewinGameEngine;
@@ -12,7 +12,7 @@
 
 	gameEngine.on('tick', () => {
 		players = [...gameEngine.players.values()];
-		currentPlayer = gameEngine.getCurrentPlayer();
+		currentPlayer = gameEngine.currentPlayer;
 		currentTurnFirstPlayer = gameEngine.currentTurnFirstPlayer;
 		currentTurn = gameEngine.currentTurn;
 	});

@@ -3,7 +3,7 @@
 	import type { ZoneActivation } from '../../../ZoneActivation';
 	import { _ } from 'svelte-i18n';
 	import type TerrainTile from '../../../TerrainTile';
-	import type Player from '../../../Player';
+	import type Player from '../../../entities/Player';
 	import {onMount} from "svelte";
 
 	export let gameEngine: AergewinGameEngine;
@@ -19,7 +19,7 @@
 	});
 
 	function sync() {
-		currentPlayer = gameEngine.getCurrentPlayer();
+		currentPlayer = gameEngine.currentPlayer;
 		currentZone = gameEngine.getPlayerZone(currentPlayer);
 		possibleActions = currentZone.possibleActions;
 	}

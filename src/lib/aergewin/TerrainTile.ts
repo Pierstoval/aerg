@@ -3,12 +3,12 @@ import type { Grid } from 'honeycomb-grid';
 import { type ZoneActivation, getTerrainActions } from './ZoneActivation';
 import { type TerrainType, type ResourceName, Assets } from './GameData';
 
-export type TerrainInventory = Map<ResourceName, number>;
+export type Inventory = Map<ResourceName, number>;
 
 export default class TerrainTile {
 	private readonly _type: TerrainType;
 	private readonly _position: Hex;
-	private _inventory: TerrainInventory = new Map();
+	private _inventory: Inventory = new Map();
 	private _grid: Grid<Hex>;
 	private _riskValue = 0;
 
@@ -27,7 +27,7 @@ export default class TerrainTile {
 		return this._position;
 	}
 
-	get inventory(): TerrainInventory {
+	get inventory(): Inventory {
 		return this._inventory;
 	}
 

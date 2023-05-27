@@ -1,7 +1,7 @@
 <script lang="ts">
     import AergewinGameEngine from '../../../AergewinGameEngine';
     import { _ } from 'svelte-i18n';
-    import type Player from '../../../Player';
+    import type Player from '../../../entities/Player';
     import type {ResourceName} from "../../../GameData";
 
     export let gameEngine: AergewinGameEngine;
@@ -9,7 +9,7 @@
     let hasItemsToDeposit = false;
 
     gameEngine.on('tick', () => {
-        currentPlayer = gameEngine.getCurrentPlayer();
+        currentPlayer = gameEngine.currentPlayer;
         hasItemsToDeposit = currentPlayer.inventory.size > 0;
     });
 

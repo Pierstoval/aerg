@@ -6,12 +6,10 @@ export type SceneManagerOptions = {
 };
 
 export function getConfig(options: Partial<SceneManagerOptions>): SceneManagerOptions {
-	const finalOptions = Object.assign(defaults(), options);
-
-	return finalOptions as SceneManagerOptions;
+	return Object.assign(defaults(), options);
 }
 
-function defaults(): Partial<SceneManagerOptions> {
+function defaults(): SceneManagerOptions {
 	return {
 		defaultScene: DefaultScene
 	} as SceneManagerOptions;
