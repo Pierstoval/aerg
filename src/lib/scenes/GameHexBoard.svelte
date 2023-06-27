@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { afterUpdate, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import AergewinGameEngine from '../aergewin/AergewinGameEngine';
 	import SceneManager from '../SceneManagement/SceneManager';
 	import type { TickEvent } from '../aergewin/Event';
@@ -38,7 +38,9 @@
 		window.gameEngine = gameEngine;
 	}
 
-	onMount(start);
+	onMount(() => {
+		start();
+	});
 
 	const clickGrid = (e: MouseEvent) => gameEngine.click(e);
 	const mouseMoveGrid = (e: MouseEvent) => gameEngine.mouseMove(e);

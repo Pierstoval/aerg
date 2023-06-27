@@ -580,14 +580,13 @@ export default class AergewinGameEngine {
 	}
 
 	private oneOffConditionMatches(event: DailyEvent): boolean {
-		event.conditions.forEach((condition) => {
+		for (const condition of event.conditions) {
 			const conditionType = condition[0];
 			if (conditionType !== 'positioned_at') {
 				throw new Error(`Condition type ${conditionType} is not supported for one-off events.`);
 			}
-			const terrainCondition = condition[1];
-			// TODO
-		});
+			const terrainConditions = Array.isArray(condition[1]) ? condition[1] : [condition[1]];
+		}
 		return false;
 	}
 
