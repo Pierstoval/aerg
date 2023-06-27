@@ -4,7 +4,7 @@ import type { ArrayXY, Svg } from '@svgdotjs/svg.js';
 import { Grid, hexToPoint } from 'honeycomb-grid';
 import { SVG } from '@svgdotjs/svg.js';
 import HUDComponent from './HUD.svelte';
-import type { SvelteComponentTyped } from 'svelte/types/runtime/internal/dev';
+import type { SvelteComponent } from 'svelte';
 import AergewinGameEngine from '../AergewinGameEngine';
 import type TerrainTile from '../TerrainTile';
 
@@ -12,7 +12,7 @@ export default class Renderer {
 	private readonly gameEngine: AergewinGameEngine;
 	private readonly grid: Grid<Hex>;
 	private readonly svgContainer: Svg;
-	private readonly hudComponent: SvelteComponentTyped;
+	private readonly hudComponent: SvelteComponent;
 	private _hoverOnPositions: Array<Hex> = [];
 
 	constructor(

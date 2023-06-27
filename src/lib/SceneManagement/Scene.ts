@@ -1,5 +1,5 @@
-import type { ComponentType, SvelteComponentTyped } from 'svelte/types/runtime/internal/dev';
+import type { ComponentType, SvelteComponent } from 'svelte';
 
 export type SceneConstructor = ComponentType;
 
-export type SceneInstance = SvelteComponentTyped;
+export type SceneInstance = SvelteComponent;
