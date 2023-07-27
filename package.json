@@ -2,6 +2,7 @@
 	"name": "aergewin",
 	"version": "0.0.1",
 	"private": true,
+	"flat": true,
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -22,7 +23,7 @@
 		"@typescript-eslint/eslint-plugin": "^6.2.0",
 		"@typescript-eslint/parser": "^6.2.0",
 		"eslint": "^8.45.0",
-		"eslint-config-prettier": "^8.5.0",
+		"eslint-config-prettier": "^8.9.0",
 		"eslint-plugin-svelte": "^2.32.4",
 		"eslint-scope": "^7.2.1",
 		"honeycomb-grid": "^4.1.4",

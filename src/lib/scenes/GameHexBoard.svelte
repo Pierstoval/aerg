@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import AergewinGameEngine from '../aergewin/AergewinGameEngine';
-	import SceneManager from '../SceneManagement/SceneManager';
-	import type { TickEvent } from '../aergewin/Event';
+	import type SceneManager from '../SceneManagement/SceneManager';
+	import type { TickEvent, GameEvent, GameEventCallback } from '../aergewin/Event';
 
 	export let game: SceneManager;
 
@@ -27,11 +27,11 @@
 	function start() {
 		gameEngine = new AergewinGameEngine(game, hexGridElement, hudElement, players);
 
-		gameEngine.on('tick', function (e: TickEvent) {
+		gameEngine.on('tick', function (e: TickEvent): void {
 			const viewbox = e.renderer.getViewbox();
 			pixelWidth = viewbox.width;
 			pixelHeight = viewbox.height;
-		});
+		} as GameEventCallback);
 
 		gameEngine.start();
 
@@ -50,6 +50,7 @@
 	<div id="board-container">
 		<div id="HUD" bind:this={hudElement} />
 		<div id="board" style="--board-width: {pixelWidth}px; --board-height: {pixelHeight}px;">
+			<!-- svelte-ignore a11y -->
 			<div
 				id="hexGrid"
 				bind:this={hexGridElement}
