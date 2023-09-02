@@ -3,6 +3,7 @@
 	"version": "0.0.1",
 	"private": true,
 	"flat": true,
+	"zzz": "bbb",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -39,10 +40,9 @@
 	},
 	"type": "module",
 	"resolutions": {
-		"@jridgewell/sourcemap-codec": "1.4.15",
+		"fsevents": "2.3.3",
 		"glob-parent": "6.0.2",
 		"estree-walker": "3.0.3",
-		"type": "2.7.2",
-		"fsevents": "2.3.3"
+		"type": "2.7.2"
 	}
 }
