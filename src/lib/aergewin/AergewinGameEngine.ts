@@ -30,10 +30,10 @@ export default class AergewinGameEngine {
 	};
 
 	private readonly sceneManager: SceneManager;
-	private readonly grid: Grid<Hex>;
 	private readonly renderer: Renderer;
 	private readonly eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
 	private readonly alterationProcessor: AlterationProcessor;
+	private readonly _grid: Grid<Hex>;
 	private readonly _currentEvents: Array<DailyEvent> = [];
 	private readonly _players: Map<string, Player>;
 	private readonly _terrain: Array<TerrainTile>;
@@ -54,15 +54,15 @@ export default class AergewinGameEngine {
 		players: Array<PlayerConstructor>
 	) {
 		this.sceneManager = sceneManager;
-		this.grid = this.createGrid();
+		this._grid = this.createGrid();
 		this._players = this.createPlayers(players);
 		this._terrain = this.createTerrain();
 		this._currentTurnFirstPlayer = this.getFirstPlayerName();
 		this._currentPlayer = this.getFirstPlayerName();
-		this.renderer = new Renderer(this, this.grid, hexGridElement, hudElement);
+		this.renderer = new Renderer(this, this._grid, hexGridElement, hudElement);
 		this.terrainDeck = TerrainsDecks;
 		this.eventsDeck = [...DailyEventsDeck];
-		this._village = new Village(this.getVillageTerrainTile(), this.grid.createHex([0, 0]), this.grid);
+		this._village = new Village(this.getVillageTerrainTile(), this._grid.createHex([0, 0]), this._grid);
 		this.alterationProcessor = new AlterationProcessor(this);
 	}
 
@@ -92,6 +92,10 @@ export default class AergewinGameEngine {
 
 	get village(): Village {
 		return this._village;
+	}
+
+	get grid(): Grid<Hex> {
+		return this._grid;
 	}
 
 	start() {
@@ -290,7 +294,7 @@ export default class AergewinGameEngine {
 		const offsetX = e.offsetX + this.renderer.getMinX();
 		const offsetY = e.offsetY + this.renderer.getMinY();
 
-		return this.grid.pointToHex(
+		return this._grid.pointToHex(
 			{ x: offsetX, y: offsetY },
 			{
 				allowOutside: false
@@ -365,7 +369,7 @@ export default class AergewinGameEngine {
 
 		let i = 1;
 		for (const playerConstructor of players) {
-			const player = new Player(playerConstructor.name, i, players.length, this.grid.createHex([0, 0]), this.grid);
+			const player = new Player(playerConstructor.name, i, players.length, this._grid.createHex([0, 0]), this);
 			map.set(playerConstructor.name, player);
 			i++;
 		}
@@ -375,10 +379,10 @@ export default class AergewinGameEngine {
 
 	private createTerrain() {
 		return [
-			new TerrainTile('village', this.grid.createHex([0, 0]), this.grid),
-			new TerrainTile('mountain', this.grid.createHex([1, 0]), this.grid),
-			new TerrainTile('forest', this.grid.createHex([0, -1]), this.grid),
-			new TerrainTile('plains', this.grid.createHex([-1, 1]), this.grid)
+			new TerrainTile('village', this._grid.createHex([0, 0]), this._grid),
+			new TerrainTile('mountain', this._grid.createHex([1, 0]), this._grid),
+			new TerrainTile('forest', this._grid.createHex([0, -1]), this._grid),
+			new TerrainTile('plains', this._grid.createHex([-1, 1]), this._grid)
 		];
 	}
 
@@ -386,14 +390,14 @@ export default class AergewinGameEngine {
 		this._terrain.forEach((terrainTile: TerrainTile) => {
 			const newHexes = this.getNewHexesAroundPosition(terrainTile.position);
 			if (newHexes.length) {
-				this.grid.setHexes(newHexes);
+				this._grid.setHexes(newHexes);
 			}
 		});
 
 		this._players.forEach((player: Player) => {
 			const newHexes = this.getNewHexesAroundPosition(player.position);
 			if (newHexes.length) {
-				this.grid.setHexes(newHexes);
+				this._grid.setHexes(newHexes);
 			}
 		});
 	}
@@ -407,16 +411,16 @@ export default class AergewinGameEngine {
 	private getNewHexesAroundPosition(position: Hex) {
 		const directional = [];
 
-		directional.push(this.grid.neighborOf(position, Direction.N));
-		directional.push(this.grid.neighborOf(position, Direction.NE));
-		directional.push(this.grid.neighborOf(position, Direction.E));
-		directional.push(this.grid.neighborOf(position, Direction.SE));
-		directional.push(this.grid.neighborOf(position, Direction.S));
-		directional.push(this.grid.neighborOf(position, Direction.SW));
-		directional.push(this.grid.neighborOf(position, Direction.W));
-		directional.push(this.grid.neighborOf(position, Direction.NW));
+		directional.push(this._grid.neighborOf(position, Direction.N));
+		directional.push(this._grid.neighborOf(position, Direction.NE));
+		directional.push(this._grid.neighborOf(position, Direction.E));
+		directional.push(this._grid.neighborOf(position, Direction.SE));
+		directional.push(this._grid.neighborOf(position, Direction.S));
+		directional.push(this._grid.neighborOf(position, Direction.SW));
+		directional.push(this._grid.neighborOf(position, Direction.W));
+		directional.push(this._grid.neighborOf(position, Direction.NW));
 
-		return directional.filter((hex: Hex) => !this.grid.hasHex(hex));
+		return directional.filter((hex: Hex) => !this._grid.hasHex(hex));
 	}
 
 	private hexContainsTerrain(hexCoordinates: Hex) {
@@ -452,7 +456,7 @@ export default class AergewinGameEngine {
 		// Pop one random terrain off the deck.
 		const spliceResult = this.terrainDeck.splice(Math.floor(Math.random() * this.terrainDeck.length), 1);
 
-		return new TerrainTile(spliceResult[0], hexCoordinates, this.grid);
+		return new TerrainTile(spliceResult[0], hexCoordinates, this._grid);
 	}
 
 	private moveCurrentPlayerTo(hexCoordinates: Hex | undefined) {
@@ -490,7 +494,7 @@ export default class AergewinGameEngine {
 
 		if (hexCoordinates && this.playerCanMoveOrExplore(player, hexCoordinates)) {
 			const hoverList = [
-				...this.grid.traverse(line({ start: player.position, stop: hexCoordinates })).filter((hex: Hex) => {
+				...this._grid.traverse(line({ start: player.position, stop: hexCoordinates })).filter((hex: Hex) => {
 					return hex.toString() !== currentPlayerPosition;
 				})
 			];
@@ -540,8 +544,6 @@ export default class AergewinGameEngine {
 		}
 
 		console.info('Applying one-off event', event);
-
-		// TODO: fix this.
 
 		const alterations = Array.isArray(event.alterations) ? event.alterations : [event.alterations];
 

@@ -2,7 +2,7 @@ import type { Direction, Hex } from 'honeycomb-grid';
 import { fromCoordinates, Grid, move } from 'honeycomb-grid';
 import { Color } from '@svgdotjs/svg.js';
 import type TerrainTile from '../TerrainTile';
-import type { ResourceName } from '../GameData';
+import type { ResourceName, TerrainTypeCondition } from '../GameData';
 import type { ZoneActivation } from '../ZoneActivation';
 import AergewinGameEngine from '../AergewinGameEngine';
 import AbstractGameEntity from './AbstractGameEntity';
@@ -20,14 +20,8 @@ export default class Player extends AbstractGameEntity {
 	private _isActive = false;
 	private _actionsSpent = 0;
 
-	constructor(
-		name: string,
-		orderIndex: number,
-		numberOfPlayers: number,
-		position: Hex,
-		grid: Grid<Hex>
-	) {
-		super(position, grid);
+	constructor(name: string, orderIndex: number, numberOfPlayers: number, position: Hex, engine: AergewinGameEngine) {
+		super(position, engine);
 		this._name = name;
 		this._orderIndex = orderIndex;
 		this._color = new Color(((orderIndex - 1) / numberOfPlayers) * 360, 90, 40, 'hsl');
@@ -59,6 +53,10 @@ export default class Player extends AbstractGameEntity {
 
 	get hp(): number {
 		return this._hp;
+	}
+
+	get isCurrentPlayer(): boolean {
+		return this._engine.currentPlayer.name === this._name;
 	}
 
 	play() {
@@ -119,9 +117,7 @@ export default class Player extends AbstractGameEntity {
 	dropResource(resource: ResourceName) {
 		let currentAmount = this._inventory.get(resource) || 0;
 		if (currentAmount === 0) {
-			throw new Error(
-				`Unrecoverable error: cannot drop resource "${resource}" since current inventory contains none.`
-			);
+			throw new Error(`Unrecoverable error: cannot drop resource "${resource}" since current inventory contains none.`);
 		}
 
 		this._inventory.set(resource, currentAmount - 1);

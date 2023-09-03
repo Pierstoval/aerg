@@ -421,6 +421,9 @@ DailyEventsDeck.forEach((event) => {
 		let conditions = Array.isArray(alteration.conditions) ? alteration.conditions : [alteration.conditions];
 
 		conditions.forEach((condition) => {
+			if (!condition.targetCondition && !condition.targetEntity) {
+				throw new Error('AlterationCondition object must at least have either an entity or a condition.');
+			}
 			const target = condition.targetCondition;
 			if (!target) {
 				return;
