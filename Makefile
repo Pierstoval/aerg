@@ -28,7 +28,7 @@ update: upgrade
 .PHONY: update
 
 start: ## Start the project
-	yarn dev
+	yarn dev --open
 .PHONY: start
 
 ##
