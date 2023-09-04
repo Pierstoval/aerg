@@ -1,20 +1,15 @@
 import type { Direction, Hex } from 'honeycomb-grid';
 import { fromCoordinates, Grid, move } from 'honeycomb-grid';
 import AbstractGameEntity from './AbstractGameEntity';
+import type AergewinGameEngine from '$lib/aergewin/AergewinGameEngine';
 
 export default class Foe extends AbstractGameEntity {
 	private readonly _type: string; // TODO: add enemies types
 
 	private _actionsSpent = 0;
 
-	constructor(
-		type: string,
-		orderIndex: number,
-		numberOfPlayers: number,
-		position: Hex,
-		grid: Grid<Hex>
-	) {
-		super(position, grid);
+	constructor(type: string, orderIndex: number, numberOfPlayers: number, position: Hex, engine: AergewinGameEngine) {
+		super(position, engine);
 		this._type = type;
 	}
 

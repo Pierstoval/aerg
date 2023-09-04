@@ -8,16 +8,7 @@ import type { GameEventCallback, GameEventType } from './Event';
 import { TickEvent, GameEvent } from './Event';
 import type Foe from './entities/Foe';
 import type { ZoneActivation, ResourceCost } from './ZoneActivation';
-import {
-	Assets,
-	TerrainsDecks,
-	DailyEventsDeck,
-	type TerrainType,
-	type DailyEvent,
-	type ResourceName,
-	type EventCondition,
-	type TargetCondition
-} from './GameData';
+import { Assets, TerrainsDecks, DailyEventsDeck, type TerrainType, type DailyEvent, type ResourceName } from './GameData';
 import Village from './entities/Village';
 import AlterationProcessor from './alteration/AlterationProcessor';
 
@@ -62,7 +53,7 @@ export default class AergewinGameEngine {
 		this.renderer = new Renderer(this, this._grid, hexGridElement, hudElement);
 		this.terrainDeck = TerrainsDecks;
 		this.eventsDeck = [...DailyEventsDeck];
-		this._village = new Village(this.getVillageTerrainTile(), this._grid.createHex([0, 0]), this._grid);
+		this._village = new Village(this.getVillageTerrainTile(), this._grid.createHex([0, 0]), this);
 		this.alterationProcessor = new AlterationProcessor(this);
 	}
 
@@ -550,23 +541,6 @@ export default class AergewinGameEngine {
 		this.alterationProcessor.process(alterations);
 
 		return;
-	}
-
-	private oneOffConditionMatches(event: DailyEvent): boolean {
-		if (!event.conditions.length) {
-			// No conditions = always apply event.
-			return true;
-		}
-
-		for (const condition of event.conditions) {
-			const conditionType = condition[0];
-			if (conditionType !== 'positioned_at') {
-				throw new Error(`Condition type ${conditionType} is not supported for one-off events.`);
-			}
-			const terrainConditions = Array.isArray(condition[1]) ? condition[1] : [condition[1]];
-			debugger;
-		}
-		return false;
 	}
 
 	private resetEventDeck() {

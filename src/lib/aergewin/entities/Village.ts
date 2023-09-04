@@ -1,12 +1,13 @@
 import AbstractGameEntity from './AbstractGameEntity';
 import type { Grid, Hex } from 'honeycomb-grid';
 import type TerrainTile from '../TerrainTile';
+import type AergewinGameEngine from '$lib/aergewin/AergewinGameEngine';
 
 export default class Village extends AbstractGameEntity {
 	private terrain: TerrainTile;
 
-	constructor(terrain: TerrainTile, position: Hex, grid: Grid<Hex>) {
-		super(position, grid);
+	constructor(terrain: TerrainTile, position: Hex, engine: AergewinGameEngine) {
+		super(position, engine);
 		this.terrain = terrain;
 	}
 
