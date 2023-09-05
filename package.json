@@ -39,6 +39,6 @@
 		"honeycomb-grid": "^4.1.4",
 		"normalize.css": "^8.0.1",
 		"sass": "^1.66.1",
-		"svelte-i18n": "^3.7.3 <3.7.4 >3.7.4"
+		"svelte-i18n": "^3.7.4"
 	}
 }
