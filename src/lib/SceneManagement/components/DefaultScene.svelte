@@ -1,5 +1,5 @@
 <script lang="ts">
-	import SceneManager from '../SceneManager';
+	import type SceneManager from '../SceneManager';
 
 	export let game: SceneManager;
 </script>
@@ -20,8 +20,5 @@
 	}
 	h1 {
 		text-align: center;
-	}
-	ul {
-		list-style: circle inside;
 	}
 </style>

@@ -44,8 +44,8 @@
 	{#each possibleActions as action}
 		<div>
 			<button
-					on:click={() => checkAndExecuteAction(action)}
-					class:disabled="{!canExecuteAction(action)}"
+				on:click={() => checkAndExecuteAction(action)}
+				class:disabled="{!canExecuteAction(action)}"
 			>
 				{$_(`actions.${action.name}`)}
 			</button>
@@ -63,8 +63,7 @@
 </section>
 
 <style lang="scss">
-	h3,
-	h4 {
+	h3 {
 		display: block;
 	}
 	button {

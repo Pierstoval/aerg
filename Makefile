@@ -27,6 +27,10 @@ upgrade: ## Update project's dependencies (alias: update)
 update: upgrade
 .PHONY: update
 
+build: ## Build static application
+	yarn build
+.PHONY: upgrade
+
 start: ## Start the project
 	yarn dev --open
 .PHONY: start

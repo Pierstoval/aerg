@@ -3,17 +3,11 @@ import GameHexBoard from '$lib/scenes/GameHexBoard.svelte';
 import SceneManager from '$lib/SceneManagement/SceneManager';
 import MainMenu from '$lib/scenes/MainMenu.svelte';
 import { initLocale } from '$lib/i18n';
-import { Window } from 'happy-dom';
+
 describe('GameHexBoard', () => {
 	let hexBoardElement: HTMLElement;
 
 	beforeEach(() => {
-		const window = new Window({
-			url: 'https://localhost:8080',
-			width: 1024,
-			height: 768
-		});
-		const document = window.document;
 		initLocale();
 		hexBoardElement = document.createElement('div');
 		const game = new SceneManager(document.createElement('div'), {

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import AergewinGameEngine from '../../../AergewinGameEngine';
+    import type AergewinGameEngine from '../../../AergewinGameEngine';
     import { _ } from 'svelte-i18n';
     import type Player from '../../../entities/Player';
     import type {ResourceName} from "../../../GameData";
@@ -58,16 +58,5 @@
         background: #f0f8ff;
         padding: 0.5rem 1rem;
         border-radius: 0.5rem;
-        &.disabled {
-            background: #f7fbff;
-            color: #888;
-            &:hover {
-                cursor: not-allowed;
-            }
-        }
-        &:hover:not(.disabled) {
-            background: #d3dfe8;
-            cursor: pointer;
-        }
     }
 </style>

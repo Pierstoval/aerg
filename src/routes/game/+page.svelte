@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
-	import SceneManager from '../../lib/SceneManagement/SceneManager';
+	import SceneManager from '../../lib/SceneManagement/SceneManager.ts';
 	import MainMenu from '../../lib/scenes/MainMenu.svelte';
 
 	let gameElement: HTMLElement;
