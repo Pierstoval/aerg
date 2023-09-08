@@ -1,7 +1,7 @@
 import type { PlayerName } from './entities/Player';
 import Player, { type PlayerConstructor } from './entities/Player';
 import { defineHex, Direction, Grid, type Hex, line, Orientation, spiral } from 'honeycomb-grid';
-import Renderer from './rendering/Renderer';
+import DefaultSvgRenderer from './rendering/DefaultSvgRenderer';
 import type SceneManager from '../SceneManagement/SceneManager';
 import TerrainTile from './TerrainTile';
 import type { GameEventCallback, GameEventType } from './Event';
@@ -11,6 +11,8 @@ import type { ZoneActivation, ResourceCost } from './ZoneActivation';
 import { Assets, TerrainsDecks, DailyEventsDeck, type TerrainType, type DailyEvent, type ResourceName } from './GameData';
 import Village from './entities/Village';
 import AlterationProcessor from './alteration/AlterationProcessor';
+import type RendererFactory from '$lib/aergewin/rendering/RendererFactory';
+import type RendererInterface from '$lib/aergewin/rendering/RendererInterface';
 
 export default class AergewinGameEngine {
 	public static readonly MAX_ACTIONS_COUNT_PER_TURN = 7;
@@ -21,7 +23,7 @@ export default class AergewinGameEngine {
 	};
 
 	private readonly sceneManager: SceneManager;
-	private readonly renderer: Renderer;
+	private readonly renderer: RendererInterface;
 	private readonly eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
 	private readonly alterationProcessor: AlterationProcessor;
 	private readonly _grid: Grid<Hex>;
@@ -38,23 +40,18 @@ export default class AergewinGameEngine {
 	private terrainDeck: Array<TerrainType>;
 	private eventsDeck: Array<DailyEvent>;
 
-	constructor(
-		sceneManager: SceneManager,
-		hexGridElement: HTMLElement,
-		hudElement: HTMLElement,
-		players: Array<PlayerConstructor>
-	) {
+	constructor(sceneManager: SceneManager, rendererFactory: RendererFactory, players: Array<PlayerConstructor>) {
 		this.sceneManager = sceneManager;
 		this._grid = this.createGrid();
 		this._players = this.createPlayers(players);
 		this._terrain = this.createTerrain();
 		this._currentTurnFirstPlayer = this.getFirstPlayerName();
 		this._currentPlayer = this.getFirstPlayerName();
-		this.renderer = new Renderer(this, this._grid, hexGridElement, hudElement);
 		this.terrainDeck = TerrainsDecks;
 		this.eventsDeck = [...DailyEventsDeck];
 		this._village = new Village(this.getVillageTerrainTile(), this._grid.createHex([0, 0]), this);
 		this.alterationProcessor = new AlterationProcessor(this);
+		this.renderer = rendererFactory.getRenderer(this);
 	}
 
 	get players(): Map<string, Player> {

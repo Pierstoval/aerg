@@ -3,6 +3,7 @@
 	import AergewinGameEngine from '../aergewin/AergewinGameEngine';
 	import type SceneManager from '../SceneManagement/SceneManager';
 	import type { TickEvent, GameEvent, GameEventCallback } from '../aergewin/Event';
+	import DefaultSvgRenderer, {SvgRendererFactory} from "$lib/aergewin/rendering/DefaultSvgRenderer";
 
 	export let game: SceneManager;
 
@@ -25,7 +26,8 @@
 	];
 
 	function start() {
-		gameEngine = new AergewinGameEngine(game, hexGridElement, hudElement, players);
+		const rendererFactory = new SvgRendererFactory(hexGridElement, hudElement);
+		gameEngine = new AergewinGameEngine(game, rendererFactory, players);
 
 		gameEngine.on('tick', function (e: TickEvent): void {
 			const viewbox = e.renderer.getViewbox();

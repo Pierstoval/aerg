@@ -1,6 +1,6 @@
 import type SceneManager from '../SceneManagement/SceneManager';
 import type AergewinGameEngine from './AergewinGameEngine';
-import type Renderer from './rendering/Renderer';
+import type RendererInterface from './rendering/RendererInterface';
 
 export type GameEventType = 'tick';
 
@@ -17,9 +17,9 @@ export abstract class GameEvent {
 }
 
 export class TickEvent extends GameEvent {
-	public readonly renderer: Renderer;
+	public readonly renderer: RendererInterface;
 
-	constructor(game: SceneManager, engine: AergewinGameEngine, renderer: Renderer) {
+	constructor(game: SceneManager, engine: AergewinGameEngine, renderer: RendererInterface) {
 		super(game, engine);
 		this.renderer = renderer;
 	}

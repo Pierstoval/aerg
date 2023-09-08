@@ -11,7 +11,7 @@ export default class SceneManager {
 
 	private _scenesCache: Map<SceneConstructor, SceneInstance> = new Map();
 
-	constructor(gameContainerElement: HTMLElement, options: Partial<SceneManagerOptions>) {
+	constructor(gameContainerElement: HTMLElement, options?: Partial<SceneManagerOptions>) {
 		this._options = getConfig(options);
 
 		this.gameContainerElement = gameContainerElement;
@@ -39,6 +39,11 @@ export default class SceneManager {
 		const existingInstance = this._scenesCache.get(scene);
 		if (existingInstance) {
 			return existingInstance;
+		}
+
+		if (scene.hasOwnProperty('render')) {
+			console.error('SCENE ALREADY INSTANTIATED');
+			console.error(scene);
 		}
 
 		const sceneInstance: SceneInstance = new scene({

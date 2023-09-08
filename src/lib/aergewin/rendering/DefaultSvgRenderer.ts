@@ -1,28 +1,40 @@
-import type { Hex, Point } from 'honeycomb-grid';
-import type Player from '../entities/Player';
-import type { ArrayXY, Svg } from '@svgdotjs/svg.js';
-import { Grid, hexToPoint } from 'honeycomb-grid';
-import { SVG } from '@svgdotjs/svg.js';
-import HUDComponent from './HUD.svelte';
-import type { SvelteComponent } from 'svelte';
-import AergewinGameEngine from '../AergewinGameEngine';
-import type TerrainTile from '../TerrainTile';
+import type { Hex } from 'honeycomb-grid';
+import { hexToPoint } from 'honeycomb-grid';
 
-export default class Renderer {
-	private readonly gameEngine: AergewinGameEngine;
-	private readonly grid: Grid<Hex>;
+import type { ArrayXY, Svg } from '@svgdotjs/svg.js';
+import { SVG } from '@svgdotjs/svg.js';
+
+import type { SvelteComponent } from 'svelte';
+
+import type Player from '../entities/Player';
+import type TerrainTile from '../TerrainTile';
+import type RendererInterface from './RendererInterface';
+import type RendererFactory from './RendererFactory';
+import HUDComponent from './HUD.svelte';
+import AergewinGameEngine from '../AergewinGameEngine';
+import BaseRenderer from './BaseRenderer';
+
+export class SvgRendererFactory implements RendererFactory {
+	private readonly _gridElement: HTMLElement;
+	private readonly _hudElement: HTMLElement;
+
+	constructor(gridElement: HTMLElement, hudElement: HTMLElement) {
+		this._gridElement = gridElement;
+		this._hudElement = hudElement;
+	}
+
+	getRenderer(engine: AergewinGameEngine): RendererInterface {
+		return new DefaultSvgRenderer(engine, this._gridElement, this._hudElement);
+	}
+}
+
+export default class DefaultSvgRenderer extends BaseRenderer {
 	private readonly svgContainer: Svg;
 	private readonly hudComponent: SvelteComponent;
 	private _hoverOnPositions: Array<Hex> = [];
 
-	constructor(
-		gameEngine: AergewinGameEngine,
-		grid: Grid<Hex>,
-		gridElement: HTMLElement,
-		hudElement: HTMLElement
-	) {
-		this.gameEngine = gameEngine;
-		this.grid = grid;
+	constructor(gameEngine: AergewinGameEngine, gridElement: HTMLElement, hudElement: HTMLElement) {
+		super(gameEngine);
 
 		// Clear the board
 		hudElement.innerHTML = '';
@@ -42,10 +54,8 @@ export default class Renderer {
 		});
 	}
 
-	public updateHoverPositions(hexes: Array<Hex>) {
-		const hasChanged =
-			hexes.length !== this._hoverOnPositions.length ||
-			hexes.toString() !== this._hoverOnPositions.toString();
+	public updateHoverPositions(hexes: Array<Hex>): void {
+		const hasChanged = hexes.length !== this._hoverOnPositions.length || hexes.toString() !== this._hoverOnPositions.toString();
 
 		if (hasChanged) {
 			this._hoverOnPositions = hexes;
@@ -53,49 +63,7 @@ export default class Renderer {
 		}
 	}
 
-	public getMinX(): number {
-		let min = Infinity;
-
-		this.grid.forEach((hex: Hex) => {
-			hex.corners.forEach((point: Point) => {
-				if (min > point.x) {
-					min = point.x;
-				}
-			});
-		});
-
-		return min;
-	}
-
-	public getMinY(): number {
-		let min = Infinity;
-
-		this.grid.forEach((hex: Hex) => {
-			hex.corners.forEach((point: Point) => {
-				if (min > point.y) {
-					min = point.y;
-				}
-			});
-		});
-
-		return min;
-	}
-
-	public getViewbox() {
-		const minX = this.getMinX();
-		const minY = this.getMinY();
-		const maxX = this.getMaxX();
-		const maxY = this.getMaxY();
-
-		return {
-			x: minX,
-			y: minY,
-			width: maxX - minX,
-			height: maxY - minY
-		};
-	}
-
-	public draw(postDrawCallback?: () => any) {
+	public draw(postDrawCallback?: () => void) {
 		this.svgContainer.clear();
 
 		this.svgContainer.viewbox(this.getViewbox());
@@ -109,34 +77,6 @@ export default class Renderer {
 		if (postDrawCallback) {
 			postDrawCallback();
 		}
-	}
-
-	private getMaxX(): number {
-		let max = -Infinity;
-
-		this.grid.forEach((hex: Hex) => {
-			hex.corners.forEach((point: Point) => {
-				if (max < point.x) {
-					max = point.x;
-				}
-			});
-		});
-
-		return max;
-	}
-
-	private getMaxY(): number {
-		let max = -Infinity;
-
-		this.grid.forEach((hex: Hex) => {
-			hex.corners.forEach((point: Point) => {
-				if (max < point.y) {
-					max = point.y;
-				}
-			});
-		});
-
-		return max;
 	}
 
 	private drawHUD() {
@@ -154,10 +94,7 @@ export default class Renderer {
 			// create a polygon from a hex's corner points
 			const points: ArrayXY[] = hex.corners.map(({ x, y }) => [x, y]);
 
-			const polygon = this.svgContainer
-				.polygon(points)
-				.fill('none')
-				.stroke({ width: 1, color: '#dddddd' });
+			const polygon = this.svgContainer.polygon(points).fill('none').stroke({ width: 1, color: '#dddddd' });
 
 			group.add(polygon);
 		});
@@ -211,10 +148,7 @@ export default class Renderer {
 				.add(
 					this.svgContainer
 						.text(String(player.index))
-						.move(
-							playerPoint.x - xOffset - coordinateOffset / 2,
-							playerPoint.y - yOffset - coordinateOffset * 1.25
-						)
+						.move(playerPoint.x - xOffset - coordinateOffset / 2, playerPoint.y - yOffset - coordinateOffset * 1.25)
 						.fill('#ffffff')
 				);
 		});
@@ -244,13 +178,7 @@ export default class Renderer {
 			const points: ArrayXY[] = hex.corners.map(({ x, y }) => [x, y]);
 
 			group.add(this.svgContainer.polygon(points).fill('#ffffff').opacity(0.3));
-			group.add(
-				this.svgContainer
-					.polygon(points)
-					.opacity(0.8)
-					.fill('none')
-					.stroke({ width: 3, color: playerColor.toHex() })
-			);
+			group.add(this.svgContainer.polygon(points).opacity(0.8).fill('none').stroke({ width: 3, color: playerColor.toHex() }));
 		});
 	}
 }

@@ -8,7 +8,7 @@
 	<h1>Game ready to be coded!</h1>
 
 	<p>Here are the game options:</p>
-	<pre>{JSON.stringify(game.options, undefined, 4)}</pre>
+	<pre>{JSON.stringify(game.options || {}, undefined, 4)}</pre>
 </main>
 
 <style lang="scss">
