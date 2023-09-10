@@ -65,15 +65,14 @@ export default class DefaultSvgRenderer extends BaseRenderer {
 	}
 
 	public async loadAssets() {
-		return Promise.all(
-			Object.values(Assets).map((assetUrl) => {
-				return fetch(assetUrl).then((res) => {
-					if (res.ok) {
-						console.info(`Successfully loaded "${assetUrl}".`);
-					} else {
-						throw new Error(`Could not load "${assetUrl}".`);
-					}
-				});
+		await Promise.all(
+			Object.values(Assets).map(async (assetUrl) => {
+				let res = await fetch(assetUrl);
+				if (res.ok) {
+					console.info(`Successfully loaded "${assetUrl}".`);
+				} else {
+					throw new Error(`Could not load "${assetUrl}".`);
+				}
 			})
 		);
 	}

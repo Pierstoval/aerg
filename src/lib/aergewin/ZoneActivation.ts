@@ -41,12 +41,7 @@ export class ZoneActivation {
 	public readonly experienceGain: number;
 	public readonly resourceCost: ResourceCost[];
 
-	constructor(
-		name: ZoneActionName,
-		actionCost: number,
-		resourceCost: ResourceCost[] = [],
-		experienceGain: number = 0
-	) {
+	constructor(name: ZoneActionName, actionCost: number, resourceCost: ResourceCost[] = [], experienceGain: number = 0) {
 		this.name = name;
 		this.cost = actionCost;
 		this.resourceCost = resourceCost;

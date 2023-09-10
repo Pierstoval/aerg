@@ -3,7 +3,7 @@
 	import AergewinGameEngine from '../aergewin/AergewinGameEngine';
 	import type SceneManager from '../SceneManagement/SceneManager';
 	import type { TickEvent, GameEvent, GameEventCallback } from '../aergewin/Event';
-	import DefaultSvgRenderer, {SvgRendererFactory} from "$lib/aergewin/rendering/DefaultSvgRenderer";
+	import {SvgRendererFactory} from "$lib/aergewin/rendering/DefaultSvgRenderer";
 
 	export let game: SceneManager;
 
@@ -25,9 +25,9 @@
 		{ name: 'Mario' }
 	];
 
-	function start() {
+	async function start() {
 		const rendererFactory = new SvgRendererFactory(hexGridElement, hudElement);
-		gameEngine = new AergewinGameEngine(game, rendererFactory, players);
+		gameEngine = new AergewinGameEngine(rendererFactory, players);
 
 		gameEngine.on('tick', function (e: TickEvent): void {
 			const viewbox = e.renderer.getViewbox();
@@ -35,7 +35,7 @@
 			pixelHeight = viewbox.height;
 		} as GameEventCallback);
 
-		gameEngine.start();
+		await gameEngine.start();
 
 		window.gameEngine = gameEngine;
 	}
