@@ -84,15 +84,15 @@ export default class AergewinGameEngine {
 		return this._grid;
 	}
 
-	start() {
+	async start() {
 		if (this._started) {
 			throw new Error('Game already running.');
 		}
 		this._started = true;
 
-		this.renderer.loadAssets().then(() => {
-			this.newTurn();
-		});
+		await this.renderer.loadAssets();
+
+		this.newTurn();
 	}
 
 	click(e: MouseEvent) {
