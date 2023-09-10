@@ -13,6 +13,7 @@ import type RendererFactory from './RendererFactory';
 import HUDComponent from './HUD.svelte';
 import AergewinGameEngine from '../AergewinGameEngine';
 import BaseRenderer from './BaseRenderer';
+import { Assets } from '$lib/aergewin/GameData';
 
 export class SvgRendererFactory implements RendererFactory {
 	private readonly _gridElement: HTMLElement;
@@ -61,6 +62,20 @@ export default class DefaultSvgRenderer extends BaseRenderer {
 			this._hoverOnPositions = hexes;
 			this.draw();
 		}
+	}
+
+	public async loadAssets() {
+		return Promise.all(
+			Object.values(Assets).map((assetUrl) => {
+				return fetch(assetUrl).then((res) => {
+					if (res.ok) {
+						console.info(`Successfully loaded "${assetUrl}".`);
+					} else {
+						throw new Error(`Could not load "${assetUrl}".`);
+					}
+				});
+			})
+		);
 	}
 
 	public draw(postDrawCallback?: () => void) {

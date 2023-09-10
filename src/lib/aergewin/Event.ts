@@ -7,11 +7,9 @@ export type GameEventType = 'tick';
 export type GameEventCallback = (e: GameEvent) => void;
 
 export abstract class GameEvent {
-	public readonly game: SceneManager;
 	public readonly engine: AergewinGameEngine;
 
-	protected constructor(game: SceneManager, engine: AergewinGameEngine) {
-		this.game = game;
+	protected constructor(engine: AergewinGameEngine) {
 		this.engine = engine;
 	}
 }
@@ -19,8 +17,8 @@ export abstract class GameEvent {
 export class TickEvent extends GameEvent {
 	public readonly renderer: RendererInterface;
 
-	constructor(game: SceneManager, engine: AergewinGameEngine, renderer: RendererInterface) {
-		super(game, engine);
+	constructor(engine: AergewinGameEngine, renderer: RendererInterface) {
+		super(engine);
 		this.renderer = renderer;
 	}
 }

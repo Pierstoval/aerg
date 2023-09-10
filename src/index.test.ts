@@ -1,43 +1,37 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import SceneManager from '$lib/SceneManagement/SceneManager';
 import { initLocale } from '$lib/i18n';
 import AergewinGameEngine from '$lib/aergewin/AergewinGameEngine';
 import { FakeRendererFactory } from '$lib/aergewin/rendering/FakeRenderer';
-import { Window } from 'happy-dom';
-import DefaultScene from '$lib/SceneManagement/components/DefaultScene.svelte';
 
-describe('GameHexBoard', () => {
+describe('Game engine', () => {
 	let gameEngine: AergewinGameEngine;
-
-	const window = new Window({
-		url: 'https://localhost:8080',
-		width: 1024,
-		height: 768
-	});
-	const document = window.document;
-	const sceneContainer = document.createElement('div');
-
-	const players = [
-		// { name: 'Alex' },
-		// { name: 'Hélène' },
-		// { name: 'Aidan' },
-		// { name: 'Jillian' },
-		{ name: 'Jane' },
-		{ name: 'John' },
-		{ name: 'Ella' },
-		{ name: 'Mario' }
-	];
+	const players = [{ name: 'Jane' }, { name: 'John' }, { name: 'Ella' }, { name: 'Mario' }];
 
 	beforeEach(() => {
 		initLocale();
-		const sceneManager = new SceneManager(sceneContainer as unknown as HTMLElement, {
-			defaultScene: DefaultScene
-		});
 		const rendererFactory = new FakeRendererFactory();
-		gameEngine = new AergewinGameEngine(sceneManager, rendererFactory, players);
+		gameEngine = new AergewinGameEngine(rendererFactory, players);
 	});
 
-	it('is a game', () => {
+	it('is instantiated', () => {
 		expect(gameEngine).toBeDefined();
+	});
+
+	it('has an empty default state when not started', () => {
+		expect(() => gameEngine.currentPlayer).toThrow('Game not running yet. Have you forgot');
+	});
+
+	it('can be started and have a base game turn', () => {
+		gameEngine.start();
+		const player = gameEngine.currentPlayer;
+		expect(player).toBeDefined();
+		expect(player.name).toBe('Jane');
+		expect(player.actionsSpent).toBe(0);
+		expect(player.index).toBe(1);
+		expect(gameEngine.getPlayerZone(player).type).toBe('village');
+
+		// FIXME TODO: fix this which is false when tested
+		// console.info(player);
+		expect(player.isActive).toBe(true);
 	});
 });

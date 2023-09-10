@@ -22,7 +22,6 @@ export default class AergewinGameEngine {
 		hexOrientation: Orientation.FLAT
 	};
 
-	private readonly sceneManager: SceneManager;
 	private readonly renderer: RendererInterface;
 	private readonly eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
 	private readonly alterationProcessor: AlterationProcessor;
@@ -40,8 +39,7 @@ export default class AergewinGameEngine {
 	private terrainDeck: Array<TerrainType>;
 	private eventsDeck: Array<DailyEvent>;
 
-	constructor(sceneManager: SceneManager, rendererFactory: RendererFactory, players: Array<PlayerConstructor>) {
-		this.sceneManager = sceneManager;
+	constructor(rendererFactory: RendererFactory, players: Array<PlayerConstructor>) {
 		this._grid = this.createGrid();
 		this._players = this.createPlayers(players);
 		this._terrain = this.createTerrain();
@@ -92,7 +90,7 @@ export default class AergewinGameEngine {
 		}
 		this._started = true;
 
-		Promise.all([this.loadAssets()]).then(() => {
+		this.renderer.loadAssets().then(() => {
 			this.newTurn();
 		});
 	}
@@ -246,7 +244,11 @@ export default class AergewinGameEngine {
 			p.stopPlaying();
 		});
 		this._currentPlayer = this.getNextPlayerName(this._currentPlayer);
-		this.currentPlayer.play();
+		this.updatePlayer(() => {
+			const p = this.currentPlayer;
+			p.play();
+			return p;
+		});
 		this.tick();
 	}
 
@@ -261,15 +263,32 @@ export default class AergewinGameEngine {
 		this._currentTurnFirstPlayer = this._currentPlayer;
 
 		this._players.forEach((player: Player) => {
-			player.stopPlaying();
-			player.newTurn();
+			this.updatePlayer(() => {
+				player.stopPlaying();
+				player.newTurn();
+				return player;
+			});
 		});
 
 		this.pickNewDailyEvent();
 
-		this.currentPlayer.play();
+		this.updatePlayer(() => {
+			const p = this.currentPlayer;
+			p.play();
+			return p;
+		});
 
 		this.tick();
+	}
+
+	private updatePlayer(callback: () => Player): void {
+		const newPlayer = callback();
+		if (!newPlayer) {
+			throw new Error(
+				'Callback used to update current player must return the instance of the player you just updated. Did you forget to write "return player;"?'
+			);
+		}
+		this._players.set(newPlayer.name, newPlayer);
 	}
 
 	private playerCanMoveOrExplore(player: Player, hexCoordinates: Hex) {
@@ -295,7 +314,7 @@ export default class AergewinGameEngine {
 
 		this.refreshGrid();
 
-		this.renderer.draw(() => this.dispatch('tick', new TickEvent(this.sceneManager, this, this.renderer)));
+		this.renderer.draw(() => this.dispatch('tick', new TickEvent(this, this.renderer)));
 	}
 
 	private getNextPlayerName(currentPlayerName: string): PlayerName {
@@ -488,20 +507,6 @@ export default class AergewinGameEngine {
 			];
 			this.renderer.updateHoverPositions(hoverList);
 		}
-	}
-
-	private async loadAssets() {
-		return Promise.all(
-			Object.values(Assets).map((assetUrl) => {
-				return fetch(assetUrl).then((res) => {
-					if (res.ok) {
-						console.info(`Successfully loaded "${assetUrl}".`);
-					} else {
-						throw new Error(`Could not load "${assetUrl}".`);
-					}
-				});
-			})
-		);
 	}
 
 	private pickNewDailyEvent() {

@@ -13,6 +13,8 @@ export default abstract class BaseRenderer implements RendererInterface {
 
 	abstract draw(postDrawCallback?: () => void): void;
 
+	abstract loadAssets(): Promise<void>;
+
 	abstract updateHoverPositions(hexes: Array<Hex>): void;
 
 	protected get grid() {

@@ -20,5 +20,9 @@ export class FakeRenderer extends BaseRenderer {
 
 	draw(postDrawCallback?: () => void): void {}
 
+	async loadAssets(): Promise<void> {
+		return Promise.resolve();
+	}
+
 	updateHoverPositions(hexes: Array<Hex>): void {}
 }
