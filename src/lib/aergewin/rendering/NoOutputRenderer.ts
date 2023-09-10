@@ -9,11 +9,11 @@ import BaseRenderer from './BaseRenderer';
 
 export class FakeRendererFactory implements RendererFactory {
 	getRenderer(engine: AergewinGameEngine): RendererInterface {
-		return new FakeRenderer(engine);
+		return new NoOutputRenderer(engine);
 	}
 }
 
-export class FakeRenderer extends BaseRenderer {
+export class NoOutputRenderer extends BaseRenderer {
 	constructor(engine: AergewinGameEngine) {
 		super(engine);
 	}

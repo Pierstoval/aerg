@@ -1,10 +1,24 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { initLocale } from '$lib/i18n';
+import { describe, it, expect, beforeEach } from 'vitest';
 import AergewinGameEngine from '$lib/aergewin/AergewinGameEngine';
-import { FakeRendererFactory } from '$lib/aergewin/rendering/FakeRenderer';
+import { FakeRendererFactory } from '$lib/aergewin/rendering/NoOutputRenderer';
+import ConfigurableRandomnessProvider from '$lib/aergewin/random/ConfigurableRandomnessProvider';
+import { DailyEventsDeck } from '$lib/aergewin/GameData';
+
+function getEventIndexByName(name: string): number {
+	for (let i = 0; i < DailyEventsDeck.length; i++) {
+		const dailyEvent = DailyEventsDeck[i];
+		if (dailyEvent.name === name) {
+			return i;
+		}
+	}
+
+	throw new Error(`Could not find event by name "${name}".`);
+}
 
 describe('Game engine', () => {
+	let randomnessProvider: ConfigurableRandomnessProvider;
 	let game: AergewinGameEngine;
+
 	const players = [
 		{ name: 'Jane' }, // First player
 		{ name: 'John' },
@@ -13,9 +27,9 @@ describe('Game engine', () => {
 	];
 
 	beforeEach(() => {
-		initLocale();
+		randomnessProvider = new ConfigurableRandomnessProvider();
 		const rendererFactory = new FakeRendererFactory();
-		game = new AergewinGameEngine(rendererFactory, players);
+		game = new AergewinGameEngine(rendererFactory, randomnessProvider, players);
 	});
 
 	it('is instantiated', () => {
@@ -53,5 +67,33 @@ describe('Game engine', () => {
 		expect(player.index).toBe(1);
 		expect(game.getPlayerZone(player).type).toBe('village');
 		expect(player.isActive).toBe(true);
+	});
+
+	it('has a configured negative event at start', async () => {
+		const eventName = 'Blizzard';
+		randomnessProvider.addNextNumberForKey('new_daily_event', getEventIndexByName(eventName));
+
+		await game.start();
+
+		const events = game.currentEvents;
+		expect(events.length).toBe(1);
+		const event = events[0];
+		expect(event).toBeDefined();
+		expect(event.type).toBe('malus');
+		expect(event.name).toBe(eventName);
+	});
+
+	it('has a configured positive event at start', async () => {
+		const eventName = 'Beau temps';
+		randomnessProvider.addNextNumberForKey('new_daily_event', getEventIndexByName(eventName));
+
+		await game.start();
+
+		const events = game.currentEvents;
+		expect(events.length).toBe(1);
+		const event = events[0];
+		expect(event).toBeDefined();
+		expect(event.type).toBe('bonus');
+		expect(event.name).toBe(eventName);
 	});
 });

@@ -1,7 +1,7 @@
 import type { PlayerName } from './entities/Player';
 import Player, { type PlayerConstructor } from './entities/Player';
 import { defineHex, Direction, Grid, type Hex, line, Orientation, spiral } from 'honeycomb-grid';
-import DefaultSvgRenderer from './rendering/DefaultSvgRenderer';
+import SvgRenderer from './rendering/SvgRenderer';
 import type SceneManager from '../SceneManagement/SceneManager';
 import TerrainTile from './TerrainTile';
 import type { GameEventCallback, GameEventType } from './Event';
@@ -13,6 +13,7 @@ import Village from './entities/Village';
 import AlterationProcessor from './alteration/AlterationProcessor';
 import type RendererFactory from '$lib/aergewin/rendering/RendererFactory';
 import type RendererInterface from '$lib/aergewin/rendering/RendererInterface';
+import type RandomnessProviderInterface from '$lib/aergewin/random/RandomnessProviderInterface';
 
 export default class AergewinGameEngine {
 	public static readonly MAX_ACTIONS_COUNT_PER_TURN = 7;
@@ -23,6 +24,7 @@ export default class AergewinGameEngine {
 	};
 
 	private readonly renderer: RendererInterface;
+	private readonly randomnessProvider: RandomnessProviderInterface;
 	private readonly eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
 	private readonly alterationProcessor: AlterationProcessor;
 	private readonly _grid: Grid<Hex>;
@@ -39,7 +41,12 @@ export default class AergewinGameEngine {
 	private terrainDeck: Array<TerrainType>;
 	private eventsDeck: Array<DailyEvent>;
 
-	constructor(rendererFactory: RendererFactory, players: Array<PlayerConstructor>) {
+	constructor(
+		rendererFactory: RendererFactory,
+		randomnessProvider: RandomnessProviderInterface,
+		players: Array<PlayerConstructor>
+	) {
+		this.randomnessProvider = randomnessProvider;
 		this._grid = this.createGrid();
 		this._players = this.createPlayers(players);
 		this._terrain = this.createTerrain();
@@ -460,8 +467,10 @@ export default class AergewinGameEngine {
 			throw new Error('Tried to get new terrain but deck is empty.');
 		}
 
+		const randomNumber = this.randomnessProvider.provideKeyedNumberBetween('new_terrain', 0, this.terrainDeck.length);
+
 		// Pop one random terrain off the deck.
-		const spliceResult = this.terrainDeck.splice(Math.floor(Math.random() * this.terrainDeck.length), 1);
+		const spliceResult = this.terrainDeck.splice(randomNumber, 1);
 
 		return new TerrainTile(spliceResult[0], hexCoordinates, this._grid);
 	}
@@ -514,7 +523,8 @@ export default class AergewinGameEngine {
 			this.resetEventDeck();
 		}
 
-		const spliceResult = this.eventsDeck.splice(Math.floor(Math.random() * this.eventsDeck.length), 1);
+		const randomNumber = this.randomnessProvider.provideKeyedNumberBetween('new_daily_event', 0, this.eventsDeck.length);
+		const spliceResult = this.eventsDeck.splice(randomNumber, 1);
 
 		const newEvent: DailyEvent = spliceResult[0];
 		if (newEvent.duration === 'one-off') {

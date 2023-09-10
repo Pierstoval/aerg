@@ -3,7 +3,7 @@
 	import AergewinGameEngine from '../aergewin/AergewinGameEngine';
 	import type SceneManager from '../SceneManagement/SceneManager';
 	import type { TickEvent, GameEvent, GameEventCallback } from '../aergewin/Event';
-	import {SvgRendererFactory} from "$lib/aergewin/rendering/DefaultSvgRenderer";
+	import {SvgRendererFactory} from "$lib/aergewin/rendering/SvgRenderer";
 
 	export let game: SceneManager;
 

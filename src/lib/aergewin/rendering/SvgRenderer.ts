@@ -25,11 +25,11 @@ export class SvgRendererFactory implements RendererFactory {
 	}
 
 	getRenderer(engine: AergewinGameEngine): RendererInterface {
-		return new DefaultSvgRenderer(engine, this._gridElement, this._hudElement);
+		return new SvgRenderer(engine, this._gridElement, this._hudElement);
 	}
 }
 
-export default class DefaultSvgRenderer extends BaseRenderer {
+export default class SvgRenderer extends BaseRenderer {
 	private readonly svgContainer: Svg;
 	private readonly hudComponent: SvelteComponent;
 	private _hoverOnPositions: Array<Hex> = [];
