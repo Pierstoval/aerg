@@ -546,11 +546,9 @@ export default class AergewinGameEngine {
 			throw new Error('Unrecoverable error: tried to apply one-off event effets, but specified event is not one-off.');
 		}
 
-		console.info('Applying one-off event', event);
-
 		const alterations = Array.isArray(event.alterations) ? event.alterations : [event.alterations];
 
-		this.alterationProcessor.process(alterations);
+		this.alterationProcessor.processOneOff(alterations);
 
 		return;
 	}
