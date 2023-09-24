@@ -1,12 +1,16 @@
 import type AergewinGameEngine from '../AergewinGameEngine';
-import type { TargetCondition, EventAlteration, ZoneActionName, TerrainTypeCondition, AlterationCondition } from '../GameData';
-import type { AlterationTarget, EventCondition, OperatorType, ResourceName, ResourceQuantityAlteration } from '../GameData';
-import Operator from './Operator';
+import type {
+	EventAlteration,
+	ZoneActionName,
+	TerrainTypeCondition,
+	AlterationCondition,
+	TargetPropertyAlteration
+} from '../GameData';
 import type AbstractGameEntity from '../entities/AbstractGameEntity';
-import type Player from '$lib/aergewin/entities/Player';
+import Player from '$lib/aergewin/entities/Player';
 
 export default class AlterationProcessor {
-	private engine: AergewinGameEngine;
+	private readonly engine: AergewinGameEngine;
 
 	constructor(engine: AergewinGameEngine) {
 		this.engine = engine;
@@ -21,22 +25,7 @@ export default class AlterationProcessor {
 
 		console.info(`Resolved targets: ${targets.length || '-'}`);
 
-		if (alteration.alterActionCost || alteration.alterActionReward) {
-			console.error('"alterActionCost" and "alterActionReward" are not applicable to one-off events.');
-			return;
-		}
-
-		if (alteration.alterResourceQuantity) {
-			console.info('TODO: alterResourceQuantity');
-		}
-
-		if (alteration.alterProperty) {
-			console.info('TODO: alterProperty');
-		}
-
-		if (alteration.replaceClosestTerrain) {
-			console.info('TODO: replaceClosestTerrain');
-		}
+		targets.forEach((target) => this.applyAlterationToTarget(alteration, target));
 	}
 
 	private getOneOffAlterationTargets(alteration: EventAlteration): Array<AbstractGameEntity> {
@@ -48,9 +37,8 @@ export default class AlterationProcessor {
 
 		const conditions = Array.isArray(alteration.conditions) ? alteration.conditions : [alteration.conditions];
 
-		const targets: Array<AbstractGameEntity> = this.getTargetsByTerrain(conditions).filter((target) => {
-			console.info('TODO: reimplement targets gathering with proper filters instead of single function');
-			return true; //return this.matchesTerrain(target, conditions);
+		const targets: Array<AbstractGameEntity> = this.getAvailableTargets().filter((target) => {
+			return this.matchesTerrain(target, conditions);
 		});
 
 		return targets;
@@ -65,13 +53,21 @@ export default class AlterationProcessor {
 		// }
 	}
 
-	private getTargetsByTerrain(conditions: Array<AlterationCondition>): Array<AbstractGameEntity> {
-		const targets: Array<AbstractGameEntity> = [];
+	private getAvailableTargets(): Array<AbstractGameEntity> {
+		return [...this.engine.players.values()];
+	}
 
-		const players = Array.from(this.engine.players.values());
+	public matchesTerrain(target: AbstractGameEntity, conditions: Array<AlterationCondition>): boolean {
+		if (target instanceof Player) {
+			return this.playerMatchesTerrain(target, conditions);
+		}
 
+		return false;
+	}
+
+	private playerMatchesTerrain(target: Player, conditions: Array<AlterationCondition>) {
 		for (const condition of conditions) {
-			const actionCondition: ZoneActionName | 'movement' | 'positioned_at' | undefined = condition.targetCondition?.[0];
+			const actionCondition = condition.targetCondition?.[0];
 			let conds = condition.targetCondition?.[1];
 			if (conds) {
 				conds = Array.isArray(conds) ? conds : [conds];
@@ -85,20 +81,49 @@ export default class AlterationProcessor {
 			const targetEntity = condition.targetEntity;
 
 			for (const terrain of terrainConditions || []) {
-				for (const player of players) {
-					if (
-						player.isAtTerrain(terrain) &&
-						(!targetEntity ||
-							targetEntity === 'all_players' ||
-							targetEntity === 'player_matching_condition' ||
-							(targetEntity === 'current_player' && player.isCurrentPlayer))
-					) {
-						targets.push(player);
-					}
+				if (
+					target.isAtTerrain(terrain) &&
+					(!targetEntity ||
+						targetEntity === 'all_players' ||
+						targetEntity === 'player_matching_condition' ||
+						(targetEntity === 'current_player' && target.isCurrentPlayer))
+				) {
+					return true;
 				}
 			}
 		}
 
-		return targets;
+		return false;
+	}
+
+	private applyAlterationToTarget(alteration: EventAlteration, target: AbstractGameEntity) {
+		if (alteration.alterActionCost || alteration.alterActionReward) {
+			console.error('"alterActionCost" and "alterActionReward" are not applicable to one-off events.');
+			return;
+		}
+
+		if (alteration.alterResourceQuantity) {
+			console.info('TODO: alterResourceQuantity');
+		}
+
+		if (alteration.alterProperty) {
+			this.alterTargetProperty(alteration.alterProperty, target);
+		}
+
+		if (alteration.replaceClosestTerrain) {
+			console.info('TODO: replaceClosestTerrain');
+		}
+	}
+
+	private alterTargetProperty(alterProperty: TargetPropertyAlteration, target: AbstractGameEntity) {
+		const [operator, amount, property] = alterProperty;
+
+		switch (property) {
+			case 'hp':
+				target.alterHp(operator, amount);
+				break;
+			default:
+				throw new Error(`Unrecoverable error: could not alter property "${property}".`);
+		}
 	}
 }

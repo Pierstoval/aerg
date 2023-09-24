@@ -11,7 +11,7 @@ import type TerrainTile from '../TerrainTile';
 import type RendererInterface from './RendererInterface';
 import type RendererFactory from './RendererFactory';
 import HUDComponent from './HUD.svelte';
-import AergewinGameEngine from '../AergewinGameEngine';
+import type AergewinGameEngine from '../AergewinGameEngine';
 import BaseRenderer from './BaseRenderer';
 import { Assets } from '$lib/aergewin/GameData';
 
@@ -29,10 +29,9 @@ export class SvgRendererFactory implements RendererFactory {
 	}
 }
 
-export default class SvgRenderer extends BaseRenderer {
+class SvgRenderer extends BaseRenderer {
 	private readonly svgContainer: Svg;
 	private readonly hudComponent: SvelteComponent;
-	private _hoverOnPositions: Array<Hex> = [];
 
 	constructor(gameEngine: AergewinGameEngine, gridElement: HTMLElement, hudElement: HTMLElement) {
 		super(gameEngine);
@@ -55,19 +54,10 @@ export default class SvgRenderer extends BaseRenderer {
 		});
 	}
 
-	public updateHoverPositions(hexes: Array<Hex>): void {
-		const hasChanged = hexes.length !== this._hoverOnPositions.length || hexes.toString() !== this._hoverOnPositions.toString();
-
-		if (hasChanged) {
-			this._hoverOnPositions = hexes;
-			this.draw();
-		}
-	}
-
 	public async loadAssets() {
 		await Promise.all(
 			Object.values(Assets).map(async (assetUrl) => {
-				let res = await fetch(assetUrl);
+				const res = await fetch(assetUrl);
 				if (res.ok) {
 					console.info(`Successfully loaded "${assetUrl}".`);
 				} else {
@@ -140,7 +130,7 @@ export default class SvgRenderer extends BaseRenderer {
 			const playerPoint = hexToPoint(player.position);
 
 			const coordinateOffset = 10;
-			const distanceToTheCenter = AergewinGameEngine.options.hexSize / 2;
+			const distanceToTheCenter = this.gameEngine.configuration.hexSize / 2;
 			const t = (player.index - 1) / (numberOfPlayers / 2);
 
 			const x = playerPoint.x - coordinateOffset;

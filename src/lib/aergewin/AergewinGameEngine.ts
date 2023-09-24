@@ -1,38 +1,32 @@
 import type { PlayerName } from './entities/Player';
 import Player, { type PlayerConstructor } from './entities/Player';
-import { defineHex, Direction, Grid, type Hex, line, Orientation, spiral } from 'honeycomb-grid';
-import SvgRenderer from './rendering/SvgRenderer';
-import type SceneManager from '../SceneManagement/SceneManager';
-import TerrainTile from './TerrainTile';
+import { defineHex, Direction, Grid, type Hex, line, spiral } from 'honeycomb-grid';
+import TerrainTile, { type TerrainConstructor } from './TerrainTile';
 import type { GameEventCallback, GameEventType } from './Event';
 import { TickEvent, GameEvent } from './Event';
 import type Foe from './entities/Foe';
 import type { ZoneActivation, ResourceCost } from './ZoneActivation';
-import { Assets, TerrainsDecks, DailyEventsDeck, type TerrainType, type DailyEvent, type ResourceName } from './GameData';
+import { TerrainsDecks, DailyEventsDeck, type TerrainType, type DailyEvent, type ResourceName } from './GameData';
 import Village from './entities/Village';
 import AlterationProcessor from './alteration/AlterationProcessor';
 import type RendererFactory from '$lib/aergewin/rendering/RendererFactory';
 import type RendererInterface from '$lib/aergewin/rendering/RendererInterface';
 import type RandomnessProviderInterface from '$lib/aergewin/random/RandomnessProviderInterface';
+import { getHexFromMouseEvent } from '$lib/aergewin/user_interaction/mouse_interaction';
+import type { GameConfiguration } from '$lib/aergewin/GameConfiguration';
 
 export default class AergewinGameEngine {
-	public static readonly MAX_ACTIONS_COUNT_PER_TURN = 7;
-
-	public static readonly options = {
-		hexSize: 70,
-		hexOrientation: Orientation.FLAT
-	};
-
-	private readonly renderer: RendererInterface;
-	private readonly randomnessProvider: RandomnessProviderInterface;
-	private readonly eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
-	private readonly alterationProcessor: AlterationProcessor;
-	private readonly _grid: Grid<Hex>;
+	private readonly _configuration: GameConfiguration;
 	private readonly _currentEvents: Array<DailyEvent> = [];
-	private readonly _players: Map<string, Player>;
-	private readonly _terrain: Array<TerrainTile>;
 	private readonly _foes: Array<Foe> = [];
+	private readonly _grid: Grid<Hex>;
+	private readonly _players: Map<string, Player>;
+	private readonly _renderer: RendererInterface;
+	private readonly _terrain: Array<TerrainTile>;
 	private readonly _village: Village;
+	private readonly alterationProcessor: AlterationProcessor;
+	private readonly eventListeners: Map<GameEventType, GameEventCallback[]> = new Map();
+	private readonly randomnessProvider: RandomnessProviderInterface;
 
 	private _started = false;
 	private _currentTurnIndex = 0;
@@ -44,51 +38,67 @@ export default class AergewinGameEngine {
 	constructor(
 		rendererFactory: RendererFactory,
 		randomnessProvider: RandomnessProviderInterface,
-		players: Array<PlayerConstructor>
+		configuration: GameConfiguration
 	) {
+		if (!configuration.players?.length) {
+			throw new Error(
+				'No players defined when starting the game. Did you forget to add the "players" key to the GameConfiguration object?'
+			);
+		}
+		if (!configuration.visibleTerrain?.length) {
+			throw new Error(
+				'No terrain defined when starting the game. Did you forget to add the "visibleTerrain" key to the GameConfiguration object?'
+			);
+		}
 		this.randomnessProvider = randomnessProvider;
+		this._configuration = configuration;
 		this._grid = this.createGrid();
-		this._players = this.createPlayers(players);
-		this._terrain = this.createTerrain();
+		this._players = this.createPlayers(configuration.players);
+		this._terrain = this.createTerrain(configuration.visibleTerrain);
 		this._currentTurnFirstPlayer = this.getFirstPlayerName();
 		this._currentPlayer = this.getFirstPlayerName();
 		this.terrainDeck = TerrainsDecks;
 		this.eventsDeck = [...DailyEventsDeck];
 		this._village = new Village(this.getVillageTerrainTile(), this._grid.createHex([0, 0]), this);
 		this.alterationProcessor = new AlterationProcessor(this);
-		this.renderer = rendererFactory.getRenderer(this);
+		this._renderer = rendererFactory.getRenderer(this);
 	}
 
-	get players(): Map<string, Player> {
-		return this._players;
+	get configuration(): GameConfiguration {
+		return this._configuration;
 	}
-
-	get terrain(): Array<TerrainTile> {
-		return this._terrain;
-	}
-
-	get isRunning(): boolean {
-		return this._started;
-	}
-
 	get currentEvents(): Array<DailyEvent> {
 		return this._currentEvents;
 	}
-
-	get currentTurnFirstPlayer(): PlayerName {
-		return this._currentTurnFirstPlayer;
+	get currentPlayer(): Player {
+		this.checkGameIsRunning();
+		const player = this._players.get(this._currentPlayer);
+		if (!player) throw new Error('Unrecoverable error: cannot find current player.');
+		return player;
 	}
-
 	get currentTurn(): number {
 		return this._currentTurnIndex;
 	}
-
-	get village(): Village {
-		return this._village;
+	get currentTurnFirstPlayer(): PlayerName {
+		return this._currentTurnFirstPlayer;
 	}
-
 	get grid(): Grid<Hex> {
 		return this._grid;
+	}
+	get isRunning(): boolean {
+		return this._started;
+	}
+	get players(): Map<string, Player> {
+		return this._players;
+	}
+	get renderer(): RendererInterface {
+		return this._renderer;
+	}
+	get terrain(): Array<TerrainTile> {
+		return this._terrain;
+	}
+	get village(): Village {
+		return this._village;
 	}
 
 	async start() {
@@ -97,7 +107,7 @@ export default class AergewinGameEngine {
 		}
 		this._started = true;
 
-		await this.renderer.loadAssets();
+		await this._renderer.loadAssets();
 
 		this.newTurn();
 	}
@@ -105,13 +115,13 @@ export default class AergewinGameEngine {
 	click(e: MouseEvent) {
 		this.checkGameIsRunning();
 
-		this.moveCurrentPlayerTo(this.getHexFromMouseEvent(e));
+		this.moveCurrentPlayerTo(getHexFromMouseEvent(this._grid, this._renderer, e));
 	}
 
 	mouseMove(e: MouseEvent) {
 		this.checkGameIsRunning();
 
-		this.hoverCurrentPlayerPath(this.getHexFromMouseEvent(e));
+		this.hoverCurrentPlayerPath(getHexFromMouseEvent(this._grid, this._renderer, e));
 	}
 
 	playerCanFight(player: Player) {
@@ -130,16 +140,35 @@ export default class AergewinGameEngine {
 		return canFight;
 	}
 
-	get currentPlayer(): Player {
+	moveCurrentPlayerTo(hexCoordinates: Hex | undefined) {
 		this.checkGameIsRunning();
 
-		const player = this._players.get(this._currentPlayer);
+		this._renderer.updateHoverPositions([]);
 
-		if (!player) {
-			throw new Error('Unrecoverable error: cannot find current player.');
+		if (!hexCoordinates) {
+			return;
 		}
 
-		return player;
+		const currentPlayer = this.currentPlayer;
+
+		if (!this.hexContainsTerrain(hexCoordinates)) {
+			// Exploration
+			if (currentPlayer.canExplore(hexCoordinates)) {
+				// Exploration
+				this._terrain.push(this.createNewTerrainAt(hexCoordinates));
+				currentPlayer.explore(hexCoordinates);
+				currentPlayer.moveTo(hexCoordinates);
+			} else {
+				return;
+			}
+		} else if (currentPlayer.canMoveTo(hexCoordinates)) {
+			// Simple movement
+			currentPlayer.moveTo(hexCoordinates);
+		} else {
+			return;
+		}
+
+		this.goToNextPlayer();
 	}
 
 	getPlayerZone(player: Player): TerrainTile {
@@ -178,7 +207,7 @@ export default class AergewinGameEngine {
 			}
 		});
 
-		const canExecute = hasResource && playerActionSpent + action.cost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
+		const canExecute = hasResource && playerActionSpent + action.cost <= this._configuration.max_actions_count_per_turn;
 
 		if (!canExecute) {
 			return false;
@@ -304,24 +333,12 @@ export default class AergewinGameEngine {
 		return (!hexContainsTerrain && player.canExplore(hexCoordinates)) || (hexContainsTerrain && player.canMoveTo(hexCoordinates));
 	}
 
-	private getHexFromMouseEvent(e: MouseEvent) {
-		const offsetX = e.offsetX + this.renderer.getMinX();
-		const offsetY = e.offsetY + this.renderer.getMinY();
-
-		return this._grid.pointToHex(
-			{ x: offsetX, y: offsetY },
-			{
-				allowOutside: false
-			}
-		);
-	}
-
 	private tick() {
 		this.checkGameIsRunning();
 
 		this.refreshGrid();
 
-		this.renderer.draw(() => this.dispatch('tick', new TickEvent(this, this.renderer)));
+		this._renderer.draw(() => this.dispatch('tick', new TickEvent(this, this._renderer)));
 	}
 
 	private getNextPlayerName(currentPlayerName: string): PlayerName {
@@ -368,8 +385,8 @@ export default class AergewinGameEngine {
 	private createGrid() {
 		return new Grid(
 			defineHex({
-				dimensions: AergewinGameEngine.options.hexSize,
-				orientation: AergewinGameEngine.options.hexOrientation,
+				dimensions: this._configuration.hexSize,
+				orientation: this._configuration.hexOrientation,
 				origin: { x: 0, y: 0 }
 			}),
 			spiral({
@@ -383,7 +400,8 @@ export default class AergewinGameEngine {
 
 		let i = 1;
 		for (const playerConstructor of players) {
-			const player = new Player(playerConstructor.name, i, players.length, this._grid.createHex([0, 0]), this);
+			const coordinates = playerConstructor.position || [0, 0];
+			const player = new Player(playerConstructor.name, i, players.length, this._grid.createHex(coordinates), this);
 			map.set(playerConstructor.name, player);
 			i++;
 		}
@@ -391,13 +409,10 @@ export default class AergewinGameEngine {
 		return map;
 	}
 
-	private createTerrain() {
-		return [
-			new TerrainTile('village', this._grid.createHex([0, 0]), this._grid),
-			new TerrainTile('mountain', this._grid.createHex([1, 0]), this._grid),
-			new TerrainTile('forest', this._grid.createHex([0, -1]), this._grid),
-			new TerrainTile('plains', this._grid.createHex([-1, 1]), this._grid)
-		];
+	private createTerrain(terrains: Array<TerrainConstructor>): TerrainTile[] {
+		return terrains.map((ctor) => {
+			return new TerrainTile(ctor.type, this._grid.createHex(ctor.position), this._grid);
+		});
 	}
 
 	private refreshGrid() {
@@ -448,7 +463,6 @@ export default class AergewinGameEngine {
 
 		return found;
 	}
-
 	private getVillageTerrainTile(): TerrainTile {
 		const terrains = this._terrain.filter((terrain) => terrain.isType('village'));
 
@@ -462,6 +476,7 @@ export default class AergewinGameEngine {
 
 		return terrains[0];
 	}
+
 	private createNewTerrainAt(hexCoordinates: Hex) {
 		if (!this.terrainDeck.length) {
 			throw new Error('Tried to get new terrain but deck is empty.');
@@ -475,35 +490,6 @@ export default class AergewinGameEngine {
 		return new TerrainTile(spliceResult[0], hexCoordinates, this._grid);
 	}
 
-	private moveCurrentPlayerTo(hexCoordinates: Hex | undefined) {
-		this.renderer.updateHoverPositions([]);
-
-		if (!hexCoordinates) {
-			return;
-		}
-
-		const currentPlayer = this.currentPlayer;
-
-		if (!this.hexContainsTerrain(hexCoordinates)) {
-			// Exploration
-			if (currentPlayer.canExplore(hexCoordinates)) {
-				// Exploration
-				this._terrain.push(this.createNewTerrainAt(hexCoordinates));
-				currentPlayer.explore(hexCoordinates);
-				currentPlayer.moveTo(hexCoordinates);
-			} else {
-				return;
-			}
-		} else if (currentPlayer.canMoveTo(hexCoordinates)) {
-			// Simple movement
-			currentPlayer.moveTo(hexCoordinates);
-		} else {
-			return;
-		}
-
-		this.goToNextPlayer();
-	}
-
 	private hoverCurrentPlayerPath(hexCoordinates: Hex | undefined) {
 		const player = this.currentPlayer;
 		const currentPlayerPosition = player.position.toString();
@@ -514,7 +500,7 @@ export default class AergewinGameEngine {
 					return hex.toString() !== currentPlayerPosition;
 				})
 			];
-			this.renderer.updateHoverPositions(hoverList);
+			this._renderer.updateHoverPositions(hoverList);
 		}
 	}
 
@@ -528,6 +514,7 @@ export default class AergewinGameEngine {
 
 		const newEvent: DailyEvent = spliceResult[0];
 		if (newEvent.duration === 'one-off') {
+			console.info('One-off event: ', newEvent);
 			this.applyOneOffDailyEvent(newEvent);
 			return;
 		}

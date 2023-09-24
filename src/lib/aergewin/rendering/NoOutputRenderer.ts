@@ -1,7 +1,3 @@
-import type { Array } from '@svgdotjs/svg.js';
-
-import type { Hex } from 'honeycomb-grid';
-
 import type AergewinGameEngine from '../AergewinGameEngine';
 import type RendererInterface from './RendererInterface';
 import type RendererFactory from './RendererFactory';
@@ -18,11 +14,11 @@ export class NoOutputRenderer extends BaseRenderer {
 		super(engine);
 	}
 
-	draw(postDrawCallback?: () => void): void {}
+	draw(postDrawCallback?: () => void): void {
+		postDrawCallback && postDrawCallback();
+	}
 
 	async loadAssets(): Promise<void> {
 		return Promise.resolve();
 	}
-
-	updateHoverPositions(hexes: Array<Hex>): void {}
 }

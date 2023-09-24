@@ -1,4 +1,3 @@
-import type SceneManager from '../SceneManagement/SceneManager';
 import type AergewinGameEngine from './AergewinGameEngine';
 import type RendererInterface from './rendering/RendererInterface';
 

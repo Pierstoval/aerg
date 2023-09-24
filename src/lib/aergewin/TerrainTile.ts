@@ -1,9 +1,14 @@
-import type { Hex } from 'honeycomb-grid';
+import type { Hex, HexCoordinates } from 'honeycomb-grid';
 import type { Grid } from 'honeycomb-grid';
 import { type ZoneActivation, getTerrainActions } from './ZoneActivation';
 import { type TerrainType, type ResourceName, Assets } from './GameData';
 
 export type Inventory = Map<ResourceName, number>;
+
+export type TerrainConstructor = {
+	type: TerrainType;
+	position: HexCoordinates;
+};
 
 export default class TerrainTile {
 	private readonly _type: TerrainType;

@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import AergewinGameEngine from '../aergewin/AergewinGameEngine';
-	import type SceneManager from '../SceneManagement/SceneManager';
-	import type { TickEvent, GameEvent, GameEventCallback } from '../aergewin/Event';
+	import type { TickEvent, GameEventCallback } from '../aergewin/Event';
 	import {SvgRendererFactory} from "$lib/aergewin/rendering/SvgRenderer";
-
-	export let game: SceneManager;
+	import {defaultGameConfiguration, defaultTerrain} from "$lib/aergewin/GameConfiguration";
+	// import DefaultRandomnessProvider from "$lib/aergewin/random/DefaultRandomnessProvider.js";
+	import ConfigurableRandomnessProvider from "$lib/aergewin/random/ConfigurableRandomnessProvider";
+	import {getEventIndexByName} from "$lib/aergewin/GameData";
 
 	let gameEngine: AergewinGameEngine;
 	let hexGridElement: HTMLElement;
@@ -19,15 +20,29 @@
 		// { name: 'Hélène' },
 		// { name: 'Aidan' },
 		// { name: 'Jillian' },
-		{ name: 'Jane' },
+		{ name: 'Jane', position: [1, 0] },
 		{ name: 'John' },
 		{ name: 'Ella' },
 		{ name: 'Mario' }
 	];
 
 	async function start() {
+		//const randomnessProvider = new DefaultRandomnessProvider();
+		const randomnessProvider = new ConfigurableRandomnessProvider();
+		const eventName = 'Chute de pierres';
+		randomnessProvider.addNextNumberForKey('new_daily_event', getEventIndexByName(eventName));
+
 		const rendererFactory = new SvgRendererFactory(hexGridElement, hudElement);
-		gameEngine = new AergewinGameEngine(rendererFactory, players);
+
+		const config = defaultGameConfiguration();
+		config.players = players;
+		config.visibleTerrain = defaultTerrain();
+
+		gameEngine = new AergewinGameEngine(
+			rendererFactory,
+			randomnessProvider,
+			config,
+		);
 
 		gameEngine.on('tick', function (e: TickEvent): void {
 			const viewbox = e.renderer.getViewbox();

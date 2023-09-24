@@ -1,8 +1,7 @@
 import type { Grid, Hex } from 'honeycomb-grid';
-import type { ResourceName } from '../GameData';
+import type { OperatorType, ResourceName } from '../GameData';
 import type AergewinGameEngine from '$lib/aergewin/AergewinGameEngine';
 import type { TerrainTypeCondition } from '../GameData';
-import type TerrainTile from '$lib/aergewin/TerrainTile';
 
 export default abstract class AbstractGameEntity {
 	protected _position: Hex;
@@ -40,9 +39,13 @@ export default abstract class AbstractGameEntity {
 	}
 
 	isAtTerrain(terrain: TerrainTypeCondition): boolean {
+		if (terrain === 'any') {
+			return true;
+		}
+
 		const currentPosition = this._position.toString();
 
-		const tiles = this._engine.terrain;
+		const tiles = this._engine.terrain.filter((t) => t.type === terrain);
 
 		for (const tile of tiles) {
 			if (tile.position.toString() === currentPosition) {
@@ -55,8 +58,27 @@ export default abstract class AbstractGameEntity {
 		return false;
 	}
 
+	alterHp(operator: OperatorType, amount: number) {
+		let value = this.hp;
+
+		switch (operator) {
+			case 'add':
+				value = this.hp + amount;
+				break;
+			case 'substract':
+				value = this.hp - amount;
+				break;
+			case 'multiply':
+				break;
+			case 'divide_floor':
+				break;
+			case 'divide_ceil':
+				break;
+		}
+	}
+
 	protected addItemToInventory(resource: ResourceName, amount: number = 1) {
-		let currentAmount = this._inventory.get(resource) || 0;
+		const currentAmount = this._inventory.get(resource) || 0;
 
 		this._inventory.set(resource, currentAmount + amount);
 	}

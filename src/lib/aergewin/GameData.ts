@@ -60,11 +60,13 @@ export type AlterationCondition = {
 	targetCondition?: TargetCondition;
 };
 
+export type TargetPropertyAlteration = [OperatorType, number, TargetProperty];
+
 export type EventAlteration = {
 	alterActionCost?: { action: OperatorType; amount: number; cumulative: boolean };
 	alterActionReward?: { action: OperatorType; amount: number; reward: Reward; cumulative: boolean };
 	alterResourceQuantity?: ResourceQuantityAlteration;
-	alterProperty?: [AlterationTarget, OperatorType, number, TargetProperty];
+	alterProperty?: TargetPropertyAlteration;
 	replaceClosestTerrain?: { from: TerrainType; to: TerrainType };
 	conditions?: AlterationCondition | Array<AlterationCondition>;
 };
@@ -166,9 +168,7 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 		description: 'Tous les personnages sur des cases Montagne subissent 2 points de dégâts',
 		type: 'malus',
 		duration: 'one-off',
-		alterations: [
-			{ alterProperty: ['all_players', 'substract', 2, 'hp'], conditions: { targetCondition: ['positioned_at', 'mountain'] } }
-		]
+		alterations: [{ alterProperty: ['substract', 2, 'hp'], conditions: { targetCondition: ['positioned_at', 'mountain'] } }]
 	},
 	{
 		name: 'Incendie',
@@ -237,7 +237,7 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 		description: 'Le village perd immédiatement 2 unités de nourriture, et perd 1 PV pour chaque unité nourriture manquante.',
 		type: 'malus',
 		duration: 'one-off',
-		alterations: [{ alterProperty: ['village', 'substract', 2, 'hp'], conditions: [] }]
+		alterations: [{ alterProperty: ['substract', 2, 'hp'], conditions: [{ targetEntity: 'village' }] }]
 	},
 	{
 		name: 'Beau temps',
@@ -385,7 +385,7 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 		description: 'Tous les alliés, personnages et soldats, regagnent 2 PV',
 		type: 'bonus',
 		duration: 'one-off',
-		alterations: [{ alterProperty: ['all_players', 'add', 2, 'hp'], conditions: [] }]
+		alterations: [{ alterProperty: ['add', 2, 'hp'], conditions: [{ targetEntity: 'all_players' }] }]
 	},
 	{
 		name: 'Mine cachée',
@@ -404,6 +404,17 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 	// 	]
 	// }
 ];
+
+export function getEventIndexByName(name: string): number {
+	for (let i = 0; i < DailyEventsDeck.length; i++) {
+		const dailyEvent = DailyEventsDeck[i];
+		if (dailyEvent.name === name) {
+			return i;
+		}
+	}
+
+	throw new Error(`Could not find event by name "${name}".`);
+}
 
 // Validate events types before running the game
 DailyEventsDeck.forEach((event) => {

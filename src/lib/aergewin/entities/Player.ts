@@ -1,16 +1,17 @@
-import type { Direction, Hex } from 'honeycomb-grid';
-import { fromCoordinates, Grid, move } from 'honeycomb-grid';
+import type { Direction, Hex, HexCoordinates } from 'honeycomb-grid';
+import { fromCoordinates, move } from 'honeycomb-grid';
 import { Color } from '@svgdotjs/svg.js';
 import type TerrainTile from '../TerrainTile';
-import type { ResourceName, TerrainTypeCondition } from '../GameData';
+import type { ResourceName } from '../GameData';
 import type { ZoneActivation } from '../ZoneActivation';
-import AergewinGameEngine from '../AergewinGameEngine';
+import type AergewinGameEngine from '../AergewinGameEngine';
 import AbstractGameEntity from './AbstractGameEntity';
 
 export type PlayerName = string;
 
 export type PlayerConstructor = {
 	name: string;
+	position?: HexCoordinates;
 };
 
 export default class Player extends AbstractGameEntity {
@@ -68,8 +69,8 @@ export default class Player extends AbstractGameEntity {
 	}
 
 	goToDirection(direction: Direction) {
-		this._grid.traverse([fromCoordinates(this._position), move(direction)]).map((p: Hex) => {
-			const distance = this._grid.distance(this._position, p);
+		this._engine.grid.traverse([fromCoordinates(this._position), move(direction)]).map((p: Hex) => {
+			const distance = this._engine.grid.distance(this._position, p);
 			this._actionsSpent += distance;
 			this._position = p;
 
@@ -78,7 +79,7 @@ export default class Player extends AbstractGameEntity {
 	}
 
 	moveTo(hex: Hex) {
-		const distance = this._grid.distance(this._position, hex);
+		const distance = this._engine.grid.distance(this._position, hex);
 		if (distance === 0) {
 			// Do nothing if player is not moving.
 			return;
@@ -88,7 +89,7 @@ export default class Player extends AbstractGameEntity {
 	}
 
 	explore(hex: Hex) {
-		const distance = this._grid.distance(this._position, hex);
+		const distance = this._engine.grid.distance(this._position, hex);
 		if (distance === 0) {
 			// Do nothing if player is not moving.
 			return;
@@ -100,22 +101,22 @@ export default class Player extends AbstractGameEntity {
 	canMove(): boolean {
 		const totalCost = this._actionsSpent + this.movementCost(1);
 
-		return totalCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
+		return totalCost <= this._engine.configuration.max_actions_count_per_turn;
 	}
 
 	canMoveTo(hex: Hex): boolean {
-		const distance = this._grid.distance(this._position, hex);
+		const distance = this._engine.grid.distance(this._position, hex);
 		if (distance === 0) {
 			return false;
 		}
 
 		const totalCost = this._actionsSpent + this.movementCost(distance);
 
-		return totalCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
+		return totalCost <= this._engine.configuration.max_actions_count_per_turn;
 	}
 
 	dropResource(resource: ResourceName) {
-		let currentAmount = this._inventory.get(resource) || 0;
+		const currentAmount = this._inventory.get(resource) || 0;
 		if (currentAmount === 0) {
 			throw new Error(`Unrecoverable error: cannot drop resource "${resource}" since current inventory contains none.`);
 		}
@@ -127,14 +128,14 @@ export default class Player extends AbstractGameEntity {
 	}
 
 	canExplore(hex: Hex): boolean {
-		const distance = this._grid.distance(this._position, hex);
+		const distance = this._engine.grid.distance(this._position, hex);
 		if (distance === 0) {
 			return false;
 		}
 
 		const totalCost = this._actionsSpent + distance + this.explorationCost();
 
-		return totalCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
+		return totalCost <= this._engine.configuration.max_actions_count_per_turn;
 	}
 
 	canActivateZone(terrain: TerrainTile) {
@@ -148,7 +149,7 @@ export default class Player extends AbstractGameEntity {
 
 		const totalCost = this._actionsSpent + minimumTerrainActivationCost;
 
-		return totalCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
+		return totalCost <= this._engine.configuration.max_actions_count_per_turn;
 	}
 
 	gatherFoodAt(action: ZoneActivation, zone: TerrainTile) {
@@ -190,7 +191,7 @@ export default class Player extends AbstractGameEntity {
 	canFight(): boolean {
 		const fightCost = 1; // FIXME when we have classes
 
-		return this._actionsSpent + fightCost <= AergewinGameEngine.MAX_ACTIONS_COUNT_PER_TURN;
+		return this._actionsSpent + fightCost <= this._engine.configuration.max_actions_count_per_turn;
 	}
 
 	newTurn() {
@@ -199,11 +200,13 @@ export default class Player extends AbstractGameEntity {
 
 	private movementCost(distance: number) {
 		// TODO: "Traveller" may have a bonus here
+		console.info('TODO: alter movement cost based on current events.');
 		return distance;
 	}
 
 	private explorationCost() {
 		// TODO: "Explorator" may have a bonus here
+		console.info('TODO: alter exploration cost based on current events.');
 		return 1;
 	}
 }

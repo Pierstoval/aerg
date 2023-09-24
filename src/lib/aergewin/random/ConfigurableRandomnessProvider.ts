@@ -1,13 +1,13 @@
 import type RandomnessProviderInterface from '$lib/aergewin/random/RandomnessProviderInterface';
-import RandomnessProvider from '$lib/aergewin/random/RandomnessProvider';
+import DefaultRandomnessProvider from '$lib/aergewin/random/DefaultRandomnessProvider';
 
 export default class ConfigurableRandomnessProvider implements RandomnessProviderInterface {
 	private readonly nextNumbers: Map<string, number[]>;
-	private readonly trueRandomnessProvider: RandomnessProvider;
+	private readonly trueRandomnessProvider: DefaultRandomnessProvider;
 
 	constructor() {
 		this.nextNumbers = new Map();
-		this.trueRandomnessProvider = new RandomnessProvider();
+		this.trueRandomnessProvider = new DefaultRandomnessProvider();
 	}
 
 	provideKeyedNumberBetween(uniqueKey: string, min: number, max: number): number {
