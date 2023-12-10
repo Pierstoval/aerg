@@ -6,7 +6,7 @@ export default interface RendererInterface {
 
 	loadAssets(): Promise<void>;
 
-	updateHoverPositions(hexes: Array<Hex>): void;
+	updateHoverPositions(hexes: Array<HexTile>): void;
 
 	getViewbox(): BaseViewbox;
 

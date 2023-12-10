@@ -1,11 +1,12 @@
 import type RendererInterface from '$lib/aergewin/rendering/RendererInterface';
-import type { Hex, Point } from 'honeycomb-grid';
+import type { Grid, Hex, Point } from 'honeycomb-grid';
 import type { BaseViewbox } from '$lib/aergewin/rendering/BaseViewbox';
 import type AergewinGameEngine from '$lib/aergewin/AergewinGameEngine';
+import type { HexTile } from '$lib/aergewin/HexTile';
 
 export default abstract class BaseRenderer implements RendererInterface {
 	protected gameEngine: AergewinGameEngine;
-	protected _hoverOnPositions: Array<Hex> = [];
+	protected _hoverOnPositions: Array<HexTile> = [];
 
 	protected constructor(engine: AergewinGameEngine) {
 		this.gameEngine = engine;
@@ -15,7 +16,7 @@ export default abstract class BaseRenderer implements RendererInterface {
 
 	abstract loadAssets(): Promise<void>;
 
-	public updateHoverPositions(hexes: Array<Hex>): void {
+	public updateHoverPositions(hexes: Array<HexTile>): void {
 		const hasChanged = hexes.length !== this._hoverOnPositions.length || hexes.toString() !== this._hoverOnPositions.toString();
 
 		if (hasChanged) {
@@ -24,7 +25,7 @@ export default abstract class BaseRenderer implements RendererInterface {
 		}
 	}
 
-	protected get grid() {
+	protected get grid(): Grid<HexTile> {
 		return this.gameEngine.grid;
 	}
 

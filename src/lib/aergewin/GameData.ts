@@ -68,7 +68,7 @@ export type EventAlteration = {
 	alterResourceQuantity?: ResourceQuantityAlteration;
 	alterProperty?: TargetPropertyAlteration;
 	replaceClosestTerrain?: { from: TerrainType; to: TerrainType };
-	conditions?: AlterationCondition | Array<AlterationCondition>;
+	conditions?: AlterationCondition;
 };
 
 export type DailyEvent = {
@@ -76,7 +76,7 @@ export type DailyEvent = {
 	description: string;
 	type: 'malus' | 'bonus';
 	duration: 'persistent' | 'one-off';
-	alterations: EventAlteration | Array<EventAlteration>;
+	alterations: Array<EventAlteration>;
 };
 
 export const DailyEventsDeck: Array<DailyEvent> = [
@@ -115,7 +115,7 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 		description: 'Le village consomme 1 nourriture de plus à chaque nouvelle journée',
 		type: 'malus',
 		duration: 'persistent',
-		alterations: [{ alterResourceQuantity: ['village', 'substract', 1, 'food'], conditions: [] }]
+		alterations: [{ alterResourceQuantity: ['village', 'substract', 1, 'food'] }]
 	},
 	{
 		name: 'Glissement de terrain',
@@ -134,7 +134,7 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 		alterations: [
 			{
 				alterActionCost: { action: 'add', amount: 1, cumulative: true },
-				conditions: { targetCondition: ['gather_food', 'lake'] }
+				conditions: { targetCondition: ['gather_food', 'any'] }
 			}
 		]
 	},
@@ -152,7 +152,7 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 		description: "À l'aube, chaque joueur doit consommer 1 nourriture ou perdre 1 PV",
 		type: 'malus',
 		duration: 'persistent',
-		alterations: [{ alterResourceQuantity: ['all_players', 'substract', 1, 'food'], conditions: [] }]
+		alterations: [{ alterResourceQuantity: ['all_players', 'substract', 1, 'food'] }]
 	},
 	// {
 	// 	name: 'Blessure',
@@ -176,7 +176,7 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 			"La forêt la plus proche est incendiée. La tuile est retournée et est considérée comme une plaine jusqu'à la fin du jeu",
 		type: 'malus',
 		duration: 'one-off',
-		alterations: [{ replaceClosestTerrain: { from: 'forest', to: 'plains' }, conditions: [] }]
+		alterations: [{ replaceClosestTerrain: { from: 'forest', to: 'plains' } }]
 	},
 	// {
 	// 	name: 'Invasion',
@@ -237,7 +237,7 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 		description: 'Le village perd immédiatement 2 unités de nourriture, et perd 1 PV pour chaque unité nourriture manquante.',
 		type: 'malus',
 		duration: 'one-off',
-		alterations: [{ alterProperty: ['substract', 2, 'hp'], conditions: [{ targetEntity: 'village' }] }]
+		alterations: [{ alterProperty: ['substract', 2, 'hp'], conditions: { targetEntity: 'village' } }]
 	},
 	{
 		name: 'Beau temps',
@@ -301,7 +301,7 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 		alterations: [
 			{
 				alterActionReward: { action: 'add', amount: 1, reward: 'food', cumulative: true },
-				conditions: { targetCondition: ['gather_food', ['forest', 'lake']] }
+				conditions: { targetCondition: ['gather_food', ['any']] }
 			}
 		]
 	},
@@ -364,35 +364,35 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 		description: 'Le village gagne 1 unité de nourriture',
 		type: 'bonus',
 		duration: 'one-off',
-		alterations: [{ alterResourceQuantity: ['village', 'add', 1, 'food'], conditions: [] }]
+		alterations: [{ alterResourceQuantity: ['village', 'add', 1, 'food'] }]
 	},
 	{
 		name: 'Scierie',
 		description: 'Le village gagne 1 unité de bois',
 		type: 'bonus',
 		duration: 'one-off',
-		alterations: [{ alterResourceQuantity: ['village', 'add', 1, 'wood'], conditions: [] }]
+		alterations: [{ alterResourceQuantity: ['village', 'add', 1, 'wood'] }]
 	},
 	{
 		name: 'Recyclage',
 		description: 'Le village gagne 1 minerai',
 		type: 'bonus',
 		duration: 'one-off',
-		alterations: [{ alterResourceQuantity: ['village', 'add', 1, 'minerals'], conditions: [] }]
+		alterations: [{ alterResourceQuantity: ['village', 'add', 1, 'minerals'] }]
 	},
 	{
 		name: 'Médecins de guerre',
 		description: 'Tous les alliés, personnages et soldats, regagnent 2 PV',
 		type: 'bonus',
 		duration: 'one-off',
-		alterations: [{ alterProperty: ['add', 2, 'hp'], conditions: [{ targetEntity: 'all_players' }] }]
+		alterations: [{ alterProperty: ['add', 2, 'hp'], conditions: { targetEntity: 'all_players' } }]
 	},
 	{
 		name: 'Mine cachée',
 		description: 'La tuile Montagne la plus proche devient une tuile Mine',
 		type: 'bonus',
 		duration: 'one-off',
-		alterations: [{ replaceClosestTerrain: { from: 'mountain', to: 'mine' }, conditions: [] }]
+		alterations: [{ replaceClosestTerrain: { from: 'mountain', to: 'mine' } }]
 	}
 	// {
 	// 	name: 'Voyance',

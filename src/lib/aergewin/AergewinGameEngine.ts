@@ -1,6 +1,6 @@
 import type { PlayerName } from './entities/Player';
 import Player, { type PlayerConstructor } from './entities/Player';
-import { defineHex, Direction, Grid, type Hex, line, spiral } from 'honeycomb-grid';
+import { Direction, Grid, type HexConstructor, line, spiral } from 'honeycomb-grid';
 import TerrainTile, { type TerrainConstructor } from './TerrainTile';
 import type { GameEventCallback, GameEventType } from './Event';
 import { TickEvent, GameEvent } from './Event';
@@ -14,12 +14,13 @@ import type RendererInterface from '$lib/aergewin/rendering/RendererInterface';
 import type RandomnessProviderInterface from '$lib/aergewin/random/RandomnessProviderInterface';
 import { getHexFromMouseEvent } from '$lib/aergewin/user_interaction/mouse_interaction';
 import type { GameConfiguration } from '$lib/aergewin/GameConfiguration';
+import { defineHexTile, HexTile } from '$lib/aergewin/HexTile';
 
 export default class AergewinGameEngine {
 	private readonly _configuration: GameConfiguration;
 	private readonly _currentEvents: Array<DailyEvent> = [];
 	private readonly _foes: Array<Foe> = [];
-	private readonly _grid: Grid<Hex>;
+	private readonly _grid: Grid<HexTile>;
 	private readonly _players: Map<string, Player>;
 	private readonly _renderer: RendererInterface;
 	private readonly _terrain: Array<TerrainTile>;
@@ -82,7 +83,7 @@ export default class AergewinGameEngine {
 	get currentTurnFirstPlayer(): PlayerName {
 		return this._currentTurnFirstPlayer;
 	}
-	get grid(): Grid<Hex> {
+	get grid(): Grid<HexTile> {
 		return this._grid;
 	}
 	get isRunning(): boolean {
@@ -90,9 +91,6 @@ export default class AergewinGameEngine {
 	}
 	get players(): Map<string, Player> {
 		return this._players;
-	}
-	get renderer(): RendererInterface {
-		return this._renderer;
 	}
 	get terrain(): Array<TerrainTile> {
 		return this._terrain;
@@ -140,7 +138,7 @@ export default class AergewinGameEngine {
 		return canFight;
 	}
 
-	moveCurrentPlayerTo(hexCoordinates: Hex | undefined) {
+	moveCurrentPlayerTo(hexCoordinates: HexTile | undefined) {
 		this.checkGameIsRunning();
 
 		this._renderer.updateHoverPositions([]);
@@ -151,7 +149,7 @@ export default class AergewinGameEngine {
 
 		const currentPlayer = this.currentPlayer;
 
-		if (!this.hexContainsTerrain(hexCoordinates)) {
+		if (!this.hasTerrainAt(hexCoordinates)) {
 			// Exploration
 			if (currentPlayer.canExplore(hexCoordinates)) {
 				// Exploration
@@ -161,7 +159,7 @@ export default class AergewinGameEngine {
 			} else {
 				return;
 			}
-		} else if (currentPlayer.canMoveTo(hexCoordinates)) {
+		} else if (currentPlayer.canMoveTo(hexCoordinates, this._currentEvents)) {
 			// Simple movement
 			currentPlayer.moveTo(hexCoordinates);
 		} else {
@@ -243,6 +241,7 @@ export default class AergewinGameEngine {
 				player.healAt(action, this.getPlayerZone(player));
 				break;
 			case 'gather_food':
+				debugger;
 				player.gatherFoodAt(action, this.getPlayerZone(player));
 				break;
 			case 'gather_wood':
@@ -256,7 +255,7 @@ export default class AergewinGameEngine {
 		this.goToNextPlayer();
 	}
 
-	addResourceAt(resource: ResourceName, position: Hex) {
+	addResourceAt(resource: ResourceName, position: HexTile) {
 		const positionAsString = position.toString();
 		const terrainsAtPosition = this._terrain.filter((item: TerrainTile) => {
 			return item.position.toString() === positionAsString;
@@ -317,6 +316,34 @@ export default class AergewinGameEngine {
 		this.tick();
 	}
 
+	getTerrainAt(hex: HexTile) {
+		for (const tile of this._terrain) {
+			if (tile.position.toString() === hex.toString()) {
+				return tile;
+			}
+		}
+
+		return null;
+	}
+
+	hasTerrainAt(hex: HexTile) {
+		for (const tile of this._terrain) {
+			if (tile.position.toString() === hex.toString()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	hexConstructor(): HexConstructor<HexTile> {
+		return defineHexTile({
+			dimensions: this._configuration.hexSize,
+			orientation: this._configuration.hexOrientation,
+			origin: { x: 0, y: 0 }
+		});
+	}
+
 	private updatePlayer(callback: () => Player): void {
 		const newPlayer = callback();
 		if (!newPlayer) {
@@ -327,8 +354,8 @@ export default class AergewinGameEngine {
 		this._players.set(newPlayer.name, newPlayer);
 	}
 
-	private playerCanMoveOrExplore(player: Player, hexCoordinates: Hex) {
-		const hexContainsTerrain = this.hexContainsTerrain(hexCoordinates);
+	private playerCanMoveOrExplore(player: Player, hexCoordinates: HexTile) {
+		const hexContainsTerrain = this.hasTerrainAt(hexCoordinates);
 
 		return (!hexContainsTerrain && player.canExplore(hexCoordinates)) || (hexContainsTerrain && player.canMoveTo(hexCoordinates));
 	}
@@ -384,11 +411,7 @@ export default class AergewinGameEngine {
 
 	private createGrid() {
 		return new Grid(
-			defineHex({
-				dimensions: this._configuration.hexSize,
-				orientation: this._configuration.hexOrientation,
-				origin: { x: 0, y: 0 }
-			}),
+			this.hexConstructor(),
 			spiral({
 				radius: 1
 			})
@@ -437,7 +460,7 @@ export default class AergewinGameEngine {
 		events.forEach((callback: GameEventCallback) => callback(event));
 	}
 
-	private getNewHexesAroundPosition(position: Hex) {
+	private getNewHexesAroundPosition(position: HexTile) {
 		const directional = [];
 
 		directional.push(this._grid.neighborOf(position, Direction.N));
@@ -449,20 +472,9 @@ export default class AergewinGameEngine {
 		directional.push(this._grid.neighborOf(position, Direction.W));
 		directional.push(this._grid.neighborOf(position, Direction.NW));
 
-		return directional.filter((hex: Hex) => !this._grid.hasHex(hex));
+		return directional.filter((hex: HexTile) => !this._grid.hasHex(hex));
 	}
 
-	private hexContainsTerrain(hexCoordinates: Hex) {
-		let found = false;
-
-		this._terrain.forEach((tile: TerrainTile) => {
-			if (tile.position.toString() === hexCoordinates.toString()) {
-				found = true;
-			}
-		});
-
-		return found;
-	}
 	private getVillageTerrainTile(): TerrainTile {
 		const terrains = this._terrain.filter((terrain) => terrain.isType('village'));
 
@@ -477,7 +489,7 @@ export default class AergewinGameEngine {
 		return terrains[0];
 	}
 
-	private createNewTerrainAt(hexCoordinates: Hex) {
+	private createNewTerrainAt(hexCoordinates: HexTile) {
 		if (!this.terrainDeck.length) {
 			throw new Error('Tried to get new terrain but deck is empty.');
 		}
@@ -490,13 +502,13 @@ export default class AergewinGameEngine {
 		return new TerrainTile(spliceResult[0], hexCoordinates, this._grid);
 	}
 
-	private hoverCurrentPlayerPath(hexCoordinates: Hex | undefined) {
+	private hoverCurrentPlayerPath(hexCoordinates: HexTile | undefined) {
 		const player = this.currentPlayer;
 		const currentPlayerPosition = player.position.toString();
 
 		if (hexCoordinates && this.playerCanMoveOrExplore(player, hexCoordinates)) {
 			const hoverList = [
-				...this._grid.traverse(line({ start: player.position, stop: hexCoordinates })).filter((hex: Hex) => {
+				...this._grid.traverse(line({ start: player.position, stop: hexCoordinates })).filter((hex: HexTile) => {
 					return hex.toString() !== currentPlayerPosition;
 				})
 			];

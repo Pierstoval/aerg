@@ -4,7 +4,6 @@
 	import type { TickEvent, GameEventCallback } from '../aergewin/Event';
 	import {SvgRendererFactory} from "$lib/aergewin/rendering/SvgRenderer";
 	import {defaultGameConfiguration, defaultTerrain} from "$lib/aergewin/GameConfiguration";
-	// import DefaultRandomnessProvider from "$lib/aergewin/random/DefaultRandomnessProvider.js";
 	import ConfigurableRandomnessProvider from "$lib/aergewin/random/ConfigurableRandomnessProvider";
 	import {getEventIndexByName} from "$lib/aergewin/GameData";
 
@@ -20,10 +19,10 @@
 		// { name: 'Hélène' },
 		// { name: 'Aidan' },
 		// { name: 'Jillian' },
-		{ name: 'Jane', position: [1, 0] },
-		{ name: 'John' },
-		{ name: 'Ella' },
-		{ name: 'Mario' }
+		{ name: 'Jane', position: [0, 0] },
+		{ name: 'John', position: [0, 0] },
+		{ name: 'Ella', position: [0, 0] },
+		{ name: 'Mario', position: [0, 0] }
 	];
 
 	async function start() {

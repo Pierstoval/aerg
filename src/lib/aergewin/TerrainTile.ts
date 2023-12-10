@@ -1,7 +1,8 @@
-import type { Hex, HexCoordinates } from 'honeycomb-grid';
+import type { HexCoordinates } from 'honeycomb-grid';
 import type { Grid } from 'honeycomb-grid';
 import { type ZoneActivation, getTerrainActions } from './ZoneActivation';
 import { type TerrainType, type ResourceName, Assets } from './GameData';
+import type { HexTile } from '$lib/aergewin/HexTile';
 
 export type Inventory = Map<ResourceName, number>;
 
@@ -12,12 +13,12 @@ export type TerrainConstructor = {
 
 export default class TerrainTile {
 	private readonly _type: TerrainType;
-	private readonly _position: Hex;
+	private readonly _position: HexTile;
 	private _inventory: Inventory = new Map();
-	private _grid: Grid<Hex>;
+	private _grid: Grid<HexTile>;
 	private _riskValue = 0;
 
-	constructor(type: TerrainType, position: Hex, grid: Grid<Hex>) {
+	constructor(type: TerrainType, position: HexTile, grid: Grid<HexTile>) {
 		this._type = type;
 		this._grid = grid;
 		this._position = position;
@@ -28,7 +29,7 @@ export default class TerrainTile {
 		return this._type;
 	}
 
-	get position(): Hex {
+	get position(): HexTile {
 		return this._position;
 	}
 

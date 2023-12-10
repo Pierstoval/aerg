@@ -1,16 +1,17 @@
-import type { Grid, Hex } from 'honeycomb-grid';
+import type { Grid } from 'honeycomb-grid';
 import type { OperatorType, ResourceName } from '../GameData';
 import type AergewinGameEngine from '$lib/aergewin/AergewinGameEngine';
 import type { TerrainTypeCondition } from '../GameData';
+import type { HexTile } from '$lib/aergewin/HexTile';
 
 export default abstract class AbstractGameEntity {
-	protected _position: Hex;
+	protected _position: HexTile;
 	protected readonly _engine: AergewinGameEngine;
-	protected _grid: Grid<Hex>;
+	protected _grid: Grid<HexTile>;
 	protected _inventory: Map<ResourceName, number> = new Map();
 	protected _hp: number;
 
-	protected constructor(position: Hex, engine: AergewinGameEngine) {
+	protected constructor(position: HexTile, engine: AergewinGameEngine) {
 		this._engine = engine;
 		this._grid = engine.grid;
 		this._position = position;
@@ -24,7 +25,7 @@ export default abstract class AbstractGameEntity {
 		return this._hp;
 	}
 
-	get position(): Hex {
+	get position(): HexTile {
 		return this._position;
 	}
 

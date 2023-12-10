@@ -14,6 +14,7 @@ import HUDComponent from './HUD.svelte';
 import type AergewinGameEngine from '../AergewinGameEngine';
 import BaseRenderer from './BaseRenderer';
 import { Assets } from '$lib/aergewin/GameData';
+import type { HexTile } from '$lib/aergewin/HexTile';
 
 export class SvgRendererFactory implements RendererFactory {
 	private readonly _gridElement: HTMLElement;
@@ -32,6 +33,7 @@ export class SvgRendererFactory implements RendererFactory {
 class SvgRenderer extends BaseRenderer {
 	private readonly svgContainer: Svg;
 	private readonly hudComponent: SvelteComponent;
+	private readonly hexPrototype: HexTile;
 
 	constructor(gameEngine: AergewinGameEngine, gridElement: HTMLElement, hudElement: HTMLElement) {
 		super(gameEngine);
@@ -52,6 +54,8 @@ class SvgRenderer extends BaseRenderer {
 				gameEngine
 			}
 		});
+
+		this.hexPrototype = new (this.gameEngine.hexConstructor())([0, 0]);
 	}
 
 	public async loadAssets() {
@@ -167,7 +171,7 @@ class SvgRenderer extends BaseRenderer {
 			group.add(
 				this.svgContainer
 					.image(terrainTile.image)
-					.size(this.grid.hexPrototype.width, this.grid.hexPrototype.height)
+					.size(this.hexPrototype.width, this.hexPrototype.height)
 					.move(corners[4].x, corners[5].y) // Top left
 			);
 		});
