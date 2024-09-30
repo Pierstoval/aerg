@@ -35,7 +35,9 @@ export default class AlterationProcessor {
 			return [];
 		}
 
-		const conditions = Array.isArray(alteration.conditions) ? alteration.conditions : [alteration.conditions];
+		const conditions = Array.isArray(alteration.conditions)
+			? alteration.conditions
+			: [alteration.conditions];
 
 		const targets: Array<AbstractGameEntity> = this.getAvailableTargets().filter((target) => {
 			return this.matchesTerrain(target, conditions);
@@ -57,7 +59,10 @@ export default class AlterationProcessor {
 		return [...this.engine.players.values()];
 	}
 
-	public matchesTerrain(target: AbstractGameEntity, conditions: Array<AlterationCondition>): boolean {
+	public matchesTerrain(
+		target: AbstractGameEntity,
+		conditions: Array<AlterationCondition>
+	): boolean {
 		if (target instanceof Player) {
 			return this.playerMatchesTerrain(target, conditions);
 		}
@@ -98,7 +103,9 @@ export default class AlterationProcessor {
 
 	private applyAlterationToTarget(alteration: EventAlteration, target: AbstractGameEntity) {
 		if (alteration.alterActionCost || alteration.alterActionReward) {
-			console.error('"alterActionCost" and "alterActionReward" are not applicable to one-off events.');
+			console.error(
+				'"alterActionCost" and "alterActionReward" are not applicable to one-off events.'
+			);
 			return;
 		}
 

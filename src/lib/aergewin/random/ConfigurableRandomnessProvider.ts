@@ -17,7 +17,9 @@ export default class ConfigurableRandomnessProvider implements RandomnessProvide
 			const value = values.shift();
 
 			if (value === undefined) {
-				throw new Error('Unrecoverable error: Next numbers had at least one value, but fetching a value returned undefined.');
+				throw new Error(
+					'Unrecoverable error: Next numbers had at least one value, but fetching a value returned undefined.'
+				);
 			}
 
 			this.nextNumbers.set(uniqueKey, values);

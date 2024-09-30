@@ -22,7 +22,13 @@ export default class Player extends AbstractGameEntity {
 	private _isActive = false;
 	private _actionsSpent = 0;
 
-	constructor(name: string, orderIndex: number, numberOfPlayers: number, position: HexTile, engine: AergewinGameEngine) {
+	constructor(
+		name: string,
+		orderIndex: number,
+		numberOfPlayers: number,
+		position: HexTile,
+		engine: AergewinGameEngine
+	) {
 		super(position, engine);
 		this._name = name;
 		this._orderIndex = orderIndex;
@@ -70,13 +76,15 @@ export default class Player extends AbstractGameEntity {
 	}
 
 	goToDirection(direction: Direction) {
-		this._engine.grid.traverse([fromCoordinates(this._position), move(direction)]).map((p: HexTile) => {
-			const distance = this._engine.grid.distance(this._position, p);
-			this._actionsSpent += distance;
-			this._position = p;
+		this._engine.grid
+			.traverse([fromCoordinates(this._position), move(direction)])
+			.map((p: HexTile) => {
+				const distance = this._engine.grid.distance(this._position, p);
+				this._actionsSpent += distance;
+				this._position = p;
 
-			return p;
-		});
+				return p;
+			});
 	}
 
 	moveTo(hex: HexTile) {
@@ -116,7 +124,9 @@ export default class Player extends AbstractGameEntity {
 	dropResource(resource: ResourceName) {
 		const currentAmount = this._inventory.get(resource) || 0;
 		if (currentAmount === 0) {
-			throw new Error(`Unrecoverable error: cannot drop resource "${resource}" since current inventory contains none.`);
+			throw new Error(
+				`Unrecoverable error: cannot drop resource "${resource}" since current inventory contains none.`
+			);
 		}
 
 		this._inventory.set(resource, currentAmount - 1);
@@ -169,7 +179,10 @@ export default class Player extends AbstractGameEntity {
 					}
 					const zones = a.conditions.targetCondition[1];
 
-					return (Array.isArray(zones) ? zones : [zones]).filter((t) => t === 'any' || t === zone.type).length > 0;
+					return (
+						(Array.isArray(zones) ? zones : [zones]).filter((t) => t === 'any' || t === zone.type)
+							.length > 0
+					);
 				});
 				return alterations.length > 0;
 			})

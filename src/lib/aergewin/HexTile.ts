@@ -59,11 +59,16 @@ export abstract class HexTile extends Hex {
 	}
 
 	get origin(): Point {
-		return createHexOrigin((this._origin || HexTile.baseOptions.origin) as 'topLeft', this || HexTile.baseOptions.dimensions);
+		return createHexOrigin(
+			(this._origin || HexTile.baseOptions.origin) as 'topLeft',
+			this || HexTile.baseOptions.dimensions
+		);
 	}
 
 	get offset(): HexOffset {
-		return (typeof this._offset !== 'undefined' ? this._offset : HexTile.baseOptions.offset) as HexOffset;
+		return (
+			typeof this._offset !== 'undefined' ? this._offset : HexTile.baseOptions.offset
+		) as HexOffset;
 	}
 }
 

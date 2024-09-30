@@ -102,7 +102,10 @@ class SvgRenderer extends BaseRenderer {
 			// create a polygon from a hex's corner points
 			const points: ArrayXY[] = hex.corners.map(({ x, y }) => [x, y]);
 
-			const polygon = this.svgContainer.polygon(points).fill('none').stroke({ width: 1, color: '#dddddd' });
+			const polygon = this.svgContainer
+				.polygon(points)
+				.fill('none')
+				.stroke({ width: 1, color: '#dddddd' });
 
 			group.add(polygon);
 		});
@@ -156,7 +159,10 @@ class SvgRenderer extends BaseRenderer {
 				.add(
 					this.svgContainer
 						.text(String(player.index))
-						.move(playerPoint.x - xOffset - coordinateOffset / 2, playerPoint.y - yOffset - coordinateOffset * 1.25)
+						.move(
+							playerPoint.x - xOffset - coordinateOffset / 2,
+							playerPoint.y - yOffset - coordinateOffset * 1.25
+						)
 						.fill('#ffffff')
 				);
 		});
@@ -186,7 +192,13 @@ class SvgRenderer extends BaseRenderer {
 			const points: ArrayXY[] = hex.corners.map(({ x, y }) => [x, y]);
 
 			group.add(this.svgContainer.polygon(points).fill('#ffffff').opacity(0.3));
-			group.add(this.svgContainer.polygon(points).opacity(0.8).fill('none').stroke({ width: 3, color: playerColor.toHex() }));
+			group.add(
+				this.svgContainer
+					.polygon(points)
+					.opacity(0.8)
+					.fill('none')
+					.stroke({ width: 3, color: playerColor.toHex() })
+			);
 		});
 	}
 }

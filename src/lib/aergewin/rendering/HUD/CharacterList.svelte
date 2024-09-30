@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
-	import Player, {type PlayerName} from '../../entities/Player';
+	import Player, { type PlayerName } from '../../entities/Player';
 	import AergewinGameEngine from '../../AergewinGameEngine';
 
 	export let gameEngine: AergewinGameEngine;
 
 	let players: Array<Player> = [];
 	let currentPlayer: Player | undefined;
-	let currentTurnFirstPlayer: PlayerName|undefined;
+	let currentTurnFirstPlayer: PlayerName | undefined;
 	let currentTurn = 0;
 
 	gameEngine.on('tick', () => {
@@ -19,10 +19,13 @@
 </script>
 
 <section>
-	<h1>{$_('hud.players_list.current_turn', {values: {current_turn: currentTurn}})}</h1>
+	<h1>{$_('hud.players_list.current_turn', { values: { current_turn: currentTurn } })}</h1>
 	<h1>{$_('hud.players_list')}</h1>
 	{#each players as player}
-		<p class:active={currentPlayer?.index === player.index} class:first-player={currentTurnFirstPlayer === player.name}>
+		<p
+			class:active={currentPlayer?.index === player.index}
+			class:first-player={currentTurnFirstPlayer === player.name}
+		>
 			<span class="player-pin" style="--player-color: {player.color.toString()}">
 				{player.index}
 			</span>
@@ -45,7 +48,7 @@
 				border-radius: 1rem;
 			}
 			&.first-player::after {
-				content: "1️⃣";
+				content: '1️⃣';
 				position: absolute;
 				right: 1rem;
 			}

@@ -9,7 +9,13 @@ export default class Foe extends AbstractGameEntity {
 
 	private _actionsSpent = 0;
 
-	constructor(type: string, orderIndex: number, numberOfPlayers: number, position: HexTile, engine: AergewinGameEngine) {
+	constructor(
+		type: string,
+		orderIndex: number,
+		numberOfPlayers: number,
+		position: HexTile,
+		engine: AergewinGameEngine
+	) {
 		super(position, engine);
 		this._type = type;
 	}

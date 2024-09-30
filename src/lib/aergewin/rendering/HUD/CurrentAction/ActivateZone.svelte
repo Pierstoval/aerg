@@ -4,7 +4,7 @@
 	import { _ } from 'svelte-i18n';
 	import type TerrainTile from '../../../TerrainTile';
 	import type Player from '../../../entities/Player';
-	import {onMount} from "svelte";
+	import { onMount } from 'svelte';
 
 	export let gameEngine: AergewinGameEngine;
 	let currentPlayer: Player;
@@ -26,7 +26,9 @@
 
 	function canExecuteAction(action: ZoneActivation): boolean {
 		if (!currentPlayer) {
-			throw new Error('Unrecoverable error: cannot find current player to check if they can execute action.');
+			throw new Error(
+				'Unrecoverable error: cannot find current player to check if they can execute action.'
+			);
 		}
 		return gameEngine.playerCanActivateZone(currentPlayer, action);
 	}
@@ -45,7 +47,7 @@
 		<div>
 			<button
 				on:click={() => checkAndExecuteAction(action)}
-				class:disabled="{!canExecuteAction(action)}"
+				class:disabled={!canExecuteAction(action)}
 			>
 				{$_(`actions.${action.name}`)}
 			</button>
@@ -55,8 +57,8 @@
 				, {resourceCost[1]} {$_(`resource.${resourceCost[0]}`)}
 			{/each}
 			{#if action.experienceGain}; {$_('hud.activate_zone.xp_gain', {
-				values: { xp: action.experienceGain }
-			})}{/if}
+					values: { xp: action.experienceGain }
+				})}{/if}
 			)
 		</div>
 	{/each}

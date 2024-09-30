@@ -3,8 +3,7 @@ import { test, expect } from '@playwright/test';
 test('test', async ({ page }) => {
 	await page.goto('/');
 
-	let cnt = await page.innerHTML('body');
-	console.info({ cnt });
+	await page.innerHTML('body');
 
 	await page.getByRole('link', { name: 'Aller à la page du jeu' }).click();
 	await page.getByRole('button', { name: 'Nouvelle partie' }).click();

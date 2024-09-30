@@ -17,7 +17,9 @@ export default abstract class BaseRenderer implements RendererInterface {
 	abstract loadAssets(): Promise<void>;
 
 	public updateHoverPositions(hexes: Array<HexTile>): void {
-		const hasChanged = hexes.length !== this._hoverOnPositions.length || hexes.toString() !== this._hoverOnPositions.toString();
+		const hasChanged =
+			hexes.length !== this._hoverOnPositions.length ||
+			hexes.toString() !== this._hoverOnPositions.toString();
 
 		if (hasChanged) {
 			this._hoverOnPositions = hexes;

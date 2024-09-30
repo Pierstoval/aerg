@@ -6,7 +6,13 @@ import type { GameEventCallback, GameEventType } from './Event';
 import { TickEvent, GameEvent } from './Event';
 import type Foe from './entities/Foe';
 import type { ZoneActivation, ResourceCost } from './ZoneActivation';
-import { TerrainsDecks, DailyEventsDeck, type TerrainType, type DailyEvent, type ResourceName } from './GameData';
+import {
+	TerrainsDecks,
+	DailyEventsDeck,
+	type TerrainType,
+	type DailyEvent,
+	type ResourceName
+} from './GameData';
 import Village from './entities/Village';
 import AlterationProcessor from './alteration/AlterationProcessor';
 import type RendererFactory from '$lib/aergewin/rendering/RendererFactory';
@@ -205,7 +211,9 @@ export default class AergewinGameEngine {
 			}
 		});
 
-		const canExecute = hasResource && playerActionSpent + action.cost <= this._configuration.max_actions_count_per_turn;
+		const canExecute =
+			hasResource &&
+			playerActionSpent + action.cost <= this._configuration.max_actions_count_per_turn;
 
 		if (!canExecute) {
 			return false;
@@ -217,7 +225,9 @@ export default class AergewinGameEngine {
 			case 'build_barricade':
 				return currentZone.isType('village');
 			case 'heal_self':
-				return !player.isFullHp() && (currentZone.isType('village') || currentZone.isType('sanctuary'));
+				return (
+					!player.isFullHp() && (currentZone.isType('village') || currentZone.isType('sanctuary'))
+				);
 			case 'gather_food':
 				return currentZone.isType('lake') || currentZone.isType('forest');
 			case 'gather_wood':
@@ -357,7 +367,10 @@ export default class AergewinGameEngine {
 	private playerCanMoveOrExplore(player: Player, hexCoordinates: HexTile) {
 		const hexContainsTerrain = this.hasTerrainAt(hexCoordinates);
 
-		return (!hexContainsTerrain && player.canExplore(hexCoordinates)) || (hexContainsTerrain && player.canMoveTo(hexCoordinates));
+		return (
+			(!hexContainsTerrain && player.canExplore(hexCoordinates)) ||
+			(hexContainsTerrain && player.canMoveTo(hexCoordinates))
+		);
 	}
 
 	private tick() {
@@ -424,7 +437,13 @@ export default class AergewinGameEngine {
 		let i = 1;
 		for (const playerConstructor of players) {
 			const coordinates = playerConstructor.position || [0, 0];
-			const player = new Player(playerConstructor.name, i, players.length, this._grid.createHex(coordinates), this);
+			const player = new Player(
+				playerConstructor.name,
+				i,
+				players.length,
+				this._grid.createHex(coordinates),
+				this
+			);
 			map.set(playerConstructor.name, player);
 			i++;
 		}
@@ -494,7 +513,11 @@ export default class AergewinGameEngine {
 			throw new Error('Tried to get new terrain but deck is empty.');
 		}
 
-		const randomNumber = this.randomnessProvider.provideKeyedNumberBetween('new_terrain', 0, this.terrainDeck.length);
+		const randomNumber = this.randomnessProvider.provideKeyedNumberBetween(
+			'new_terrain',
+			0,
+			this.terrainDeck.length
+		);
 
 		// Pop one random terrain off the deck.
 		const spliceResult = this.terrainDeck.splice(randomNumber, 1);
@@ -508,9 +531,11 @@ export default class AergewinGameEngine {
 
 		if (hexCoordinates && this.playerCanMoveOrExplore(player, hexCoordinates)) {
 			const hoverList = [
-				...this._grid.traverse(line({ start: player.position, stop: hexCoordinates })).filter((hex: HexTile) => {
-					return hex.toString() !== currentPlayerPosition;
-				})
+				...this._grid
+					.traverse(line({ start: player.position, stop: hexCoordinates }))
+					.filter((hex: HexTile) => {
+						return hex.toString() !== currentPlayerPosition;
+					})
 			];
 			this._renderer.updateHoverPositions(hoverList);
 		}
@@ -521,7 +546,11 @@ export default class AergewinGameEngine {
 			this.resetEventDeck();
 		}
 
-		const randomNumber = this.randomnessProvider.provideKeyedNumberBetween('new_daily_event', 0, this.eventsDeck.length);
+		const randomNumber = this.randomnessProvider.provideKeyedNumberBetween(
+			'new_daily_event',
+			0,
+			this.eventsDeck.length
+		);
 		const spliceResult = this.eventsDeck.splice(randomNumber, 1);
 
 		const newEvent: DailyEvent = spliceResult[0];
@@ -542,7 +571,9 @@ export default class AergewinGameEngine {
 
 	private applyOneOffDailyEvent(event: DailyEvent) {
 		if (event.duration !== 'one-off') {
-			throw new Error('Unrecoverable error: tried to apply one-off event effets, but specified event is not one-off.');
+			throw new Error(
+				'Unrecoverable error: tried to apply one-off event effets, but specified event is not one-off.'
+			);
 		}
 
 		const alterations = Array.isArray(event.alterations) ? event.alterations : [event.alterations];

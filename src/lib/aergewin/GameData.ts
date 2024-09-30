@@ -1,6 +1,13 @@
 export type ResourceName = 'wood' | 'food' | 'minerals';
 
-export type TerrainType = 'village' | 'mountain' | 'lake' | 'forest' | 'plains' | 'sanctuary' | 'mine';
+export type TerrainType =
+	| 'village'
+	| 'mountain'
+	| 'lake'
+	| 'forest'
+	| 'plains'
+	| 'sanctuary'
+	| 'mine';
 
 export type ZoneActionName =
 	| 'repair_village'
@@ -43,11 +50,19 @@ export const Assets = {
 
 export type TerrainTypeCondition = TerrainType | 'any';
 
-export type TargetCondition = [ZoneActionName | 'movement' | 'positioned_at', TerrainTypeCondition | Array<TerrainTypeCondition>];
+export type TargetCondition = [
+	ZoneActionName | 'movement' | 'positioned_at',
+	TerrainTypeCondition | Array<TerrainTypeCondition>
+];
 
 export type OperatorType = 'add' | 'substract' | 'multiply' | 'divide_floor' | 'divide_ceil';
 
-export type AlterationTarget = 'village' | 'current_player' | 'player_matching_condition' | 'all_players' | 'enemy';
+export type AlterationTarget =
+	| 'village'
+	| 'current_player'
+	| 'player_matching_condition'
+	| 'all_players'
+	| 'enemy';
 
 export type Reward = ResourceName;
 
@@ -98,7 +113,10 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 		type: 'malus',
 		duration: 'persistent',
 		alterations: [
-			{ alterActionCost: { action: 'add', amount: 1, cumulative: true }, conditions: { targetCondition: ['movement', 'forest'] } }
+			{
+				alterActionCost: { action: 'add', amount: 1, cumulative: true },
+				conditions: { targetCondition: ['movement', 'forest'] }
+			}
 		]
 	},
 	{
@@ -107,7 +125,10 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 		type: 'malus',
 		duration: 'persistent',
 		alterations: [
-			{ alterActionCost: { action: 'add', amount: 1, cumulative: true }, conditions: { targetCondition: ['movement', 'lake'] } }
+			{
+				alterActionCost: { action: 'add', amount: 1, cumulative: true },
+				conditions: { targetCondition: ['movement', 'lake'] }
+			}
 		]
 	},
 	{
@@ -123,7 +144,10 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 		type: 'malus',
 		duration: 'persistent',
 		alterations: [
-			{ alterActionCost: { action: 'add', amount: 1, cumulative: true }, conditions: { targetCondition: ['movement', 'plains'] } }
+			{
+				alterActionCost: { action: 'add', amount: 1, cumulative: true },
+				conditions: { targetCondition: ['movement', 'plains'] }
+			}
 		]
 	},
 	{
@@ -168,7 +192,12 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 		description: 'Tous les personnages sur des cases Montagne subissent 2 points de dégâts',
 		type: 'malus',
 		duration: 'one-off',
-		alterations: [{ alterProperty: ['substract', 2, 'hp'], conditions: { targetCondition: ['positioned_at', 'mountain'] } }]
+		alterations: [
+			{
+				alterProperty: ['substract', 2, 'hp'],
+				conditions: { targetCondition: ['positioned_at', 'mountain'] }
+			}
+		]
 	},
 	{
 		name: 'Incendie',
@@ -234,10 +263,13 @@ export const DailyEventsDeck: Array<DailyEvent> = [
 	// },
 	{
 		name: 'Vermine',
-		description: 'Le village perd immédiatement 2 unités de nourriture, et perd 1 PV pour chaque unité nourriture manquante.',
+		description:
+			'Le village perd immédiatement 2 unités de nourriture, et perd 1 PV pour chaque unité nourriture manquante.',
 		type: 'malus',
 		duration: 'one-off',
-		alterations: [{ alterProperty: ['substract', 2, 'hp'], conditions: { targetEntity: 'village' } }]
+		alterations: [
+			{ alterProperty: ['substract', 2, 'hp'], conditions: { targetEntity: 'village' } }
+		]
 	},
 	{
 		name: 'Beau temps',
@@ -429,11 +461,15 @@ DailyEventsDeck.forEach((event) => {
 			return;
 		}
 
-		let conditions = Array.isArray(alteration.conditions) ? alteration.conditions : [alteration.conditions];
+		let conditions = Array.isArray(alteration.conditions)
+			? alteration.conditions
+			: [alteration.conditions];
 
 		conditions.forEach((condition) => {
 			if (!condition.targetCondition && !condition.targetEntity) {
-				throw new Error('AlterationCondition object must at least have either an entity or a condition.');
+				throw new Error(
+					'AlterationCondition object must at least have either an entity or a condition.'
+				);
 			}
 			const target = condition.targetCondition;
 			if (!target) {

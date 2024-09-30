@@ -2,10 +2,10 @@
 	import { onMount } from 'svelte';
 	import AergewinGameEngine from '../aergewin/AergewinGameEngine';
 	import type { TickEvent, GameEventCallback } from '../aergewin/Event';
-	import {SvgRendererFactory} from "$lib/aergewin/rendering/SvgRenderer";
-	import {defaultGameConfiguration, defaultTerrain} from "$lib/aergewin/GameConfiguration";
-	import ConfigurableRandomnessProvider from "$lib/aergewin/random/ConfigurableRandomnessProvider";
-	import {getEventIndexByName} from "$lib/aergewin/GameData";
+	import { SvgRendererFactory } from '$lib/aergewin/rendering/SvgRenderer';
+	import { defaultGameConfiguration, defaultTerrain } from '$lib/aergewin/GameConfiguration';
+	import ConfigurableRandomnessProvider from '$lib/aergewin/random/ConfigurableRandomnessProvider';
+	import { getEventIndexByName } from '$lib/aergewin/GameData';
 
 	let gameEngine: AergewinGameEngine;
 	let hexGridElement: HTMLElement;
@@ -37,11 +37,7 @@
 		config.players = players;
 		config.visibleTerrain = defaultTerrain();
 
-		gameEngine = new AergewinGameEngine(
-			rendererFactory,
-			randomnessProvider,
-			config,
-		);
+		gameEngine = new AergewinGameEngine(rendererFactory, randomnessProvider, config);
 
 		gameEngine.on('tick', function (e: TickEvent): void {
 			const viewbox = e.renderer.getViewbox();
