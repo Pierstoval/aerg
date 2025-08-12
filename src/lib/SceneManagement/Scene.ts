@@ -1,5 +1,5 @@
-import type { ComponentType, SvelteComponent } from 'svelte';
+import type { SvelteComponent, Component } from 'svelte';
 
-export type SceneConstructor = ComponentType;
+export type SceneConstructor = Component;
 
-export type SceneInstance = SvelteComponent;
+export type SceneInstance = Record<string, any>;

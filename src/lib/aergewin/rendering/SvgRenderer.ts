@@ -4,7 +4,7 @@ import { hexToPoint } from 'honeycomb-grid';
 import type { ArrayXY, Svg } from '@svgdotjs/svg.js';
 import { SVG } from '@svgdotjs/svg.js';
 
-import type { SvelteComponent } from 'svelte';
+import { hydrate, type SvelteComponent } from 'svelte';
 
 import type Player from '../entities/Player';
 import type TerrainTile from '../TerrainTile';
@@ -47,9 +47,8 @@ class SvgRenderer extends BaseRenderer {
 
 		this.svgContainer = svgContainer;
 
-		this.hudComponent = new HUDComponent({
+		this.hudComponent = hydrate(HUDComponent, {
 			target: hudElement,
-			hydrate: true,
 			props: {
 				gameEngine
 			}

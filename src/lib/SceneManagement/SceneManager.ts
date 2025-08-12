@@ -1,3 +1,4 @@
+import { hydrate } from 'svelte';
 import { writable, type Writable } from 'svelte/store';
 import type { SceneManagerOptions } from './SceneManagerOptions';
 import { getConfig } from './SceneManagerOptions';
@@ -46,9 +47,8 @@ export default class SceneManager {
 			console.error(scene);
 		}
 
-		const sceneInstance: SceneInstance = new scene({
+		const sceneInstance: SceneInstance = hydrate(scene, {
 			target: this.gameContainerElement,
-			hydrate: true,
 			props: {
 				game: this
 			}

@@ -251,7 +251,6 @@ export default class AergewinGameEngine {
 				player.healAt(action, this.getPlayerZone(player));
 				break;
 			case 'gather_food':
-				debugger;
 				player.gatherFoodAt(action, this.getPlayerZone(player));
 				break;
 			case 'gather_wood':
